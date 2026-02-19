@@ -1,0 +1,315 @@
+{
+  "kind": "build_request",
+  "title": "Build Gym Member Portal with trainer/client dashboards, AI assistant VORTEX, and full admin controls",
+  "projectName": "Gym Member Portal",
+  "priority": "normal",
+  "requirements": [
+    {
+      "id": "REQ-1",
+      "text": "Create a backend data model for workout plans that includes exercise name, sets, reps, weight, rest time, and notes. Workout plans must be associated with specific clients and created by specific trainers.",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ],
+        "quotes": [
+          "trainers can update workout plans"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Workout plan data structure stores all exercise details",
+        "Each workout plan is linked to a client ID and trainer ID",
+        "Support for multiple exercises per workout plan"
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "text": "Implement backend functions for trainers to create, update, and delete workout plans for their assigned clients.",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ],
+        "quotes": [
+          "trainers can update workout plans"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Trainers can create new workout plans with multiple exercises",
+        "Trainers can update existing workout plans",
+        "Trainers can delete workout plans",
+        "Only trainers can modify workout plans for their clients"
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "text": "Create a backend data model for client progress tracking that records completed workouts, weight lifted, sets completed, date, and personal notes.",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ],
+        "quotes": [
+          "clients can see their progress in real-time"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Progress entries are linked to specific clients and workout plans",
+        "Track completion date and actual performance metrics",
+        "Support progress history over time"
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "text": "Implement backend functions for clients to log workout completions and update their progress metrics.",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ],
+        "quotes": [
+          "clients can see their progress in real-time"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Clients can mark workouts as completed",
+        "Clients can record actual sets, reps, and weight used",
+        "Clients can add personal notes to progress entries"
+      ]
+    },
+    {
+      "id": "REQ-5",
+      "text": "Create a user management system with three roles: admin, trainer, and client. Store user profiles with role, name, email, and assigned relationships (trainers to clients).",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ],
+        "quotes": [
+          "ALL THE FUNCTION should be in the hands of the app creater",
+          "publish this app official available for others"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Support admin, trainer, and client user roles",
+        "Store user profile information",
+        "Track trainer-to-client assignments",
+        "Admin can manage all users"
+      ]
+    },
+    {
+      "id": "REQ-6",
+      "text": "Implement backend functions for admin to add, edit, and remove users (trainers and clients), and to assign clients to trainers.",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ],
+        "quotes": [
+          "ALL THE FUNCTION should be in the hands of the app creater",
+          "each minor control in my hands only"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Admin can create new trainer and client accounts",
+        "Admin can edit user information",
+        "Admin can deactivate or remove users",
+        "Admin can assign and reassign clients to trainers"
+      ]
+    },
+    {
+      "id": "REQ-7",
+      "text": "Create a backend storage system for app branding settings including logo URL, primary color, secondary color, and accent color. Include functions for admin to update these settings.",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ],
+        "quotes": [
+          "logo colour and change",
+          "each minor control in my hands only"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Store customizable branding settings",
+        "Admin can update logo and color scheme",
+        "Settings persist across sessions",
+        "All users see updated branding in real-time"
+      ]
+    },
+    {
+      "id": "REQ-8",
+      "text": "Implement an AI assistant named VORTEX with backend functions to handle user queries about workouts, exercises, fitness advice, and progress insights.",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ],
+        "quotes": [
+          "intelligent ai VORTEX"
+        ]
+      },
+      "acceptanceCriteria": [
+        "VORTEX can answer fitness-related questions",
+        "VORTEX can provide workout recommendations",
+        "VORTEX can analyze user progress data",
+        "Chat history is maintained per user"
+      ]
+    },
+    {
+      "id": "REQ-9",
+      "text": "Create a trainer dashboard UI where trainers can view their assigned clients, create new workout plans, edit existing plans, and see client progress summaries.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ],
+        "quotes": [
+          "trainers can update workout plans"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Trainers see list of their assigned clients",
+        "Form to create workout plans with multiple exercises",
+        "Edit interface for updating existing workout plans",
+        "View client progress summaries and completion rates"
+      ]
+    },
+    {
+      "id": "REQ-10",
+      "text": "Create a client dashboard UI where clients can view their assigned workout plans, log workout completions with actual metrics, and see their progress history with charts.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ],
+        "quotes": [
+          "clients can see their progress in real-time"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Clients see their current workout plans",
+        "Form to log workout completions with sets, reps, and weight",
+        "Progress history displayed as charts or graphs",
+        "Real-time updates when progress is logged"
+      ]
+    },
+    {
+      "id": "REQ-11",
+      "text": "Create an admin control panel UI where the app creator can upload and change the logo, customize color scheme (primary, secondary, accent colors), manage all users (add/edit/remove trainers and clients), and assign clients to trainers.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ],
+        "quotes": [
+          "ALL THE FUNCTION should be in the hands of the app creater like logo colour and change",
+          "each minor control in my hands only"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Logo upload interface with preview",
+        "Color picker for primary, secondary, and accent colors",
+        "User management table with add/edit/remove actions",
+        "Interface to assign clients to trainers",
+        "Live preview of branding changes"
+      ]
+    },
+    {
+      "id": "REQ-12",
+      "text": "Create a VORTEX AI assistant chat interface accessible to all users with a conversation view, message input, and contextual responses based on user role and workout data.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ],
+        "quotes": [
+          "intelligent ai VORTEX"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Chat interface with conversation history",
+        "Message input with send functionality",
+        "VORTEX responses appear in real-time",
+        "Accessible from all user dashboards",
+        "Visual indication of VORTEX as AI assistant"
+      ]
+    },
+    {
+      "id": "REQ-13",
+      "text": "Apply the customizable branding (logo and colors) throughout the entire application UI so all users see the admin-configured theme.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ],
+        "quotes": [
+          "logo colour and change",
+          "each minor control in my hands only"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Logo displays in navigation or header",
+        "Primary, secondary, and accent colors applied to UI elements",
+        "Branding updates reflect immediately across all pages",
+        "Consistent theme throughout trainer, client, and admin interfaces"
+      ]
+    },
+    {
+      "id": "REQ-14",
+      "text": "Implement role-based access control so admins can access all features, trainers can only manage their assigned clients' workouts, and clients can only view and update their own progress.",
+      "target": "both",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ],
+        "quotes": [
+          "ALL THE FUNCTION should be in the hands of the app creater",
+          "each minor control in my hands only"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Admin has full access to all features",
+        "Trainers can only see and modify their assigned clients",
+        "Clients can only access their own workout plans and progress",
+        "Unauthorized actions are blocked on both frontend and backend"
+      ]
+    },
+    {
+      "id": "REQ-15",
+      "text": "Design a professional fitness-focused visual theme with energetic colors (avoiding blue and purple unless customized), modern typography, and clean layouts that work well for gym and fitness contexts. The theme should feel motivating and athletic while maintaining clarity and usability across trainer, client, and admin interfaces.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Cohesive visual design across all pages",
+        "Color scheme appropriate for fitness/gym context",
+        "Typography that is clear and professional",
+        "Layout supports both data-heavy displays and simple interactions"
+      ]
+    }
+  ],
+  "constraints": [
+    "The admin (app creator) must have exclusive control over branding, user management, and all app settings",
+    "Trainers can only access and modify workout plans for their assigned clients",
+    "Clients can only view their own workout plans and progress data",
+    "All branding changes (logo and colors) must update in real-time for all users"
+  ],
+  "nonGoals": [
+    "Integration with external fitness tracking devices or APIs",
+    "Social media sharing features",
+    "Payment or subscription management",
+    "Video or multimedia workout demonstrations",
+    "Nutrition tracking or meal planning features"
+  ],
+  "imageRequirements": {
+    "required": [
+      "Athletic fitness-themed logo icon suitable for a gym member portal (gym-logo.dim_256x256.png)",
+      "Hero banner image with energetic fitness theme for landing page (hero-fitness.dim_1200x400.png)"
+    ],
+    "edits": []
+  }
+}

@@ -1,0 +1,105 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    :root {
+        --radius: 0.625rem;
+        
+        /* Fitness-themed color palette with energetic oranges and reds */
+        --background: 0.99 0 0;
+        --foreground: 0.15 0 0;
+        
+        --card: 1 0 0;
+        --card-foreground: 0.15 0 0;
+        
+        --popover: 1 0 0;
+        --popover-foreground: 0.15 0 0;
+        
+        /* Primary: Energetic Orange */
+        --primary: 0.65 0.18 35;
+        --primary-foreground: 0.99 0 0;
+        
+        /* Secondary: Warm Gray */
+        --secondary: 0.95 0.01 0;
+        --secondary-foreground: 0.25 0 0;
+        
+        --muted: 0.96 0.01 0;
+        --muted-foreground: 0.50 0.01 0;
+        
+        /* Accent: Vibrant Red */
+        --accent: 0.55 0.22 25;
+        --accent-foreground: 0.99 0 0;
+        
+        --destructive: 0.55 0.25 27;
+        --destructive-foreground: 0.99 0 0;
+        
+        --border: 0.90 0.01 0;
+        --input: 0.90 0.01 0;
+        --ring: 0.65 0.18 35;
+        
+        --chart-1: 0.65 0.18 35;
+        --chart-2: 0.70 0.15 50;
+        --chart-3: 0.55 0.22 25;
+        --chart-4: 0.75 0.12 70;
+        --chart-5: 0.60 0.20 15;
+        
+        /* Brand colors (can be overridden dynamically) */
+        --brand-primary: #FF6B35;
+        --brand-secondary: #F7931E;
+        --brand-accent: #C1121F;
+    }
+
+    .dark {
+        --background: 0.12 0 0;
+        --foreground: 0.98 0 0;
+        
+        --card: 0.18 0 0;
+        --card-foreground: 0.98 0 0;
+        
+        --popover: 0.15 0 0;
+        --popover-foreground: 0.98 0 0;
+        
+        /* Primary: Bright Orange for dark mode */
+        --primary: 0.70 0.20 35;
+        --primary-foreground: 0.12 0 0;
+        
+        --secondary: 0.22 0.01 0;
+        --secondary-foreground: 0.98 0 0;
+        
+        --muted: 0.25 0.01 0;
+        --muted-foreground: 0.65 0.01 0;
+        
+        /* Accent: Vibrant Red for dark mode */
+        --accent: 0.60 0.24 25;
+        --accent-foreground: 0.98 0 0;
+        
+        --destructive: 0.60 0.27 27;
+        --destructive-foreground: 0.98 0 0;
+        
+        --border: 0.30 0.01 0;
+        --input: 0.30 0.01 0;
+        --ring: 0.70 0.20 35;
+        
+        --chart-1: 0.70 0.20 35;
+        --chart-2: 0.75 0.17 50;
+        --chart-3: 0.60 0.24 25;
+        --chart-4: 0.80 0.14 70;
+        --chart-5: 0.65 0.22 15;
+    }
+
+    * {
+        @apply border-border;
+    }
+    
+    body {
+        @apply bg-background text-foreground;
+        font-feature-settings: "rlig" 1, "calt" 1;
+    }
+}
+
+@layer utilities {
+    .text-balance {
+        text-wrap: balance;
+    }
+}
