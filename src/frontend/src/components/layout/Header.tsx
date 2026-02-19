@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import { useInternetIdentity } from '../../hooks/useInternetIdentity';
 import { useGetCallerUserProfile } from '../../hooks/useQueries';
 import { useBranding } from '../../contexts/BrandingContext';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Menu, Dumbbell, MessageSquare } from 'lucide-react';
+import { Menu, MessageSquare, Dumbbell } from 'lucide-react';
 import { AppUserRole } from '../../backend';
 import VortexChat from '../vortex/VortexChat';
 import { useQueryClient } from '@tanstack/react-query';
@@ -20,6 +20,11 @@ export default function Header() {
 
   const isAuthenticated = !!identity;
   const isLoggingIn = loginStatus === 'logging-in';
+
+  // Auto-open VORTEX on mount
+  useEffect(() => {
+    setVortexOpen(true);
+  }, []);
 
   const handleAuth = async () => {
     if (isAuthenticated) {
@@ -70,17 +75,19 @@ export default function Header() {
                   My Workouts
                 </Button>
               )}
+              <Button variant="ghost" onClick={() => navigate({ to: '/exercises' })} className="gap-2">
+                <Dumbbell className="h-4 w-4" />
+                Exercises
+              </Button>
             </nav>
           )}
         </div>
 
         <div className="flex items-center gap-3">
-          {isAuthenticated && userProfile && (
-            <Button variant="outline" size="sm" onClick={() => setVortexOpen(true)} className="gap-2">
-              <MessageSquare className="h-4 w-4" />
-              <span className="hidden sm:inline">VORTEX AI</span>
-            </Button>
-          )}
+          <Button variant="outline" size="sm" onClick={() => setVortexOpen(true)} className="gap-2">
+            <MessageSquare className="h-4 w-4" />
+            <span className="hidden sm:inline">VORTEX AI</span>
+          </Button>
 
           <Button
             onClick={handleAuth}
@@ -115,6 +122,10 @@ export default function Header() {
                       My Workouts
                     </Button>
                   )}
+                  <Button variant="ghost" onClick={() => navigate({ to: '/exercises' })} className="gap-2">
+                    <Dumbbell className="h-4 w-4" />
+                    Exercise Library
+                  </Button>
                 </nav>
               </SheetContent>
             </Sheet>

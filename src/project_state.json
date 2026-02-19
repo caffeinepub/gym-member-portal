@@ -1,15 +1,27 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 3,
-  "summary": "Gym Member Portal: A web application where trainers can create and update workout plans, clients can track their progress in real-time, and includes an AI assistant named VORTEX. The app creator has full admin control over branding (logo, colors), user management, and app publication settings.",
+  "projectStateVersion": 21,
+  "summary": "Gym Member Portal: A web application where trainers can create and update workout plans, clients can track their progress in real-time, and includes an AI assistant named VORTEX. The app creator has full admin control over branding (logo, colors), user management, and app publication settings. Clients can access workout timetables, diet plans, exercise guides with videos, and proper reps/sets for all body muscle training. Future subscription model planned at 21 rupees.",
   "architectural_notes": [
     "Real-time data synchronization required for workout progress tracking",
     "Multi-role authentication system (admin, trainer, client)",
-    "Centralized admin control over all app settings and user permissions"
+    "Centralized admin control over all app settings and user permissions",
+    "Video hosting and streaming infrastructure needed for exercise demonstration videos",
+    "Diet plan database with nutritional information and meal recommendations",
+    "Exercise library categorized by body muscle groups with detailed instructions",
+    "Future payment integration required for subscription model at 21 rupees",
+    "Default weekly training schedule template needed: Monday (Chest+biceps+forearm), Tuesday (Back+triceps), Wednesday (Shoulder+chest+forearms), Thursday (Tricep+biceps+abs), Friday (Back+shoulder), Saturday (Legs+abs)",
+    "Exercise database must include sets, reps, muscle group targets, and form notes in Hindi/English mix for Indian audience",
+    "Diet plan system should support multiple meal options per time slot with Indian-specific foods (Dal, Roti, Paneer, Sattu, etc.)"
   ],
-  "known_issues": [],
-  "isFixRequest": false,
-  "imageRequirements": "## Required Images\n- Athletic fitness-themed logo icon suitable for a gym member portal (gym-logo.dim_256x256.png)\n- Hero banner image with energetic fitness theme for landing page (hero-fitness.dim_1200x400.png)",
+  "known_issues": [
+    "'Get Started' button still not working as expected - user wants direct app access without login flow",
+    "VORTEX AI assistant should be presented immediately on app start for user guidance",
+    "VORTEX AI assistant responses are not conversational enough - user wants GPT-like conversation quality",
+    "VORTEX AI assistant not responding correctly to user queries - responses don't match what the user asks",
+    "VORTEX AI assistant returning generic error messages instead of processing user requests"
+  ],
+  "isFixRequest": true,
   "existing_features": [
     {
       "id": "feature-create-a-trainer-dashboard-ui-where-trainers-can-view-their-assigned-clients-create-new-workout-plans-edit-existing-plans-and-see-client-progress-summaries",
@@ -64,6 +76,135 @@
       "title": "Design a professional fitness-focused visual theme with energetic colors (avoiding blue and purple unless customized), modern typography, and clean layouts that work well for gym and fitness contexts. The theme should feel motivating and athletic while maintaining clarity and usability across trainer, client, and admin interfaces.",
       "reqIds": [
         "REQ-15"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-investigate-and-fix-the-get-started-button-on-the-landingpage-component-frontend-src-pages-landingpage-tsx-so-that-clicking-it-properly-triggers-the-internet-identity-login-flow-using-the-login-function-from-useinternetidentity-hook",
+      "title": "Investigate and fix the 'Get Started' button on the LandingPage component (frontend/src/pages/LandingPage.tsx) so that clicking it properly triggers the Internet Identity login flow using the login() function from useInternetIdentity hook",
+      "reqIds": [
+        "REQ-16",
+        "REQ-17"
+      ],
+      "version": 2
+    },
+    {
+      "id": "feature-remove-the-internet-identity-login-requirement-from-the-get-started-button-on-the-landingpage-component-frontend-src-pages-landingpage-tsx-so-that-clicking-it-directly-navigates-users-into-the-app-without-triggering-authentication",
+      "title": "Remove the Internet Identity login requirement from the 'Get Started' button on the LandingPage component (frontend/src/pages/LandingPage.tsx) so that clicking it directly navigates users into the app without triggering authentication",
+      "reqIds": [
+        "REQ-18"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-display-the-vortex-ai-assistant-chat-interface-automatically-when-the-app-loads-so-users-are-immediately-greeted-by-the-ai-assistant-for-guidance-without-needing-to-click-the-vortex-button",
+      "title": "Display the VORTEX AI assistant chat interface automatically when the app loads, so users are immediately greeted by the AI assistant for guidance without needing to click the VORTEX button",
+      "reqIds": [
+        "REQ-19"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-app-tsx-routing-logic-to-remove-authentication-checks-and-role-based-routing-allowing-all-users-to-access-the-app-directly-without-requiring-a-logged-in-identity-or-profile-setup",
+      "title": "Update the App.tsx routing logic to remove authentication checks and role-based routing, allowing all users to access the app directly without requiring a logged-in identity or profile setup",
+      "reqIds": [
+        "REQ-20"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-enhance-the-vortexchat-component-frontend-src-components-vortex-vortexchat-tsx-to-display-typing-indicators-when-waiting-for-ai-responses-and-improve-the-conversation-flow-ui-to-feel-more-interactive",
+      "title": "Enhance the VortexChat component (frontend/src/components/vortex/VortexChat.tsx) to display typing indicators when waiting for AI responses and improve the conversation flow UI to feel more interactive",
+      "reqIds": [
+        "REQ-22"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-improve-the-vortexchat-component-frontend-src-components-vortex-vortexchat-tsx-to-better-display-ai-responses-with-proper-formatting-line-breaks-and-structure-to-ensure-answers-are-readable-and-well-organized",
+      "title": "Improve the VortexChat component (frontend/src/components/vortex/VortexChat.tsx) to better display AI responses with proper formatting, line breaks, and structure to ensure answers are readable and well-organized",
+      "reqIds": [
+        "REQ-25"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-create-a-workout-timetable-view-in-the-client-dashboard-that-displays-scheduled-training-sessions-in-a-calendar-or-list-format-showing-date-time-workout-plan-name-and-completion-status-with-ability-to-mark-sessions-as-completed",
+      "title": "Create a workout timetable view in the client dashboard that displays scheduled training sessions in a calendar or list format, showing date, time, workout plan name, and completion status with ability to mark sessions as completed",
+      "reqIds": [
+        "REQ-35"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-diet-plan-section-to-the-client-dashboard-that-displays-assigned-meal-plans-with-meal-times-food-items-portions-and-nutritional-information-in-an-organized-easy-to-read-format",
+      "title": "Add a diet plan section to the client dashboard that displays assigned meal plans with meal times, food items, portions, and nutritional information in an organized, easy-to-read format",
+      "reqIds": [
+        "REQ-36"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-create-an-exercise-library-browser-interface-accessible-to-all-users-that-displays-exercises-organized-by-muscle-group-with-search-and-filter-capabilities-showing-exercise-details-video-player-and-recommended-reps-sets",
+      "title": "Create an exercise library browser interface accessible to all users that displays exercises organized by muscle group, with search and filter capabilities, showing exercise details, video player, and recommended reps/sets",
+      "reqIds": [
+        "REQ-37"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-timetable-management-interface-to-the-trainer-dashboard-where-trainers-can-schedule-workout-sessions-for-their-clients-by-selecting-client-date-time-and-workout-plan",
+      "title": "Add a timetable management interface to the trainer dashboard where trainers can schedule workout sessions for their clients by selecting client, date, time, and workout plan",
+      "reqIds": [
+        "REQ-38"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-diet-plan-creator-and-editor-interface-to-the-trainer-dashboard-where-trainers-can-design-meal-plans-with-multiple-meals-add-food-items-with-portions-and-nutritional-data-and-assign-plans-to-clients",
+      "title": "Add a diet plan creator and editor interface to the trainer dashboard where trainers can design meal plans with multiple meals, add food items with portions and nutritional data, and assign plans to clients",
+      "reqIds": [
+        "REQ-39"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-an-exercise-library-management-interface-to-the-admin-dashboard-where-admins-can-add-new-exercises-with-all-details-including-video-urls-edit-existing-exercises-and-organize-exercises-by-muscle-groups",
+      "title": "Add an exercise library management interface to the admin dashboard where admins can add new exercises with all details including video URLs, edit existing exercises, and organize exercises by muscle groups",
+      "reqIds": [
+        "REQ-40"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-timetable-section-to-display-the-weekly-workout-schedule-showing-monday-chest-biceps-forearms-tuesday-back-triceps-wednesday-shoulder-chest-forearms-thursday-triceps-biceps-abs-friday-back-shoulder-saturday-legs-abs",
+      "title": "Update the timetable section to display the weekly workout schedule showing: Monday (Chest + Biceps + Forearms), Tuesday (Back + Triceps), Wednesday (Shoulder + Chest + Forearms), Thursday (Triceps + Biceps + Abs), Friday (Back + Shoulder), Saturday (Legs + Abs)",
+      "reqIds": [
+        "REQ-41"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-the-uploaded-workout-schedule-table-image-to-the-timetable-section-ui-as-a-visual-reference-showing-the-weekly-muscle-group-training-plan",
+      "title": "Add the uploaded workout schedule table image to the timetable section UI as a visual reference showing the weekly muscle group training plan",
+      "reqIds": [
+        "REQ-42"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-display-the-seven-exercises-squats-push-ups-bench-press-deadlift-pull-ups-lat-pulldown-overhead-press-plank-with-their-sets-reps-and-descriptions-in-the-exercise-library-browser-interface-organized-by-their-target-muscle-groups",
+      "title": "Display the seven exercises (Squats, Push-ups, Bench Press, Deadlift, Pull-ups/Lat Pulldown, Overhead Press, Plank) with their sets, reps, and descriptions in the exercise library browser interface, organized by their target muscle groups",
+      "reqIds": [
+        "REQ-45"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-display-the-comprehensive-diet-plan-in-the-client-dashboard-diet-plan-view-showing-all-six-meal-times-breakfast-mid-morning-lunch-pre-workout-post-workout-dinner-with-both-food-options-clearly-labeled-as-option-1-and-option-2-for-each-meal",
+      "title": "Display the comprehensive diet plan in the client dashboard diet plan view showing all six meal times (Breakfast, Mid-Morning, Lunch, Pre-Workout, Post-Workout, Dinner) with both food options clearly labeled as Option 1 and Option 2 for each meal",
+      "reqIds": [
+        "REQ-46"
       ],
       "version": 1
     }
@@ -166,6 +307,196 @@
       "summary": "Implement an AI assistant named VORTEX with backend functions to handle user queries about workouts, exercises, fitness advice, and progress insights.",
       "reqIds": [
         "REQ-8"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-15",
+      "summary": "Make 'Get Started' button directly open the app without login flow",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-16",
+      "summary": "Show VORTEX AI assistant immediately on app start to guide users",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-17",
+      "summary": "Improve VORTEX AI responses to be more conversational and GPT-like",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-18",
+      "summary": "Update the backend VORTEX AI response generation to provide more natural, conversational, and contextually aware responses similar to GPT, including proper greeting acknowledgments, follow-up questions, and coherent multi-turn dialogue flow",
+      "reqIds": [
+        "REQ-21"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-19",
+      "summary": "Update the backend VORTEX AI assistant logic in backend/main.mo to accurately parse and understand user questions, ensuring responses directly address what the user is asking rather than providing generic or off-topic answers",
+      "reqIds": [
+        "REQ-23"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-20",
+      "summary": "Enhance the VORTEX AI response generation in backend/main.mo to provide contextually aware answers by incorporating user role (admin/trainer/client), workout history, and current training status when formulating responses",
+      "reqIds": [
+        "REQ-24"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-21",
+      "summary": "Update the backend VORTEX AI assistant error handling in backend/main.mo to catch and properly handle exceptions during request processing, ensuring meaningful error responses are returned instead of generic 'encountered an error' messages",
+      "reqIds": [
+        "REQ-26"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-22",
+      "summary": "Add comprehensive logging and debugging capabilities to the VORTEX AI request processing pipeline in backend/main.mo to track request parsing, context gathering, and response generation steps",
+      "reqIds": [
+        "REQ-27"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-23",
+      "summary": "Implement fallback response strategies in backend/main.mo for VORTEX AI when primary response generation fails, providing helpful alternatives rather than error messages",
+      "reqIds": [
+        "REQ-28"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-24",
+      "summary": "Client workout timetable feature to schedule and view training sessions",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-25",
+      "summary": "Diet plan management for clients with meal recommendations",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-26",
+      "summary": "Exercise library with videos showing proper form for all body muscle groups",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-27",
+      "summary": "Exercise guidance system with proper reps and sets recommendations",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-28",
+      "summary": "Subscription payment system at 21 rupees (future feature)",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-29",
+      "summary": "Create a backend data model for workout timetables that stores scheduled training sessions with date, time, workout plan reference, completion status, and optional client notes",
+      "reqIds": [
+        "REQ-29"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-30",
+      "summary": "Implement backend functions for trainers to create, update, and delete workout timetable entries for their assigned clients",
+      "reqIds": [
+        "REQ-30"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-31",
+      "summary": "Create a backend data model for diet plans that includes meal name, meal time, food items with portions, calories, macros (protein, carbs, fats), and dietary notes",
+      "reqIds": [
+        "REQ-31"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-32",
+      "summary": "Implement backend functions for trainers to create, update, and delete diet plans for their assigned clients",
+      "reqIds": [
+        "REQ-32"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-33",
+      "summary": "Create a backend data model for an exercise library that stores exercise name, target muscle groups, difficulty level, equipment needed, video URL, description, and recommended reps/sets ranges",
+      "reqIds": [
+        "REQ-33"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-34",
+      "summary": "Implement backend functions for admins to add, update, and delete exercises in the exercise library",
+      "reqIds": [
+        "REQ-34"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-35",
+      "summary": "Add a default weekly training schedule template (Monday: Chest+biceps+forearm, Tuesday: Back+triceps, Wednesday: Shoulder+chest+forearms, Thursday: Tricep+biceps+abs, Friday: Back+shoulder, Saturday: Legs+abs) to the timetable section",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-36",
+      "summary": "Add exercise demonstration videos showing proper form for each muscle group to the exercise library and schedule sections",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-37",
+      "summary": "Update VORTEX AI assistant to identify creator as 'Vanshul' when asked who made it",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-38",
+      "summary": "Add detailed exercise database with Squats, Push-ups, Bench Press, Deadlift, Pull-ups/Lat Pulldown, Overhead Press, and Plank including sets/reps specifications",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-39",
+      "summary": "Create comprehensive diet plan template with meal timing, Indian meal options (breakfast, mid-morning, lunch, pre-workout, post-workout, dinner) and meal alternatives",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-40",
+      "summary": "Add seven specific exercises to the exercise library with complete details: Squats (Legs, 3 sets x 12 reps, description: 'Foundation for the entire body'), Push-ups (Chest/Shoulders/Triceps, 3 sets x max reps, description: 'Essential for every gym session'), Bench Press (Chest, 3 sets x 10 reps, description: 'Best exercise for broad chest'), Deadlift (Back/Overall Strength, 3 sets x 8 reps, description: 'Gives power to the entire body, focus on form'), Pull-ups/Lat Pulldown (Back/Biceps, 3 sets x 8-10 reps, description: 'Essential for V-shape body'), Overhead Press (Shoulders, 3 sets x 10 reps, description: 'For broader shoulders'), Plank (Core/Abs, 3 sets x 1 minute, description: 'Perform at the end of workout')",
+      "reqIds": [
+        "REQ-43"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-41",
+      "summary": "Create a comprehensive diet plan template with six meals (Breakfast, Mid-Morning, Lunch, Pre-Workout, Post-Workout, Dinner) where each meal has two food options: Breakfast Option 1: '3 Boiled Eggs + Brown Bread / Roti', Option 2: 'Oats with Milk + 1 Banana'; Mid-Morning Option 1: '1 bowl Roasted Chana (High Protein)', Option 2: 'Handful of Peanuts + 1 Apple'; Lunch Option 1: 'Dal + Rice + Curd (Dahi) + Salad', Option 2: 'Soya Chunks Curry + 2 Roti + Salad'; Pre-Workout Option 1: '1 Banana + Black Coffee (for energy)', Option 2: '1 Sweet Potato (Shakarkandi)'; Post-Workout Option 1: '4 Egg Whites or Paneer (50g)', Option 2: 'Sattu Drink (3-4 spoons in water/milk)'; Dinner Option 1: 'Paneer Bhurji / Chicken + 2 Roti', Option 2: 'Moong Dal Khichdi + Omelette'",
+      "reqIds": [
+        "REQ-44"
       ],
       "status": "pending"
     }

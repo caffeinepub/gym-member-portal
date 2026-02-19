@@ -1,10 +1,11 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Settings, Users, Palette } from 'lucide-react';
+import { Settings, Users, Palette, Dumbbell } from 'lucide-react';
 import BrandingControls from '../components/admin/BrandingControls';
 import UserManagement from '../components/admin/UserManagement';
 import ClientAssignment from '../components/admin/ClientAssignment';
+import ExerciseLibraryManagement from '../components/admin/ExerciseLibraryManagement';
 
 export default function AdminDashboard() {
   return (
@@ -27,6 +28,10 @@ export default function AdminDashboard() {
           <TabsTrigger value="assignments" className="gap-2">
             <Settings className="h-4 w-4" />
             Assignments
+          </TabsTrigger>
+          <TabsTrigger value="exercises" className="gap-2">
+            <Dumbbell className="h-4 w-4" />
+            Exercise Library
           </TabsTrigger>
         </TabsList>
 
@@ -62,6 +67,18 @@ export default function AdminDashboard() {
             </CardHeader>
             <CardContent>
               <ClientAssignment />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="exercises" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Exercise Library</CardTitle>
+              <CardDescription>Manage the exercise database with videos and instructions</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ExerciseLibraryManagement />
             </CardContent>
           </Card>
         </TabsContent>

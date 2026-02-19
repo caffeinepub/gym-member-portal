@@ -3,9 +3,11 @@ import { useInternetIdentity } from '../hooks/useInternetIdentity';
 import { useGetAllWorkoutPlansForUser, useGetWorkoutRecordsForUser } from '../hooks/useQueries';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Dumbbell, TrendingUp, Calendar } from 'lucide-react';
+import { Dumbbell, TrendingUp, Calendar, CalendarDays, Utensils } from 'lucide-react';
 import WorkoutPlanView from '../components/client/WorkoutPlanView';
 import ProgressCharts from '../components/client/ProgressCharts';
+import TimetableView from '../components/client/TimetableView';
+import DietPlanView from '../components/client/DietPlanView';
 
 export default function ClientDashboard() {
   const { identity } = useInternetIdentity();
@@ -59,8 +61,22 @@ export default function ClientDashboard() {
 
       <Tabs defaultValue="plans" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="plans">Workout Plans</TabsTrigger>
-          <TabsTrigger value="progress">Progress</TabsTrigger>
+          <TabsTrigger value="plans" className="gap-2">
+            <Dumbbell className="h-4 w-4" />
+            Workout Plans
+          </TabsTrigger>
+          <TabsTrigger value="timetable" className="gap-2">
+            <CalendarDays className="h-4 w-4" />
+            Timetable
+          </TabsTrigger>
+          <TabsTrigger value="diet" className="gap-2">
+            <Utensils className="h-4 w-4" />
+            Diet Plan
+          </TabsTrigger>
+          <TabsTrigger value="progress" className="gap-2">
+            <TrendingUp className="h-4 w-4" />
+            Progress
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="plans" className="space-y-4">
@@ -79,8 +95,16 @@ export default function ClientDashboard() {
               </CardContent>
             </Card>
           ) : (
-            workoutPlans.map((plan) => <WorkoutPlanView key={plan.id} plan={plan} userId={userId!} />)
+            workoutPlans.map((plan) => userId && <WorkoutPlanView key={plan.id} plan={plan} userId={userId} />)
           )}
+        </TabsContent>
+
+        <TabsContent value="timetable" className="space-y-4">
+          {userId ? <TimetableView userId={userId} /> : <p>Please log in to view your timetable</p>}
+        </TabsContent>
+
+        <TabsContent value="diet" className="space-y-4">
+          {userId ? <DietPlanView userId={userId} /> : <p>Please log in to view your diet plan</p>}
         </TabsContent>
 
         <TabsContent value="progress" className="space-y-4">

@@ -2,11 +2,11 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-create-a-trainer-dashboard-ui-where-trainers-can-view-their-assigned-clients-create-new-workout-plans-edit-existing-plans-and-see-client-progress-summaries",
-      "featureTitle": "Create a trainer dashboard UI where trainers can view their assigned clients, create new workout plans, edit existing plans, and see client progress summaries.",
+      "featureId": "feature-display-the-seven-exercises-squats-push-ups-bench-press-deadlift-pull-ups-lat-pulldown-overhead-press-plank-with-their-sets-reps-and-descriptions-in-the-exercise-library-browser-interface-organized-by-their-target-muscle-groups",
+      "featureTitle": "Display the seven exercises (Squats, Push-ups, Bench Press, Deadlift, Pull-ups/Lat Pulldown, Overhead Press, Plank) with their sets, reps, and descriptions in the exercise library browser interface, organized by their target muscle groups",
       "files": [
-        "frontend/src/App.tsx",
-        "frontend/src/components/layout/Header.tsx"
+        "frontend/src/components/exercise/ExerciseDetailModal.tsx",
+        "frontend/src/components/exercise/ExerciseLibraryBrowser.tsx"
       ],
       "components": [
         "authorization@4.0.0",
@@ -18,16 +18,15 @@
         "github-export-icp-cli@1.0.0"
       ],
       "testIds": [
-        "REQ-9"
+        "REQ-45"
       ],
       "confidence": "high"
     },
     {
-      "featureId": "feature-create-a-client-dashboard-ui-where-clients-can-view-their-assigned-workout-plans-log-workout-completions-with-actual-metrics-and-see-their-progress-history-with-charts",
-      "featureTitle": "Create a client dashboard UI where clients can view their assigned workout plans, log workout completions with actual metrics, and see their progress history with charts.",
+      "featureId": "feature-display-the-comprehensive-diet-plan-in-the-client-dashboard-diet-plan-view-showing-all-six-meal-times-breakfast-mid-morning-lunch-pre-workout-post-workout-dinner-with-both-food-options-clearly-labeled-as-option-1-and-option-2-for-each-meal",
+      "featureTitle": "Display the comprehensive diet plan in the client dashboard diet plan view showing all six meal times (Breakfast, Mid-Morning, Lunch, Pre-Workout, Post-Workout, Dinner) with both food options clearly labeled as Option 1 and Option 2 for each meal",
       "files": [
-        "frontend/src/App.tsx",
-        "frontend/src/components/layout/Header.tsx"
+        "frontend/src/components/client/DietPlanView.tsx"
       ],
       "components": [
         "authorization@4.0.0",
@@ -39,112 +38,7 @@
         "github-export-icp-cli@1.0.0"
       ],
       "testIds": [
-        "REQ-10"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-create-an-admin-control-panel-ui-where-the-app-creator-can-upload-and-change-the-logo-customize-color-scheme-primary-secondary-accent-colors-manage-all-users-add-edit-remove-trainers-and-clients-and-assign-clients-to-trainers",
-      "featureTitle": "Create an admin control panel UI where the app creator can upload and change the logo, customize color scheme (primary, secondary, accent colors), manage all users (add/edit/remove trainers and clients), and assign clients to trainers.",
-      "files": [
-        "frontend/src/App.tsx",
-        "frontend/src/components/layout/Header.tsx"
-      ],
-      "components": [
-        "authorization@4.0.0",
-        "blob-storage@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-11"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-create-a-vortex-ai-assistant-chat-interface-accessible-to-all-users-with-a-conversation-view-message-input-and-contextual-responses-based-on-user-role-and-workout-data",
-      "featureTitle": "Create a VORTEX AI assistant chat interface accessible to all users with a conversation view, message input, and contextual responses based on user role and workout data.",
-      "files": [
-        "frontend/src/components/layout/Header.tsx",
-        "frontend/src/pages/AdminDashboard.tsx",
-        "frontend/src/pages/ClientDashboard.tsx",
-        "frontend/src/pages/TrainerDashboard.tsx"
-      ],
-      "components": [
-        "authorization@4.0.0",
-        "blob-storage@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-12"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-apply-the-customizable-branding-logo-and-colors-throughout-the-entire-application-ui-so-all-users-see-the-admin-configured-theme",
-      "featureTitle": "Apply the customizable branding (logo and colors) throughout the entire application UI so all users see the admin-configured theme.",
-      "files": [
-        "frontend/src/App.tsx"
-      ],
-      "components": [
-        "authorization@4.0.0",
-        "blob-storage@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-13"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-implement-role-based-access-control-so-admins-can-access-all-features-trainers-can-only-manage-their-assigned-clients-workouts-and-clients-can-only-view-and-update-their-own-progress",
-      "featureTitle": "Implement role-based access control so admins can access all features, trainers can only manage their assigned clients' workouts, and clients can only view and update their own progress.",
-      "files": [
-        "frontend/src/components/auth/AccessDeniedScreen.tsx",
-        "frontend/src/components/auth/RoleGuard.tsx"
-      ],
-      "components": [
-        "authorization@4.0.0",
-        "blob-storage@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-14"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-design-a-professional-fitness-focused-visual-theme-with-energetic-colors-avoiding-blue-and-purple-unless-customized-modern-typography-and-clean-layouts-that-work-well-for-gym-and-fitness-contexts-the-theme-should-feel-motivating-and-athletic-while-maintaining-clarity-and-usability-across-trainer-client-and-admin-interfaces",
-      "featureTitle": "Design a professional fitness-focused visual theme with energetic colors (avoiding blue and purple unless customized), modern typography, and clean layouts that work well for gym and fitness contexts. The theme should feel motivating and athletic while maintaining clarity and usability across trainer, client, and admin interfaces.",
-      "files": [
-        "frontend/src/App.tsx"
-      ],
-      "components": [
-        "authorization@4.0.0",
-        "blob-storage@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-15"
+        "REQ-46"
       ],
       "confidence": "high"
     }

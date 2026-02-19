@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useActor } from './useActor';
 import { Principal } from '@dfinity/principal';
-import type { UserProfile, AppUserRole, WorkoutPlan, WorkoutRecord, User, BrandingSettings, Set_ } from '../backend';
+import type { UserProfile, AppUserRole, WorkoutPlan, WorkoutRecord, User, BrandingSettings, Set_, Meal, Exercise, DietPlan, ScheduledSession, MealOption } from '../backend';
 
 // User Profile Queries
 export function useGetCallerUserProfile() {
@@ -318,3 +318,265 @@ export function useAskVortex() {
     },
   });
 }
+
+// Workout Timetable Queries
+export function useGetScheduledSessionsForClient(clientId?: Principal) {
+  const { actor, isFetching: actorFetching } = useActor();
+
+  return useQuery<ScheduledSession[]>({
+    queryKey: ['scheduledSessions', clientId?.toString()],
+    queryFn: async () => {
+      if (!actor || !clientId) return [];
+      return actor.getScheduledSessionsForClient(clientId);
+    },
+    enabled: !!actor && !actorFetching && !!clientId,
+  });
+}
+
+export function useCreateScheduledSession() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: {
+      id: string;
+      trainerId: Principal;
+      clientId: Principal;
+      workoutPlanId: string;
+      dateTime: bigint;
+      clientNotes: string;
+    }) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.createScheduledSession(
+        params.id,
+        params.trainerId,
+        params.clientId,
+        params.workoutPlanId,
+        params.dateTime,
+        params.clientNotes
+      );
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['scheduledSessions'] });
+    },
+  });
+}
+
+export function useUpdateScheduledSession() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: { id: string; dateTime: bigint; clientNotes: string }) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.updateScheduledSession(params.id, params.dateTime, params.clientNotes);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['scheduledSessions'] });
+    },
+  });
+}
+
+export function useDeleteScheduledSession() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.deleteScheduledSession(id);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['scheduledSessions'] });
+    },
+  });
+}
+
+// Diet Plan Queries
+export function useGetDietPlanForClient(clientId?: Principal) {
+  const { actor, isFetching: actorFetching } = useActor();
+
+  return useQuery<DietPlan | null>({
+    queryKey: ['dietPlan', clientId?.toString()],
+    queryFn: async () => {
+      if (!actor || !clientId) return null;
+      const plans = await actor.getDietPlansForClient(clientId);
+      return plans.length > 0 ? plans[0] : null;
+    },
+    enabled: !!actor && !actorFetching && !!clientId,
+  });
+}
+
+export function useGetDietPlanTemplate() {
+  const { actor, isFetching: actorFetching } = useActor();
+
+  return useQuery<MealOption[]>({
+    queryKey: ['dietPlanTemplate'],
+    queryFn: async () => {
+      if (!actor) return [];
+      return actor.getDietPlanTemplate();
+    },
+    enabled: !!actor && !actorFetching,
+  });
+}
+
+export function useCreateDietPlan() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: {
+      id: string;
+      trainerId: Principal;
+      clientId: Principal;
+      name: string;
+      meals: Meal[];
+      dietaryNotes: string;
+    }) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.createDietPlan(
+        params.id,
+        params.trainerId,
+        params.clientId,
+        params.name,
+        params.meals,
+        params.dietaryNotes
+      );
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['dietPlan'] });
+    },
+  });
+}
+
+export function useUpdateDietPlan() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: { id: string; meals: Meal[]; dietaryNotes: string }) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.updateDietPlan(params.id, params.meals, params.dietaryNotes);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['dietPlan'] });
+    },
+  });
+}
+
+export function useDeleteDietPlan() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.deleteDietPlan(id);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['dietPlan'] });
+    },
+  });
+}
+
+// Exercise Library Queries
+export function useGetAllExercises() {
+  const { actor, isFetching: actorFetching } = useActor();
+
+  return useQuery<Exercise[]>({
+    queryKey: ['exercises'],
+    queryFn: async () => {
+      if (!actor) return [];
+      return actor.getAllExercises();
+    },
+    enabled: !!actor && !actorFetching,
+  });
+}
+
+export function useAddExercise() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: {
+      id: bigint;
+      name: string;
+      targetMuscleGroups: string;
+      difficultyLevel: string;
+      equipmentNeeded: string;
+      videoUrl: string;
+      description: string;
+      recommendedRepsRange: string;
+      recommendedSetsRange: string;
+    }) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.addExerciseToLibrary(
+        params.id,
+        params.name,
+        params.targetMuscleGroups,
+        params.difficultyLevel,
+        params.equipmentNeeded,
+        params.videoUrl,
+        params.description,
+        params.recommendedRepsRange,
+        params.recommendedSetsRange
+      );
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['exercises'] });
+    },
+  });
+}
+
+export function useUpdateExercise() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: {
+      id: bigint;
+      name: string;
+      targetMuscleGroups: string;
+      difficultyLevel: string;
+      equipmentNeeded: string;
+      videoUrl: string;
+      description: string;
+      recommendedRepsRange: string;
+      recommendedSetsRange: string;
+    }) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.updateExerciseInLibrary(
+        params.id,
+        params.name,
+        params.targetMuscleGroups,
+        params.difficultyLevel,
+        params.equipmentNeeded,
+        params.videoUrl,
+        params.description,
+        params.recommendedRepsRange,
+        params.recommendedSetsRange
+      );
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['exercises'] });
+    },
+  });
+}
+
+export function useDeleteExercise() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: bigint) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.deleteExerciseFromLibrary(id);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['exercises'] });
+    },
+  });
+}
+
+// Re-export types from backend
+export type { Exercise, DietPlan, ScheduledSession, MealOption };

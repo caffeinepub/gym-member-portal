@@ -17,6 +17,7 @@ interface WorkoutPlanFormProps {
 
 interface ExerciseSet {
   id: number;
+  exerciseId: number;
   reps: number;
   weight: number;
 }
@@ -26,17 +27,17 @@ export default function WorkoutPlanForm({ clientId, trainerId, onSuccess }: Work
   const [planName, setPlanName] = useState('');
   const [restTime, setRestTime] = useState(60);
   const [notes, setNotes] = useState('');
-  const [sets, setSets] = useState<ExerciseSet[]>([{ id: 0, reps: 10, weight: 0 }]);
+  const [sets, setSets] = useState<ExerciseSet[]>([{ id: 0, exerciseId: 1, reps: 10, weight: 0 }]);
 
   const addSet = () => {
-    setSets([...sets, { id: sets.length, reps: 10, weight: 0 }]);
+    setSets([...sets, { id: sets.length, exerciseId: 1, reps: 10, weight: 0 }]);
   };
 
   const removeSet = (id: number) => {
     setSets(sets.filter((s) => s.id !== id));
   };
 
-  const updateSet = (id: number, field: 'reps' | 'weight', value: number) => {
+  const updateSet = (id: number, field: 'exerciseId' | 'reps' | 'weight', value: number) => {
     setSets(sets.map((s) => (s.id === id ? { ...s, [field]: value } : s)));
   };
 
@@ -57,6 +58,7 @@ export default function WorkoutPlanForm({ clientId, trainerId, onSuccess }: Work
       const planId = `plan_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       const backendSets: Set_[] = sets.map((s) => ({
         id: BigInt(s.id),
+        exerciseId: BigInt(s.exerciseId),
         reps: BigInt(s.reps),
         weight: s.weight,
       }));
@@ -116,6 +118,14 @@ export default function WorkoutPlanForm({ clientId, trainerId, onSuccess }: Work
         {sets.map((set, index) => (
           <div key={set.id} className="flex items-center gap-3 rounded-lg border p-3">
             <span className="text-sm font-medium text-muted-foreground">Set {index + 1}</span>
+            <Input
+              type="number"
+              placeholder="Exercise ID"
+              min="1"
+              value={set.exerciseId}
+              onChange={(e) => updateSet(set.id, 'exerciseId', parseInt(e.target.value) || 1)}
+              className="w-28"
+            />
             <Input
               type="number"
               placeholder="Reps"

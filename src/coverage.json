@@ -1,290 +1,70 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-19T08:40:38.305Z",
+  "generatedAt": "2026-02-19T16:13:39.925Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 15,
-    "implemented": 7,
+    "total": 4,
+    "implemented": 2,
     "items": [
       {
-        "id": "REQ-1",
-        "summary": "Create a backend data model for workout plans that includes exercise name, sets, reps, weight, rest time, and notes. Workout plans must be associated with specific clients and created by specific trainers.",
+        "id": "REQ-43",
+        "summary": "Add seven specific exercises to the exercise library with complete details: Squats (Legs, 3 sets x 12 reps, description: 'Foundation for the entire body'), Push-ups (Chest/Shoulders/Triceps, 3 sets x max reps, description: 'Essential for every gym session'), Bench Press (Chest, 3 sets x 10 reps, description: 'Best exercise for broad chest'), Deadlift (Back/Overall Strength, 3 sets x 8 reps, description: 'Gives power to the entire body, focus on form'), Pull-ups/Lat Pulldown (Back/Biceps, 3 sets x 8-10 reps, description: 'Essential for V-shape body'), Overhead Press (Shoulders, 3 sets x 10 reps, description: 'For broader shoulders'), Plank (Core/Abs, 3 sets x 1 minute, description: 'Perform at the end of workout')",
         "status": "unknown",
         "plannedFiles": [],
         "matchedFiles": []
       },
       {
-        "id": "REQ-10",
-        "summary": "Create a client dashboard UI where clients can view their assigned workout plans, log workout completions with actual metrics, and see their progress history with charts.",
+        "id": "REQ-44",
+        "summary": "Create a comprehensive diet plan template with six meals (Breakfast, Mid-Morning, Lunch, Pre-Workout, Post-Workout, Dinner) where each meal has two food options: Breakfast Option 1: '3 Boiled Eggs + Brown Bread / Roti', Option 2: 'Oats with Milk + 1 Banana'; Mid-Morning Option 1: '1 bowl Roasted Chana (High Protein)', Option 2: 'Handful of Peanuts + 1 Apple'; Lunch Option 1: 'Dal + Rice + Curd (Dahi) + Salad', Option 2: 'Soya Chunks Curry + 2 Roti + Salad'; Pre-Workout Option 1: '1 Banana + Black Coffee (for energy)', Option 2: '1 Sweet Potato (Shakarkandi)'; Post-Workout Option 1: '4 Egg Whites or Paneer (50g)', Option 2: 'Sattu Drink (3-4 spoons in water/milk)'; Dinner Option 1: 'Paneer Bhurji / Chicken + 2 Roti', Option 2: 'Moong Dal Khichdi + Omelette'",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-45",
+        "summary": "Display the seven exercises (Squats, Push-ups, Bench Press, Deadlift, Pull-ups/Lat Pulldown, Overhead Press, Plank) with their sets, reps, and descriptions in the exercise library browser interface, organized by their target muscle groups",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/App.tsx",
-          "frontend/src/components/layout/Header.tsx"
+          "frontend/src/components/exercise/ExerciseLibraryBrowser.tsx",
+          "frontend/src/components/exercise/ExerciseDetailModal.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/App.tsx",
-          "frontend/src/components/layout/Header.tsx"
+          "frontend/src/components/exercise/ExerciseLibraryBrowser.tsx",
+          "frontend/src/components/exercise/ExerciseDetailModal.tsx"
         ]
       },
       {
-        "id": "REQ-11",
-        "summary": "Create an admin control panel UI where the app creator can upload and change the logo, customize color scheme (primary, secondary, accent colors), manage all users (add/edit/remove trainers and clients), and assign clients to trainers.",
+        "id": "REQ-46",
+        "summary": "Display the comprehensive diet plan in the client dashboard diet plan view showing all six meal times (Breakfast, Mid-Morning, Lunch, Pre-Workout, Post-Workout, Dinner) with both food options clearly labeled as Option 1 and Option 2 for each meal",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/App.tsx",
-          "frontend/src/components/layout/Header.tsx"
+          "frontend/src/components/client/DietPlanView.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/App.tsx",
-          "frontend/src/components/layout/Header.tsx"
-        ]
-      },
-      {
-        "id": "REQ-12",
-        "summary": "Create a VORTEX AI assistant chat interface accessible to all users with a conversation view, message input, and contextual responses based on user role and workout data.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/components/layout/Header.tsx",
-          "frontend/src/pages/TrainerDashboard.tsx",
-          "frontend/src/pages/ClientDashboard.tsx",
-          "frontend/src/pages/AdminDashboard.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/components/layout/Header.tsx",
-          "frontend/src/pages/TrainerDashboard.tsx",
-          "frontend/src/pages/ClientDashboard.tsx",
-          "frontend/src/pages/AdminDashboard.tsx"
-        ]
-      },
-      {
-        "id": "REQ-13",
-        "summary": "Apply the customizable branding (logo and colors) throughout the entire application UI so all users see the admin-configured theme.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/App.tsx",
-          "frontend/src/index.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/App.tsx"
-        ]
-      },
-      {
-        "id": "REQ-14",
-        "summary": "Implement role-based access control so admins can access all features, trainers can only manage their assigned clients' workouts, and clients can only view and update their own progress.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/components/auth/RoleGuard.tsx",
-          "frontend/src/components/auth/AccessDeniedScreen.tsx",
-          "frontend/src/hooks/useUserRole.ts",
-          "frontend/src/utils/roleChecks.ts"
-        ],
-        "matchedFiles": [
-          "frontend/src/components/auth/RoleGuard.tsx",
-          "frontend/src/components/auth/AccessDeniedScreen.tsx"
-        ]
-      },
-      {
-        "id": "REQ-15",
-        "summary": "Design a professional fitness-focused visual theme with energetic colors (avoiding blue and purple unless customized), modern typography, and clean layouts that work well for gym and fitness contexts. The theme should feel motivating and athletic while maintaining clarity and usability across trainer, client, and admin interfaces.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/App.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/App.tsx"
-        ]
-      },
-      {
-        "id": "REQ-2",
-        "summary": "Implement backend functions for trainers to create, update, and delete workout plans for their assigned clients.",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
-      },
-      {
-        "id": "REQ-3",
-        "summary": "Create a backend data model for client progress tracking that records completed workouts, weight lifted, sets completed, date, and personal notes.",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
-      },
-      {
-        "id": "REQ-4",
-        "summary": "Implement backend functions for clients to log workout completions and update their progress metrics.",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
-      },
-      {
-        "id": "REQ-5",
-        "summary": "Create a user management system with three roles: admin, trainer, and client. Store user profiles with role, name, email, and assigned relationships (trainers to clients).",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
-      },
-      {
-        "id": "REQ-6",
-        "summary": "Implement backend functions for admin to add, edit, and remove users (trainers and clients), and to assign clients to trainers.",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
-      },
-      {
-        "id": "REQ-7",
-        "summary": "Create a backend storage system for app branding settings including logo URL, primary color, secondary color, and accent color. Include functions for admin to update these settings.",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
-      },
-      {
-        "id": "REQ-8",
-        "summary": "Implement an AI assistant named VORTEX with backend functions to handle user queries about workouts, exercises, fitness advice, and progress insights.",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
-      },
-      {
-        "id": "REQ-9",
-        "summary": "Create a trainer dashboard UI where trainers can view their assigned clients, create new workout plans, edit existing plans, and see client progress summaries.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/App.tsx",
-          "frontend/src/components/layout/Header.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/App.tsx",
-          "frontend/src/components/layout/Header.tsx"
+          "frontend/src/components/client/DietPlanView.tsx"
         ]
       }
     ]
   },
   "changedFiles": [
-    "backend/authorization/MixinAuthorization.mo",
-    "backend/authorization/access-control.mo",
-    "backend/blob-storage/Mixin.mo",
-    "backend/blob-storage/Storage.mo",
     "backend/main.mo",
+    "backend/migration.mo",
     "build-request.json",
-    "build-template/Dockerfile",
-    "build-template/LICENSE",
-    "build-template/README.md",
-    "build-template/deploy.sh",
-    "build-template/icp.yaml",
-    "build-template/package.json",
-    "build-template/pnpm-lock.yaml",
-    "build-template/pnpm-workspace.yaml",
-    "build-template/scripts/prune-unused-images.js",
-    "build-template/scripts/resize-images.js",
-    "build-template/src/backend/canister.yaml",
-    "build-template/src/backend/system-idl/aaaaa-aa.did",
-    "build-template/src/frontend/canister.yaml",
-    "build-template/src/frontend/components.json",
-    "build-template/src/frontend/env.json",
-    "build-template/src/frontend/eslint-rules/no-bigint-in-query-keys.js",
-    "build-template/src/frontend/eslint-rules/require-internet-identity-provider.js",
-    "build-template/src/frontend/eslint.config.js",
-    "build-template/src/frontend/package.json",
-    "build-template/src/frontend/postcss.config.js",
-    "build-template/src/frontend/src/components/ui/accordion.tsx",
-    "build-template/src/frontend/src/components/ui/alert-dialog.tsx",
-    "build-template/src/frontend/src/components/ui/alert.tsx",
-    "build-template/src/frontend/src/components/ui/aspect-ratio.tsx",
-    "build-template/src/frontend/src/components/ui/avatar.tsx",
-    "build-template/src/frontend/src/components/ui/badge.tsx",
-    "build-template/src/frontend/src/components/ui/breadcrumb.tsx",
-    "build-template/src/frontend/src/components/ui/button.tsx",
-    "build-template/src/frontend/src/components/ui/calendar.tsx",
-    "build-template/src/frontend/src/components/ui/card.tsx",
-    "build-template/src/frontend/src/components/ui/carousel.tsx",
-    "build-template/src/frontend/src/components/ui/chart.tsx",
-    "build-template/src/frontend/src/components/ui/checkbox.tsx",
-    "build-template/src/frontend/src/components/ui/collapsible.tsx",
-    "build-template/src/frontend/src/components/ui/command.tsx",
-    "build-template/src/frontend/src/components/ui/context-menu.tsx",
-    "build-template/src/frontend/src/components/ui/dialog.tsx",
-    "build-template/src/frontend/src/components/ui/drawer.tsx",
-    "build-template/src/frontend/src/components/ui/dropdown-menu.tsx",
-    "build-template/src/frontend/src/components/ui/form.tsx",
-    "build-template/src/frontend/src/components/ui/hover-card.tsx",
-    "build-template/src/frontend/src/components/ui/input-otp.tsx",
-    "build-template/src/frontend/src/components/ui/input.tsx",
-    "build-template/src/frontend/src/components/ui/label.tsx",
-    "build-template/src/frontend/src/components/ui/menubar.tsx",
-    "build-template/src/frontend/src/components/ui/navigation-menu.tsx",
-    "build-template/src/frontend/src/components/ui/pagination.tsx",
-    "build-template/src/frontend/src/components/ui/popover.tsx",
-    "build-template/src/frontend/src/components/ui/progress.tsx",
-    "build-template/src/frontend/src/components/ui/radio-group.tsx",
-    "build-template/src/frontend/src/components/ui/resizable.tsx",
-    "build-template/src/frontend/src/components/ui/scroll-area.tsx",
-    "build-template/src/frontend/src/components/ui/select.tsx",
-    "build-template/src/frontend/src/components/ui/separator.tsx",
-    "build-template/src/frontend/src/components/ui/sheet.tsx",
-    "build-template/src/frontend/src/components/ui/sidebar.tsx",
-    "build-template/src/frontend/src/components/ui/skeleton.tsx",
-    "build-template/src/frontend/src/components/ui/slider.tsx",
-    "build-template/src/frontend/src/components/ui/sonner.tsx",
-    "build-template/src/frontend/src/components/ui/switch.tsx",
-    "build-template/src/frontend/src/components/ui/table.tsx",
-    "build-template/src/frontend/src/components/ui/tabs.tsx",
-    "build-template/src/frontend/src/components/ui/textarea.tsx",
-    "build-template/src/frontend/src/components/ui/toggle-group.tsx",
-    "build-template/src/frontend/src/components/ui/toggle.tsx",
-    "build-template/src/frontend/src/components/ui/tooltip.tsx",
-    "build-template/src/frontend/src/hooks/use-mobile.tsx",
-    "build-template/src/frontend/src/lib/utils.ts",
-    "build-template/src/frontend/tsconfig.json",
-    "build-template/src/frontend/vite.config.js",
-    "build-template/tsconfig.json",
-    "caffeine.lock.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/index.css",
-    "frontend/index.html",
-    "frontend/public/assets/generated/gym-logo.dim_256x256.png",
-    "frontend/public/assets/generated/hero-fitness.dim_1200x400.png",
-    "frontend/src/App.tsx",
     "frontend/src/backend.d.ts",
     "frontend/src/backend.ts",
-    "frontend/src/components/admin/BrandingControls.tsx",
-    "frontend/src/components/admin/ClientAssignment.tsx",
-    "frontend/src/components/admin/UserFormModal.tsx",
-    "frontend/src/components/admin/UserManagement.tsx",
-    "frontend/src/components/auth/AccessDeniedScreen.tsx",
-    "frontend/src/components/auth/RoleGuard.tsx",
-    "frontend/src/components/client/ProgressCharts.tsx",
-    "frontend/src/components/client/WorkoutLogForm.tsx",
-    "frontend/src/components/client/WorkoutPlanView.tsx",
-    "frontend/src/components/layout/AppLayout.tsx",
-    "frontend/src/components/layout/Footer.tsx",
-    "frontend/src/components/layout/Header.tsx",
-    "frontend/src/components/trainer/ClientList.tsx",
-    "frontend/src/components/trainer/WorkoutPlanForm.tsx",
-    "frontend/src/components/vortex/VortexChat.tsx",
-    "frontend/src/components/vortex/VortexMessage.tsx",
-    "frontend/src/config.ts",
-    "frontend/src/contexts/BrandingContext.tsx",
+    "frontend/src/components/client/DietPlanView.tsx",
+    "frontend/src/components/exercise/ExerciseDetailModal.tsx",
+    "frontend/src/components/exercise/ExerciseLibraryBrowser.tsx",
     "frontend/src/declarations/backend.did.d.ts",
     "frontend/src/declarations/backend.did.js",
-    "frontend/src/hooks/useActor.ts",
-    "frontend/src/hooks/useInternetIdentity.ts",
     "frontend/src/hooks/useQueries.ts",
-    "frontend/src/index.css",
-    "frontend/src/main.tsx",
-    "frontend/src/pages/AdminDashboard.tsx",
-    "frontend/src/pages/ClientDashboard.tsx",
-    "frontend/src/pages/LandingPage.tsx",
-    "frontend/src/pages/ProfileSetup.tsx",
-    "frontend/src/pages/TrainerDashboard.tsx",
-    "frontend/src/ui-summary.json",
-    "frontend/src/utils/StorageClient.ts",
-    "frontend/src/utils/urlParams.ts",
-    "frontend/tailwind.config.js",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

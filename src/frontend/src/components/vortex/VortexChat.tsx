@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,6 +12,7 @@ interface Message {
   content: string;
   isVortex: boolean;
   timestamp: Date;
+  isTyping?: boolean;
 }
 
 interface VortexChatProps {
@@ -23,49 +24,76 @@ export default function VortexChat({ open, onOpenChange }: VortexChatProps) {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      content: 'Hello! I\'m VORTEX, your AI fitness assistant. How can I help you today?',
+      content: 'Hello! 👋 I\'m VORTEX, your AI fitness assistant. How can I help you with your fitness journey today? Would you like to create a workout plan, check your progress, or need motivation?',
       isVortex: true,
       timestamp: new Date(),
     },
   ]);
   const [input, setInput] = useState('');
   const askVortex = useAskVortex();
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to bottom when messages change
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages]);
 
   const handleSend = async () => {
-    if (!input.trim()) return;
+    if (!input.trim() || askVortex.isPending) return;
 
     const userMessage: Message = {
       id: Date.now().toString(),
-      content: input,
+      content: input.trim(),
       isVortex: false,
       timestamp: new Date(),
     };
 
+    // Optimistically add user message
     setMessages((prev) => [...prev, userMessage]);
+    const currentInput = input.trim();
     setInput('');
 
-    try {
-      const response = await askVortex.mutateAsync(input);
-      
-      const vortexMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        content: response,
-        isVortex: true,
-        timestamp: new Date(),
-      };
+    // Add typing indicator
+    const typingIndicator: Message = {
+      id: 'typing-' + Date.now(),
+      content: '',
+      isVortex: true,
+      timestamp: new Date(),
+      isTyping: true,
+    };
+    setMessages((prev) => [...prev, typingIndicator]);
 
-      setMessages((prev) => [...prev, vortexMessage]);
+    try {
+      const response = await askVortex.mutateAsync(currentInput);
+      
+      // Remove typing indicator and add actual response
+      setMessages((prev) => {
+        const withoutTyping = prev.filter((msg) => !msg.isTyping);
+        const vortexMessage: Message = {
+          id: Date.now().toString(),
+          content: response,
+          isVortex: true,
+          timestamp: new Date(),
+        };
+        return [...withoutTyping, vortexMessage];
+      });
     } catch (error) {
       console.error('Failed to get VORTEX response:', error);
       
-      const errorMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        content: 'Sorry, I encountered an error. Please try again.',
-        isVortex: true,
-        timestamp: new Date(),
-      };
-
-      setMessages((prev) => [...prev, errorMessage]);
+      // Remove typing indicator and add error message
+      setMessages((prev) => {
+        const withoutTyping = prev.filter((msg) => !msg.isTyping);
+        const errorMessage: Message = {
+          id: Date.now().toString(),
+          content: 'I apologize, but I encountered an error processing your request. Please try again, and I\'ll do my best to help you!',
+          isVortex: true,
+          timestamp: new Date(),
+        };
+        return [...withoutTyping, errorMessage];
+      });
     }
   };
 
@@ -86,17 +114,12 @@ export default function VortexChat({ open, onOpenChange }: VortexChatProps) {
           </SheetTitle>
         </SheetHeader>
 
-        <ScrollArea className="flex-1 pr-4">
+        <ScrollArea className="flex-1 pr-4" ref={scrollAreaRef}>
           <div className="space-y-4 py-4">
             {messages.map((message) => (
               <VortexMessage key={message.id} message={message} />
             ))}
-            {askVortex.isPending && (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Sparkles className="h-4 w-4 animate-pulse" />
-                <span>VORTEX is thinking...</span>
-              </div>
-            )}
+            <div ref={messagesEndRef} />
           </div>
         </ScrollArea>
 
@@ -107,8 +130,14 @@ export default function VortexChat({ open, onOpenChange }: VortexChatProps) {
             onChange={(e) => setInput(e.target.value)}
             onKeyPress={handleKeyPress}
             disabled={askVortex.isPending}
+            className="flex-1"
           />
-          <Button onClick={handleSend} disabled={askVortex.isPending || !input.trim()} size="icon">
+          <Button 
+            onClick={handleSend} 
+            disabled={askVortex.isPending || !input.trim()} 
+            size="icon"
+            className="shrink-0"
+          >
             <Send className="h-4 w-4" />
           </Button>
         </div>

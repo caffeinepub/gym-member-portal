@@ -1,13 +1,15 @@
 import React from 'react';
-import { useInternetIdentity } from '../hooks/useInternetIdentity';
+import { useNavigate } from '@tanstack/react-router';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dumbbell, Users, TrendingUp, Sparkles } from 'lucide-react';
 
 export default function LandingPage() {
-  const { login, loginStatus } = useInternetIdentity();
+  const navigate = useNavigate();
 
-  const isLoggingIn = loginStatus === 'logging-in';
+  const handleGetStarted = () => {
+    navigate({ to: '/client-dashboard' });
+  };
 
   return (
     <div className="flex flex-col">
@@ -26,9 +28,9 @@ export default function LandingPage() {
               Connect with expert trainers, track your progress in real-time, and achieve your fitness goals with
               personalized workout plans.
             </p>
-            <Button size="lg" onClick={login} disabled={isLoggingIn} className="gap-2 text-lg">
+            <Button size="lg" onClick={handleGetStarted} className="gap-2 text-lg">
               <Dumbbell className="h-5 w-5" />
-              {isLoggingIn ? 'Logging in...' : 'Get Started'}
+              Get Started
             </Button>
           </div>
         </div>
@@ -98,8 +100,8 @@ export default function LandingPage() {
             <p className="mb-8 text-lg text-muted-foreground">
               Join thousands of members achieving their fitness goals with personalized training and support.
             </p>
-            <Button size="lg" onClick={login} disabled={isLoggingIn}>
-              {isLoggingIn ? 'Logging in...' : 'Login to Continue'}
+            <Button size="lg" onClick={handleGetStarted}>
+              Get Started Now
             </Button>
           </div>
         </div>

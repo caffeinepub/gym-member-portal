@@ -19,6 +19,7 @@ export const _CaffeineStorageRefillResult = IDL.Record({
   'success' : IDL.Opt(IDL.Bool),
   'topped_up_amount' : IDL.Opt(IDL.Nat),
 });
+export const ExerciseId = IDL.Nat;
 export const UserId = IDL.Principal;
 export const AppUserRole = IDL.Variant({
   'client' : IDL.Null,
@@ -30,12 +31,45 @@ export const UserRole = IDL.Variant({
   'user' : IDL.Null,
   'guest' : IDL.Null,
 });
+export const DietPlanId = IDL.Text;
+export const MealId = IDL.Text;
+export const FoodItem = IDL.Record({
+  'carbs' : IDL.Float64,
+  'fats' : IDL.Float64,
+  'calories' : IDL.Nat,
+  'name' : IDL.Text,
+  'portion' : IDL.Text,
+  'protein' : IDL.Float64,
+});
+export const Meal = IDL.Record({
+  'id' : MealId,
+  'foodItems' : IDL.Vec(FoodItem),
+  'carbs' : IDL.Float64,
+  'fats' : IDL.Float64,
+  'name' : IDL.Text,
+  'time' : IDL.Text,
+  'totalCalories' : IDL.Nat,
+  'protein' : IDL.Float64,
+});
+export const TimetableId = IDL.Text;
 export const WorkoutPlanId = IDL.Text;
 export const SetId = IDL.Nat;
 export const Set = IDL.Record({
   'id' : SetId,
   'weight' : IDL.Float64,
+  'exerciseId' : ExerciseId,
   'reps' : IDL.Nat,
+});
+export const Exercise = IDL.Record({
+  'id' : ExerciseId,
+  'difficultyLevel' : IDL.Text,
+  'equipmentNeeded' : IDL.Text,
+  'name' : IDL.Text,
+  'description' : IDL.Text,
+  'recommendedSetsRange' : IDL.Text,
+  'targetMuscleGroups' : IDL.Text,
+  'videoUrl' : IDL.Text,
+  'recommendedRepsRange' : IDL.Text,
 });
 export const User = IDL.Record({
   'id' : UserId,
@@ -62,6 +96,32 @@ export const UserProfile = IDL.Record({
   'name' : IDL.Text,
   'role' : AppUserRole,
   'email' : IDL.Text,
+});
+export const DietOption = IDL.Record({
+  'foodItems' : IDL.Vec(FoodItem),
+  'description' : IDL.Text,
+});
+export const MealOption = IDL.Record({
+  'options' : IDL.Vec(DietOption),
+  'mealType' : IDL.Text,
+});
+export const DietPlan = IDL.Record({
+  'id' : DietPlanId,
+  'meals' : IDL.Vec(Meal),
+  'clientId' : UserId,
+  'name' : IDL.Text,
+  'trainerId' : UserId,
+  'dietaryNotes' : IDL.Text,
+});
+export const ScheduledSession = IDL.Record({
+  'id' : TimetableId,
+  'clientId' : UserId,
+  'isCompleted' : IDL.Bool,
+  'trainerNotes' : IDL.Text,
+  'trainerId' : UserId,
+  'clientNotes' : IDL.Text,
+  'workoutPlanId' : WorkoutPlanId,
+  'dateTime' : IDL.Int,
 });
 export const RecordId = IDL.Text;
 export const Time = IDL.Int;
@@ -102,10 +162,35 @@ export const idlService = IDL.Service({
     ),
   '_caffeineStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
   '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
+  'addExerciseToLibrary' : IDL.Func(
+      [
+        ExerciseId,
+        IDL.Text,
+        IDL.Text,
+        IDL.Text,
+        IDL.Text,
+        IDL.Text,
+        IDL.Text,
+        IDL.Text,
+        IDL.Text,
+      ],
+      [],
+      [],
+    ),
   'addUser' : IDL.Func([UserId, IDL.Text, IDL.Text, AppUserRole], [], []),
   'askVortex' : IDL.Func([IDL.Text], [IDL.Text], []),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
   'assignClientToTrainer' : IDL.Func([UserId, UserId], [], []),
+  'createDietPlan' : IDL.Func(
+      [DietPlanId, UserId, UserId, IDL.Text, IDL.Vec(Meal), IDL.Text],
+      [],
+      [],
+    ),
+  'createScheduledSession' : IDL.Func(
+      [TimetableId, UserId, UserId, WorkoutPlanId, IDL.Int, IDL.Text],
+      [],
+      [],
+    ),
   'createWorkoutPlan' : IDL.Func(
       [
         WorkoutPlanId,
@@ -119,8 +204,12 @@ export const idlService = IDL.Service({
       [],
       [],
     ),
+  'deleteDietPlan' : IDL.Func([DietPlanId], [], []),
+  'deleteExerciseFromLibrary' : IDL.Func([ExerciseId], [], []),
+  'deleteScheduledSession' : IDL.Func([TimetableId], [], []),
   'deleteWorkoutPlan' : IDL.Func([WorkoutPlanId], [], []),
   'editUser' : IDL.Func([UserId, IDL.Text, IDL.Text, AppUserRole], [], []),
+  'getAllExercises' : IDL.Func([], [IDL.Vec(Exercise)], ['query']),
   'getAllUsers' : IDL.Func([], [IDL.Vec(User)], ['query']),
   'getAllWorkoutPlansForUser' : IDL.Func(
       [UserId],
@@ -130,6 +219,19 @@ export const idlService = IDL.Service({
   'getBrandingSettings' : IDL.Func([], [BrandingSettings], ['query']),
   'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
+  'getDietPlanTemplate' : IDL.Func([], [IDL.Vec(MealOption)], ['query']),
+  'getDietPlansForClient' : IDL.Func([UserId], [IDL.Vec(DietPlan)], ['query']),
+  'getExercise' : IDL.Func([ExerciseId], [IDL.Opt(Exercise)], ['query']),
+  'getScheduledSessionsForClient' : IDL.Func(
+      [UserId],
+      [IDL.Vec(ScheduledSession)],
+      ['query'],
+    ),
+  'getScheduledSessionsForTrainer' : IDL.Func(
+      [UserId],
+      [IDL.Vec(ScheduledSession)],
+      ['query'],
+    ),
   'getTrainerClients' : IDL.Func([UserId], [IDL.Vec(UserId)], ['query']),
   'getUser' : IDL.Func([UserId], [IDL.Opt(User)], ['query']),
   'getUserProfile' : IDL.Func(
@@ -156,6 +258,23 @@ export const idlService = IDL.Service({
   'removeUser' : IDL.Func([UserId], [], []),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
   'updateBrandingSettings' : IDL.Func([BrandingSettings], [], []),
+  'updateDietPlan' : IDL.Func([DietPlanId, IDL.Vec(Meal), IDL.Text], [], []),
+  'updateExerciseInLibrary' : IDL.Func(
+      [
+        ExerciseId,
+        IDL.Text,
+        IDL.Text,
+        IDL.Text,
+        IDL.Text,
+        IDL.Text,
+        IDL.Text,
+        IDL.Text,
+        IDL.Text,
+      ],
+      [],
+      [],
+    ),
+  'updateScheduledSession' : IDL.Func([TimetableId, IDL.Int, IDL.Text], [], []),
   'updateWorkoutPlan' : IDL.Func(
       [WorkoutPlanId, IDL.Text, IDL.Vec(Set), IDL.Nat, IDL.Text],
       [],
@@ -178,6 +297,7 @@ export const idlFactory = ({ IDL }) => {
     'success' : IDL.Opt(IDL.Bool),
     'topped_up_amount' : IDL.Opt(IDL.Nat),
   });
+  const ExerciseId = IDL.Nat;
   const UserId = IDL.Principal;
   const AppUserRole = IDL.Variant({
     'client' : IDL.Null,
@@ -189,12 +309,45 @@ export const idlFactory = ({ IDL }) => {
     'user' : IDL.Null,
     'guest' : IDL.Null,
   });
+  const DietPlanId = IDL.Text;
+  const MealId = IDL.Text;
+  const FoodItem = IDL.Record({
+    'carbs' : IDL.Float64,
+    'fats' : IDL.Float64,
+    'calories' : IDL.Nat,
+    'name' : IDL.Text,
+    'portion' : IDL.Text,
+    'protein' : IDL.Float64,
+  });
+  const Meal = IDL.Record({
+    'id' : MealId,
+    'foodItems' : IDL.Vec(FoodItem),
+    'carbs' : IDL.Float64,
+    'fats' : IDL.Float64,
+    'name' : IDL.Text,
+    'time' : IDL.Text,
+    'totalCalories' : IDL.Nat,
+    'protein' : IDL.Float64,
+  });
+  const TimetableId = IDL.Text;
   const WorkoutPlanId = IDL.Text;
   const SetId = IDL.Nat;
   const Set = IDL.Record({
     'id' : SetId,
     'weight' : IDL.Float64,
+    'exerciseId' : ExerciseId,
     'reps' : IDL.Nat,
+  });
+  const Exercise = IDL.Record({
+    'id' : ExerciseId,
+    'difficultyLevel' : IDL.Text,
+    'equipmentNeeded' : IDL.Text,
+    'name' : IDL.Text,
+    'description' : IDL.Text,
+    'recommendedSetsRange' : IDL.Text,
+    'targetMuscleGroups' : IDL.Text,
+    'videoUrl' : IDL.Text,
+    'recommendedRepsRange' : IDL.Text,
   });
   const User = IDL.Record({
     'id' : UserId,
@@ -221,6 +374,32 @@ export const idlFactory = ({ IDL }) => {
     'name' : IDL.Text,
     'role' : AppUserRole,
     'email' : IDL.Text,
+  });
+  const DietOption = IDL.Record({
+    'foodItems' : IDL.Vec(FoodItem),
+    'description' : IDL.Text,
+  });
+  const MealOption = IDL.Record({
+    'options' : IDL.Vec(DietOption),
+    'mealType' : IDL.Text,
+  });
+  const DietPlan = IDL.Record({
+    'id' : DietPlanId,
+    'meals' : IDL.Vec(Meal),
+    'clientId' : UserId,
+    'name' : IDL.Text,
+    'trainerId' : UserId,
+    'dietaryNotes' : IDL.Text,
+  });
+  const ScheduledSession = IDL.Record({
+    'id' : TimetableId,
+    'clientId' : UserId,
+    'isCompleted' : IDL.Bool,
+    'trainerNotes' : IDL.Text,
+    'trainerId' : UserId,
+    'clientNotes' : IDL.Text,
+    'workoutPlanId' : WorkoutPlanId,
+    'dateTime' : IDL.Int,
   });
   const RecordId = IDL.Text;
   const Time = IDL.Int;
@@ -261,10 +440,35 @@ export const idlFactory = ({ IDL }) => {
       ),
     '_caffeineStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
     '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
+    'addExerciseToLibrary' : IDL.Func(
+        [
+          ExerciseId,
+          IDL.Text,
+          IDL.Text,
+          IDL.Text,
+          IDL.Text,
+          IDL.Text,
+          IDL.Text,
+          IDL.Text,
+          IDL.Text,
+        ],
+        [],
+        [],
+      ),
     'addUser' : IDL.Func([UserId, IDL.Text, IDL.Text, AppUserRole], [], []),
     'askVortex' : IDL.Func([IDL.Text], [IDL.Text], []),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
     'assignClientToTrainer' : IDL.Func([UserId, UserId], [], []),
+    'createDietPlan' : IDL.Func(
+        [DietPlanId, UserId, UserId, IDL.Text, IDL.Vec(Meal), IDL.Text],
+        [],
+        [],
+      ),
+    'createScheduledSession' : IDL.Func(
+        [TimetableId, UserId, UserId, WorkoutPlanId, IDL.Int, IDL.Text],
+        [],
+        [],
+      ),
     'createWorkoutPlan' : IDL.Func(
         [
           WorkoutPlanId,
@@ -278,8 +482,12 @@ export const idlFactory = ({ IDL }) => {
         [],
         [],
       ),
+    'deleteDietPlan' : IDL.Func([DietPlanId], [], []),
+    'deleteExerciseFromLibrary' : IDL.Func([ExerciseId], [], []),
+    'deleteScheduledSession' : IDL.Func([TimetableId], [], []),
     'deleteWorkoutPlan' : IDL.Func([WorkoutPlanId], [], []),
     'editUser' : IDL.Func([UserId, IDL.Text, IDL.Text, AppUserRole], [], []),
+    'getAllExercises' : IDL.Func([], [IDL.Vec(Exercise)], ['query']),
     'getAllUsers' : IDL.Func([], [IDL.Vec(User)], ['query']),
     'getAllWorkoutPlansForUser' : IDL.Func(
         [UserId],
@@ -289,6 +497,23 @@ export const idlFactory = ({ IDL }) => {
     'getBrandingSettings' : IDL.Func([], [BrandingSettings], ['query']),
     'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
+    'getDietPlanTemplate' : IDL.Func([], [IDL.Vec(MealOption)], ['query']),
+    'getDietPlansForClient' : IDL.Func(
+        [UserId],
+        [IDL.Vec(DietPlan)],
+        ['query'],
+      ),
+    'getExercise' : IDL.Func([ExerciseId], [IDL.Opt(Exercise)], ['query']),
+    'getScheduledSessionsForClient' : IDL.Func(
+        [UserId],
+        [IDL.Vec(ScheduledSession)],
+        ['query'],
+      ),
+    'getScheduledSessionsForTrainer' : IDL.Func(
+        [UserId],
+        [IDL.Vec(ScheduledSession)],
+        ['query'],
+      ),
     'getTrainerClients' : IDL.Func([UserId], [IDL.Vec(UserId)], ['query']),
     'getUser' : IDL.Func([UserId], [IDL.Opt(User)], ['query']),
     'getUserProfile' : IDL.Func(
@@ -315,6 +540,27 @@ export const idlFactory = ({ IDL }) => {
     'removeUser' : IDL.Func([UserId], [], []),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
     'updateBrandingSettings' : IDL.Func([BrandingSettings], [], []),
+    'updateDietPlan' : IDL.Func([DietPlanId, IDL.Vec(Meal), IDL.Text], [], []),
+    'updateExerciseInLibrary' : IDL.Func(
+        [
+          ExerciseId,
+          IDL.Text,
+          IDL.Text,
+          IDL.Text,
+          IDL.Text,
+          IDL.Text,
+          IDL.Text,
+          IDL.Text,
+          IDL.Text,
+        ],
+        [],
+        [],
+      ),
+    'updateScheduledSession' : IDL.Func(
+        [TimetableId, IDL.Int, IDL.Text],
+        [],
+        [],
+      ),
     'updateWorkoutPlan' : IDL.Func(
         [WorkoutPlanId, IDL.Text, IDL.Vec(Set), IDL.Nat, IDL.Text],
         [],

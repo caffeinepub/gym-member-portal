@@ -19,10 +19,74 @@ export interface BrandingSettings {
   'logoUrl' : string,
   'secondaryColor' : string,
 }
+export interface DietOption {
+  'foodItems' : Array<FoodItem>,
+  'description' : string,
+}
+export interface DietPlan {
+  'id' : DietPlanId,
+  'meals' : Array<Meal>,
+  'clientId' : UserId,
+  'name' : string,
+  'trainerId' : UserId,
+  'dietaryNotes' : string,
+}
+export type DietPlanId = string;
+export interface Exercise {
+  'id' : ExerciseId,
+  'difficultyLevel' : string,
+  'equipmentNeeded' : string,
+  'name' : string,
+  'description' : string,
+  'recommendedSetsRange' : string,
+  'targetMuscleGroups' : string,
+  'videoUrl' : string,
+  'recommendedRepsRange' : string,
+}
+export type ExerciseId = bigint;
+export interface FoodItem {
+  'carbs' : number,
+  'fats' : number,
+  'calories' : bigint,
+  'name' : string,
+  'portion' : string,
+  'protein' : number,
+}
+export interface Meal {
+  'id' : MealId,
+  'foodItems' : Array<FoodItem>,
+  'carbs' : number,
+  'fats' : number,
+  'name' : string,
+  'time' : string,
+  'totalCalories' : bigint,
+  'protein' : number,
+}
+export type MealId = string;
+export interface MealOption {
+  'options' : Array<DietOption>,
+  'mealType' : string,
+}
 export type RecordId = string;
-export interface Set { 'id' : SetId, 'weight' : number, 'reps' : bigint }
+export interface ScheduledSession {
+  'id' : TimetableId,
+  'clientId' : UserId,
+  'isCompleted' : boolean,
+  'trainerNotes' : string,
+  'trainerId' : UserId,
+  'clientNotes' : string,
+  'workoutPlanId' : WorkoutPlanId,
+  'dateTime' : bigint,
+}
+export interface Set {
+  'id' : SetId,
+  'weight' : number,
+  'exerciseId' : ExerciseId,
+  'reps' : bigint,
+}
 export type SetId = bigint;
 export type Time = bigint;
+export type TimetableId = string;
 export interface User {
   'id' : UserId,
   'name' : string,
@@ -84,21 +148,58 @@ export interface _SERVICE {
   >,
   '_caffeineStorageUpdateGatewayPrincipals' : ActorMethod<[], undefined>,
   '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
+  'addExerciseToLibrary' : ActorMethod<
+    [
+      ExerciseId,
+      string,
+      string,
+      string,
+      string,
+      string,
+      string,
+      string,
+      string,
+    ],
+    undefined
+  >,
   'addUser' : ActorMethod<[UserId, string, string, AppUserRole], undefined>,
   'askVortex' : ActorMethod<[string], string>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
   'assignClientToTrainer' : ActorMethod<[UserId, UserId], undefined>,
+  'createDietPlan' : ActorMethod<
+    [DietPlanId, UserId, UserId, string, Array<Meal>, string],
+    undefined
+  >,
+  'createScheduledSession' : ActorMethod<
+    [TimetableId, UserId, UserId, WorkoutPlanId, bigint, string],
+    undefined
+  >,
   'createWorkoutPlan' : ActorMethod<
     [WorkoutPlanId, UserId, UserId, string, Array<Set>, bigint, string],
     undefined
   >,
+  'deleteDietPlan' : ActorMethod<[DietPlanId], undefined>,
+  'deleteExerciseFromLibrary' : ActorMethod<[ExerciseId], undefined>,
+  'deleteScheduledSession' : ActorMethod<[TimetableId], undefined>,
   'deleteWorkoutPlan' : ActorMethod<[WorkoutPlanId], undefined>,
   'editUser' : ActorMethod<[UserId, string, string, AppUserRole], undefined>,
+  'getAllExercises' : ActorMethod<[], Array<Exercise>>,
   'getAllUsers' : ActorMethod<[], Array<User>>,
   'getAllWorkoutPlansForUser' : ActorMethod<[UserId], Array<WorkoutPlan>>,
   'getBrandingSettings' : ActorMethod<[], BrandingSettings>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
+  'getDietPlanTemplate' : ActorMethod<[], Array<MealOption>>,
+  'getDietPlansForClient' : ActorMethod<[UserId], Array<DietPlan>>,
+  'getExercise' : ActorMethod<[ExerciseId], [] | [Exercise]>,
+  'getScheduledSessionsForClient' : ActorMethod<
+    [UserId],
+    Array<ScheduledSession>
+  >,
+  'getScheduledSessionsForTrainer' : ActorMethod<
+    [UserId],
+    Array<ScheduledSession>
+  >,
   'getTrainerClients' : ActorMethod<[UserId], Array<UserId>>,
   'getUser' : ActorMethod<[UserId], [] | [User]>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
@@ -112,6 +213,25 @@ export interface _SERVICE {
   'removeUser' : ActorMethod<[UserId], undefined>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
   'updateBrandingSettings' : ActorMethod<[BrandingSettings], undefined>,
+  'updateDietPlan' : ActorMethod<[DietPlanId, Array<Meal>, string], undefined>,
+  'updateExerciseInLibrary' : ActorMethod<
+    [
+      ExerciseId,
+      string,
+      string,
+      string,
+      string,
+      string,
+      string,
+      string,
+      string,
+    ],
+    undefined
+  >,
+  'updateScheduledSession' : ActorMethod<
+    [TimetableId, bigint, string],
+    undefined
+  >,
   'updateWorkoutPlan' : ActorMethod<
     [WorkoutPlanId, string, Array<Set>, bigint, string],
     undefined

@@ -1,385 +1,44 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Gym Member Portal Frontend - Trainer/Client Dashboards, VORTEX AI Assistant, and Admin Controls",
+  "title": "Add detailed exercise schedule and comprehensive diet plan",
   "requirements": [
     {
-      "id": "REQ-9",
-      "summary": "Create trainer dashboard with client list, workout plan creation/editing, and client progress summaries",
+      "id": "REQ-45",
+      "summary": "Display seven specific exercises with sets, reps, and descriptions in exercise library browser, organized by muscle groups",
       "acceptanceCriteria": [
-        "Trainers see list of their assigned clients",
-        "Form to create workout plans with multiple exercises",
-        "Edit interface for updating existing workout plans",
-        "View client progress summaries and completion rates"
+        "All seven exercises appear in the exercise library interface",
+        "Each exercise displays its sets and reps information",
+        "Exercises can be filtered by muscle group (Legs, Chest, Shoulders, Triceps, Back, Biceps, Core/Abs)",
+        "Exercise descriptions are visible to users"
       ],
       "file_operations": [
         {
-          "path": "frontend/src/pages/TrainerDashboard.tsx",
-          "operation": "create",
-          "description": "Create the main trainer dashboard page that displays assigned clients, workout plan management interface, and client progress summaries. Include navigation to create/edit workout plans and view client details. Use the authorization component to verify trainer role before rendering dashboard content."
+          "path": "frontend/src/components/exercise/ExerciseLibraryBrowser.tsx",
+          "operation": "modify",
+          "description": "Update the exercise card display to show sets and reps information from recommendedSetsRange and recommendedRepsRange fields. Ensure the seven specific exercises (Squats, Push-ups, Bench Press, Deadlift, Pull-ups/Lat Pulldown, Overhead Press, Plank) are rendered with their complete details when returned from the backend. Add visual indicators (badges or labels) for sets/reps alongside the existing difficulty badge. The muscle group filter should support filtering by Legs, Chest, Shoulders, Triceps, Back, Biceps, and Core/Abs based on the targetMuscleGroups field."
         },
         {
-          "path": "frontend/src/components/trainer/ClientList.tsx",
-          "operation": "create",
-          "description": "Create a component that displays the trainer's assigned clients using getTrainerClients backend function. Show client names, current workout plan status, and recent progress metrics. Include links to view client details and create/edit workout plans for each client."
-        },
-        {
-          "path": "frontend/src/components/trainer/WorkoutPlanForm.tsx",
-          "operation": "create",
-          "description": "Create a form component for creating and editing workout plans. Support adding multiple exercises with fields for exercise name, sets, reps, weight, rest time, and notes. Call createWorkoutPlan or updateWorkoutPlan backend functions. Include validation and dynamic exercise addition/removal."
-        },
-        {
-          "path": "frontend/src/components/trainer/ClientProgressSummary.tsx",
-          "operation": "create",
-          "description": "Create a component that displays client progress summaries using getWorkoutRecordsForUser backend function. Show completion rates, recent workout history, and performance trends. Include visual indicators for client engagement and progress."
-        },
-        {
-          "path": "frontend/src/hooks/useTrainerData.ts",
-          "operation": "create",
-          "description": "Create custom hooks for trainer-specific data fetching: useTrainerClients, useCreateWorkoutPlan, useUpdateWorkoutPlan, useDeleteWorkoutPlan, useClientProgress. Use React Query for caching and real-time updates. Verify the authorization component's usage instructions before implementing."
+          "path": "frontend/src/components/exercise/ExerciseDetailModal.tsx",
+          "operation": "modify",
+          "description": "Ensure the modal displays the recommendedSetsRange and recommendedRepsRange fields prominently in the exercise details view. Format these fields to show the specific set and rep information (e.g., '3 sets x 12 reps' for Squats, '3 sets x max reps' for Push-ups, '3 sets x 1 minute' for Plank). Verify that all seven exercises display their complete descriptions and target muscle groups when opened."
         }
       ]
     },
     {
-      "id": "REQ-10",
-      "summary": "Create client dashboard with workout plan viewing, workout logging, and progress history with charts",
+      "id": "REQ-46",
+      "summary": "Display comprehensive diet plan with six meal times and two food options per meal in client dashboard",
       "acceptanceCriteria": [
-        "Clients see their current workout plans",
-        "Form to log workout completions with sets, reps, and weight",
-        "Progress history displayed as charts or graphs",
-        "Real-time updates when progress is logged"
+        "Diet plan view shows all six meal times in chronological order",
+        "Each meal displays both Option 1 and Option 2 food choices",
+        "Meal options match the specified Indian food items exactly",
+        "Diet plan is presented in an easy-to-read format for clients"
       ],
       "file_operations": [
         {
-          "path": "frontend/src/pages/ClientDashboard.tsx",
-          "operation": "create",
-          "description": "Create the main client dashboard page that displays current workout plans, workout logging interface, and progress history. Include navigation to log workouts and view detailed progress charts. Use the authorization component to verify client role before rendering dashboard content."
-        },
-        {
-          "path": "frontend/src/components/client/WorkoutPlanView.tsx",
-          "operation": "create",
-          "description": "Create a component that displays the client's assigned workout plans using getAllWorkoutPlansForUser backend function. Show exercise details, sets, reps, weight targets, rest times, and trainer notes in a clear, actionable format."
-        },
-        {
-          "path": "frontend/src/components/client/WorkoutLogForm.tsx",
-          "operation": "create",
-          "description": "Create a form component for logging workout completions. Include fields for completed sets, actual weight used, and personal notes. Call logWorkoutCompletion backend function. Support quick logging with pre-filled workout plan data and validation."
-        },
-        {
-          "path": "frontend/src/components/client/ProgressCharts.tsx",
-          "operation": "create",
-          "description": "Create a component that displays progress history using getWorkoutRecordsForUser backend function. Implement charts showing workout completion trends, weight progression, and volume over time using a charting library. Include date range filters and exercise-specific views."
-        },
-        {
-          "path": "frontend/src/hooks/useClientData.ts",
-          "operation": "create",
-          "description": "Create custom hooks for client-specific data fetching: useClientWorkoutPlans, useLogWorkout, useUpdateWorkoutRecord, useClientProgress. Use React Query for caching and real-time updates. Verify the authorization component's usage instructions before implementing."
-        }
-      ]
-    },
-    {
-      "id": "REQ-11",
-      "summary": "Create admin control panel for logo/color customization, user management (add/edit/remove trainers and clients), and client-to-trainer assignments",
-      "acceptanceCriteria": [
-        "Logo upload interface with preview",
-        "Color picker for primary, secondary, and accent colors",
-        "User management table with add/edit/remove actions",
-        "Interface to assign clients to trainers",
-        "Live preview of branding changes"
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/pages/AdminDashboard.tsx",
-          "operation": "create",
-          "description": "Create the main admin control panel page with sections for branding customization, user management, and client-trainer assignments. Include navigation to different admin functions. Use the authorization component to verify admin role before rendering admin controls."
-        },
-        {
-          "path": "frontend/src/components/admin/BrandingControls.tsx",
-          "operation": "create",
-          "description": "Create a component for logo upload and color customization. Include logo preview using the generated gym-logo.dim_256x256.png from frontend/public/assets/generated/ as the default. Provide color pickers for primary, secondary, and accent colors. Call updateBrandingSettings backend function. Use the blob-storage component to support logo upload with progress tracking. Verify the component's usage instructions before implementing. Show live preview of branding changes."
-        },
-        {
-          "path": "frontend/src/components/admin/UserManagement.tsx",
-          "operation": "create",
-          "description": "Create a component for managing users (trainers and clients). Display user list using getAllUsers backend function. Include add/edit/remove actions calling addUser, editUser, removeUser backend functions. Show user roles, names, emails, and action buttons in a table format."
-        },
-        {
-          "path": "frontend/src/components/admin/ClientAssignment.tsx",
-          "operation": "create",
-          "description": "Create a component for assigning clients to trainers. Display trainers and clients using getAllUsers backend function. Provide interface to assign/reassign clients to trainers calling assignClientToTrainer backend function. Show current assignments and allow modifications."
-        },
-        {
-          "path": "frontend/src/components/admin/UserFormModal.tsx",
-          "operation": "create",
-          "description": "Create a modal component for adding or editing users. Include form fields for name, email, and role selection (trainer or client). Handle form submission calling addUser or editUser backend functions. Include validation and error handling."
-        },
-        {
-          "path": "frontend/src/hooks/useAdminData.ts",
-          "operation": "create",
-          "description": "Create custom hooks for admin-specific data fetching: useAllUsers, useAddUser, useEditUser, useRemoveUser, useAssignClient, useBrandingSettings, useUpdateBranding. Use React Query for caching and real-time updates. Verify the authorization component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/hooks/useBlobUpload.ts",
-          "operation": "create",
-          "description": "Create a custom hook for handling blob uploads using the blob-storage component. Support upload progress tracking and ExternalBlob conversion. Verify the blob-storage component's usage instructions before implementing."
-        }
-      ]
-    },
-    {
-      "id": "REQ-12",
-      "summary": "Create VORTEX AI assistant chat interface accessible to all users with conversation view, message input, and contextual responses",
-      "acceptanceCriteria": [
-        "Chat interface with conversation history",
-        "Message input with send functionality",
-        "VORTEX responses appear in real-time",
-        "Accessible from all user dashboards",
-        "Visual indication of VORTEX as AI assistant"
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/components/vortex/VortexChat.tsx",
-          "operation": "create",
-          "description": "Create the VORTEX AI assistant chat interface component. Display conversation history with user messages and VORTEX responses. Include message input field and send button. Call askVortex backend function for responses. Show loading indicator during response generation. Style VORTEX messages distinctly to indicate AI assistant."
-        },
-        {
-          "path": "frontend/src/components/vortex/VortexMessage.tsx",
-          "operation": "create",
-          "description": "Create a component for displaying individual chat messages. Differentiate between user messages and VORTEX responses with distinct styling. Include timestamp and message content. Show VORTEX branding/icon for AI responses."
-        },
-        {
-          "path": "frontend/src/hooks/useVortex.ts",
-          "operation": "create",
-          "description": "Create custom hooks for VORTEX chat functionality: useVortexChat for managing chat state and message history, useSendMessage for sending messages to askVortex backend function. Use React Query for response handling and caching."
-        }
-      ]
-    },
-    {
-      "id": "REQ-13",
-      "summary": "Apply customizable branding (logo and colors) throughout the entire application UI",
-      "acceptanceCriteria": [
-        "Logo displays in navigation or header",
-        "Primary, secondary, and accent colors applied to UI elements",
-        "Branding updates reflect immediately across all pages",
-        "Consistent theme throughout trainer, client, and admin interfaces"
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/components/layout/AppLayout.tsx",
-          "operation": "create",
-          "description": "Create the main application layout component that wraps all pages. Include header/navigation with logo display, main content area, and footer. Fetch branding settings using getBrandingSettings backend function and apply logo and colors throughout. Wire in generated gym-logo.dim_256x256.png from frontend/public/assets/generated/ as the default logo before custom logo is uploaded. Ensure branding updates reflect immediately across all pages."
-        },
-        {
-          "path": "frontend/src/hooks/useBranding.ts",
-          "operation": "create",
-          "description": "Create a custom hook for fetching and applying branding settings. Use getBrandingSettings backend function. Provide branding context (logo URL, primary, secondary, accent colors) to all components. Use React Query for caching and real-time updates when admin changes branding."
-        },
-        {
-          "path": "frontend/src/contexts/BrandingContext.tsx",
-          "operation": "create",
-          "description": "Create a React context for branding settings that provides logo URL and color values to all components. Include context provider that fetches branding settings and makes them available throughout the app. Support dynamic updates when branding changes."
-        },
-        {
-          "path": "frontend/src/index.css",
+          "path": "frontend/src/components/client/DietPlanView.tsx",
           "operation": "modify",
-          "description": "Add CSS custom properties (CSS variables) for primary, secondary, and accent colors that can be dynamically updated when branding settings change. Define color usage patterns for buttons, backgrounds, text, and UI elements. Ensure colors are applied consistently throughout the application."
-        },
-        {
-          "path": "frontend/tailwind.config.js",
-          "operation": "modify",
-          "description": "Extend Tailwind configuration to use CSS custom properties for brand colors. Map primary, secondary, and accent colors to Tailwind utility classes. Enable dynamic color updates through CSS variables."
-        }
-      ]
-    },
-    {
-      "id": "REQ-14",
-      "summary": "Implement role-based access control frontend guards so admins access all features, trainers only manage assigned clients' workouts, and clients only view/update own progress",
-      "acceptanceCriteria": [
-        "Admin has full access to all features",
-        "Trainers can only see and modify their assigned clients",
-        "Clients can only access their own workout plans and progress",
-        "Unauthorized actions are blocked on both frontend and backend"
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/components/auth/RoleGuard.tsx",
-          "operation": "create",
-          "description": "Create a role guard component that checks user role using getCallerUserProfile backend function. Render children only if user has required role (admin, trainer, or client). Redirect or show access denied message for unauthorized users. Use the authorization component to verify role-based permissions. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/components/auth/AccessDeniedScreen.tsx",
-          "operation": "create",
-          "description": "Create an access denied screen component that displays when users attempt to access unauthorized pages or features. Show clear message explaining access restrictions and suggest appropriate actions. Include navigation back to user's appropriate dashboard."
-        },
-        {
-          "path": "frontend/src/hooks/useUserRole.ts",
-          "operation": "create",
-          "description": "Create a custom hook for checking user role and permissions. Use getCallerUserProfile and isCallerAdmin backend functions. Provide helper functions: isAdmin, isTrainer, isClient, hasAccess. Use React Query for caching. Verify the authorization component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/utils/roleChecks.ts",
-          "operation": "create",
-          "description": "Create utility functions for role-based checks and access control logic. Include functions to determine if a user can access specific features based on their role. Support checking trainer-client relationships for workout plan access."
-        }
-      ]
-    },
-    {
-      "id": "REQ-15",
-      "summary": "Design a professional fitness-focused visual theme with energetic colors, modern typography, and clean layouts for gym and fitness contexts",
-      "acceptanceCriteria": [
-        "Cohesive visual design across all pages",
-        "Color scheme appropriate for fitness/gym context",
-        "Typography that is clear and professional",
-        "Layout supports both data-heavy displays and simple interactions"
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/index.css",
-          "operation": "modify",
-          "description": "Define the base fitness-focused theme with energetic colors appropriate for gym contexts (avoiding blue and purple as default). Establish modern typography using clear, professional fonts. Set up spacing, border, and shadow utilities for clean layouts. Include responsive design tokens and ensure styles work well for data-heavy trainer views and simple client interactions."
-        },
-        {
-          "path": "frontend/tailwind.config.js",
-          "operation": "modify",
-          "description": "Configure Tailwind with fitness-themed color palette (energetic colors avoiding blue/purple), modern typography scale, and layout utilities. Define custom spacing, border radius, and shadow values that support both data-dense and clean interfaces. Ensure responsive breakpoints work for all user roles."
-        },
-        {
-          "path": "frontend/src/components/layout/Header.tsx",
-          "operation": "create",
-          "description": "Create a header component with logo display, navigation links for different user roles, and user profile/logout controls. Apply fitness-focused styling with energetic colors and modern typography. Show role-appropriate navigation: admin sees admin controls, trainers see client management, clients see workout/progress links. Include VORTEX assistant access for all users."
-        },
-        {
-          "path": "frontend/src/components/layout/HeroSection.tsx",
-          "operation": "create",
-          "description": "Create a hero section component for the landing/login page using the generated hero-fitness.dim_1200x400.png from frontend/public/assets/generated/. Display motivating fitness messaging with energetic styling. Include call-to-action for login and introduction to the gym member portal. Apply theme colors and modern typography."
-        }
-      ]
-    },
-    {
-      "id": "REQ-9",
-      "summary": "Wire trainer dashboard and components into the application routing and navigation",
-      "acceptanceCriteria": [
-        "Trainer dashboard is accessible via route",
-        "Navigation includes links to trainer dashboard for trainers",
-        "All trainer components are properly integrated"
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/App.tsx",
-          "operation": "modify",
-          "description": "Add route for /trainer-dashboard that renders TrainerDashboard page wrapped in RoleGuard requiring trainer role. Include role-based routing logic that redirects users to appropriate dashboards based on their role (admin to /admin, trainer to /trainer-dashboard, client to /client-dashboard). Wire in authentication flow using the authorization component. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/components/layout/Header.tsx",
-          "operation": "modify",
-          "description": "Add navigation link to trainer dashboard visible only to trainers. Include conditional rendering based on user role using useUserRole hook. Ensure trainers can navigate to their dashboard from any page."
-        }
-      ]
-    },
-    {
-      "id": "REQ-10",
-      "summary": "Wire client dashboard and components into the application routing and navigation",
-      "acceptanceCriteria": [
-        "Client dashboard is accessible via route",
-        "Navigation includes links to client dashboard for clients",
-        "All client components are properly integrated"
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/App.tsx",
-          "operation": "modify",
-          "description": "Add route for /client-dashboard that renders ClientDashboard page wrapped in RoleGuard requiring client role. Ensure role-based routing logic redirects clients to their dashboard on login."
-        },
-        {
-          "path": "frontend/src/components/layout/Header.tsx",
-          "operation": "modify",
-          "description": "Add navigation link to client dashboard visible only to clients. Include conditional rendering based on user role using useUserRole hook. Ensure clients can navigate to their dashboard from any page."
-        }
-      ]
-    },
-    {
-      "id": "REQ-11",
-      "summary": "Wire admin dashboard and components into the application routing and navigation",
-      "acceptanceCriteria": [
-        "Admin dashboard is accessible via route",
-        "Navigation includes links to admin dashboard for admins",
-        "All admin components are properly integrated"
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/App.tsx",
-          "operation": "modify",
-          "description": "Add route for /admin-dashboard that renders AdminDashboard page wrapped in RoleGuard requiring admin role. Ensure role-based routing logic redirects admins to their control panel on login."
-        },
-        {
-          "path": "frontend/src/components/layout/Header.tsx",
-          "operation": "modify",
-          "description": "Add navigation link to admin dashboard visible only to admins. Include conditional rendering based on user role using useUserRole hook. Ensure admins can access control panel from any page."
-        }
-      ]
-    },
-    {
-      "id": "REQ-12",
-      "summary": "Wire VORTEX chat interface into all user dashboards",
-      "acceptanceCriteria": [
-        "VORTEX chat is accessible from trainer dashboard",
-        "VORTEX chat is accessible from client dashboard",
-        "VORTEX chat is accessible from admin dashboard"
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/components/layout/Header.tsx",
-          "operation": "modify",
-          "description": "Add VORTEX assistant access button or link in the header visible to all authenticated users. Open VortexChat component in a modal or side panel when clicked. Include visual indication that VORTEX is an AI assistant."
-        },
-        {
-          "path": "frontend/src/pages/TrainerDashboard.tsx",
-          "operation": "modify",
-          "description": "Integrate VortexChat component into trainer dashboard. Provide quick access to VORTEX for fitness advice and client progress insights. Ensure chat interface is accessible without leaving the dashboard."
-        },
-        {
-          "path": "frontend/src/pages/ClientDashboard.tsx",
-          "operation": "modify",
-          "description": "Integrate VortexChat component into client dashboard. Provide quick access to VORTEX for workout advice and progress questions. Ensure chat interface is accessible without leaving the dashboard."
-        },
-        {
-          "path": "frontend/src/pages/AdminDashboard.tsx",
-          "operation": "modify",
-          "description": "Integrate VortexChat component into admin dashboard. Provide access to VORTEX for administrative queries and app management assistance."
-        }
-      ]
-    },
-    {
-      "id": "REQ-13",
-      "summary": "Wire branding system into the application root and layout",
-      "acceptanceCriteria": [
-        "Branding context is available throughout the app",
-        "Logo and colors update dynamically when admin changes settings"
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/App.tsx",
-          "operation": "modify",
-          "description": "Wrap the application with BrandingContext.Provider to make branding settings available throughout the app. Include AppLayout component to apply consistent header, footer, and navigation across all pages. Ensure branding settings are fetched on app initialization."
-        },
-        {
-          "path": "frontend/src/index.tsx",
-          "operation": "modify",
-          "description": "Ensure BrandingContext is initialized at the app root level before any components render. Set up dynamic CSS variable updates based on branding settings."
-        }
-      ]
-    },
-    {
-      "id": "REQ-15",
-      "summary": "Wire hero section and landing page into the application entry point",
-      "acceptanceCriteria": [
-        "Hero section displays on landing/login page",
-        "Generated hero image is used in hero section"
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/App.tsx",
-          "operation": "modify",
-          "description": "Add route for the landing page (/) that displays HeroSection component with login prompt for unauthenticated users. Redirect authenticated users to their role-appropriate dashboard. Wire in generated hero-fitness.dim_1200x400.png from frontend/public/assets/generated/ as the hero banner."
+          "description": "Update the component to display diet plans with a structure that supports multiple options per meal time. If the backend returns meals with the six specified meal times (Breakfast, Mid-Morning, Lunch, Pre-Workout, Post-Workout, Dinner), render them in chronological order. For each meal time, display both food options clearly labeled as 'Option 1' and 'Option 2'. Show the food items, portions, and nutritional breakdown for each option. Add visual separation between meal times using cards or sections. Ensure the layout is mobile-responsive and easy to read. If the diet plan structure includes a meals array with foodItems, render all items within each meal option."
         }
       ]
     }
