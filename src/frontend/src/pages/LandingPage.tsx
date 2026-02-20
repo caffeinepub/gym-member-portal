@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Dumbbell, Users, TrendingUp, Sparkles } from 'lucide-react';
+import { Dumbbell, Users, TrendingUp, Zap, Target, Award } from 'lucide-react';
 
 export default function LandingPage() {
   const navigate = useNavigate();
@@ -14,77 +14,113 @@ export default function LandingPage() {
   return (
     <div className="flex flex-col">
       {/* Hero Section */}
-      <section className="relative overflow-hidden">
-        <div
-          className="absolute inset-0 bg-cover bg-center opacity-20"
-          style={{ backgroundImage: 'url(/assets/generated/hero-fitness.dim_1200x400.png)' }}
-        />
-        <div className="container relative py-24 md:py-32">
-          <div className="mx-auto max-w-3xl text-center">
-            <h1 className="mb-6 text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl">
-              Transform Your Fitness Journey
+      <section
+        className="relative overflow-hidden border-b-4 border-primary"
+        style={{
+          backgroundImage: 'url(/assets/generated/hero-gym.dim_1920x600.png)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      >
+        <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-background/60 to-background" />
+        <div className="container relative py-32 md:py-48">
+          <div className="mx-auto max-w-4xl text-center">
+            <h1 className="mb-8 text-6xl font-black tracking-tighter text-primary drop-shadow-[0_0_30px_rgba(204,255,0,0.5)] sm:text-7xl md:text-8xl">
+              IRON TEMPLE
             </h1>
-            <p className="mb-8 text-lg text-muted-foreground md:text-xl">
-              Connect with expert trainers, track your progress in real-time, and achieve your fitness goals with
-              personalized workout plans.
+            <p className="mb-4 text-3xl font-extrabold uppercase tracking-wide text-secondary drop-shadow-[0_0_20px_rgba(0,212,255,0.5)] md:text-4xl">
+              Where Legends Are Forged
             </p>
-            <Button size="lg" onClick={handleGetStarted} className="gap-2 text-lg">
-              <Dumbbell className="h-5 w-5" />
-              Get Started
+            <p className="mb-12 text-xl font-bold text-foreground/90 md:text-2xl">
+              Track your gains. Share your PRs. Dominate the grind.
+            </p>
+            <Button
+              size="lg"
+              onClick={handleGetStarted}
+              className="gap-3 border-2 border-primary bg-primary px-12 py-8 text-2xl font-black uppercase tracking-wider shadow-neon-volt-lg transition-all hover:scale-105 hover:shadow-neon-volt-lg"
+            >
+              <Zap className="h-8 w-8" />
+              Start Your Journey
             </Button>
           </div>
         </div>
       </section>
 
       {/* Features Section */}
-      <section className="border-t bg-muted/30 py-16 md:py-24">
+      <section className="border-b-2 border-primary/20 bg-card/50 py-24 md:py-32">
         <div className="container">
-          <h2 className="mb-12 text-center text-3xl font-bold tracking-tight">Everything You Need to Succeed</h2>
-          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
-            <Card>
-              <CardContent className="pt-6">
-                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
-                  <Users className="h-6 w-6 text-primary" />
+          <h2 className="mb-16 text-center text-5xl font-black uppercase tracking-tighter text-primary">
+            Unleash Your Potential
+          </h2>
+          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+            <Card className="border-2 border-primary/30 bg-card transition-all hover:border-primary hover:shadow-neon-volt">
+              <CardContent className="pt-8">
+                <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-lg bg-primary/20">
+                  <Target className="h-10 w-10 text-primary" />
                 </div>
-                <h3 className="mb-2 text-xl font-semibold">Expert Trainers</h3>
-                <p className="text-muted-foreground">
-                  Work with certified trainers who create personalized workout plans tailored to your goals.
+                <h3 className="mb-4 text-2xl font-black uppercase">Personalized Tracking</h3>
+                <p className="text-lg font-semibold text-muted-foreground">
+                  Custom workout splits and macro goals calculated from your metrics. Science-backed gains.
                 </p>
               </CardContent>
             </Card>
 
-            <Card>
-              <CardContent className="pt-6">
-                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
-                  <TrendingUp className="h-6 w-6 text-primary" />
+            <Card className="border-2 border-secondary/30 bg-card transition-all hover:border-secondary hover:shadow-neon-blue">
+              <CardContent className="pt-8">
+                <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-lg bg-secondary/20">
+                  <Users className="h-10 w-10 text-secondary" />
                 </div>
-                <h3 className="mb-2 text-xl font-semibold">Track Progress</h3>
-                <p className="text-muted-foreground">
-                  Monitor your performance with detailed analytics and see your improvements over time.
+                <h3 className="mb-4 text-2xl font-black uppercase">The Flex Wall</h3>
+                <p className="text-lg font-semibold text-muted-foreground">
+                  Share progress pics, post PRs, and get motivated by the community. Show the world your grind.
                 </p>
               </CardContent>
             </Card>
 
-            <Card>
-              <CardContent className="pt-6">
-                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
-                  <Dumbbell className="h-6 w-6 text-primary" />
+            <Card className="border-2 border-primary/30 bg-card transition-all hover:border-primary hover:shadow-neon-volt">
+              <CardContent className="pt-8">
+                <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-lg bg-primary/20">
+                  <TrendingUp className="h-10 w-10 text-primary" />
                 </div>
-                <h3 className="mb-2 text-xl font-semibold">Custom Workouts</h3>
-                <p className="text-muted-foreground">
-                  Get workout plans designed specifically for you, updated in real-time by your trainer.
+                <h3 className="mb-4 text-2xl font-black uppercase">Progress Analytics</h3>
+                <p className="text-lg font-semibold text-muted-foreground">
+                  Visualize your strength gains and body weight changes. Data-driven domination.
                 </p>
               </CardContent>
             </Card>
 
-            <Card>
-              <CardContent className="pt-6">
-                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
-                  <Sparkles className="h-6 w-6 text-primary" />
+            <Card className="border-2 border-secondary/30 bg-card transition-all hover:border-secondary hover:shadow-neon-blue">
+              <CardContent className="pt-8">
+                <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-lg bg-secondary/20">
+                  <Dumbbell className="h-10 w-10 text-secondary" />
                 </div>
-                <h3 className="mb-2 text-xl font-semibold">VORTEX AI</h3>
-                <p className="text-muted-foreground">
-                  Get instant fitness advice and workout recommendations from our intelligent AI assistant.
+                <h3 className="mb-4 text-2xl font-black uppercase">Workout Logs</h3>
+                <p className="text-lg font-semibold text-muted-foreground">
+                  Track every rep, every set, every session. Your complete training history at your fingertips.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="border-2 border-primary/30 bg-card transition-all hover:border-primary hover:shadow-neon-volt">
+              <CardContent className="pt-8">
+                <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-lg bg-primary/20">
+                  <Award className="h-10 w-10 text-primary" />
+                </div>
+                <h3 className="mb-4 text-2xl font-black uppercase">Supplement Stack</h3>
+                <p className="text-lg font-semibold text-muted-foreground">
+                  Build your perfect stack. Categorized by goals: Bulking, Cutting, Endurance. Fuel your fire.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="border-2 border-secondary/30 bg-card transition-all hover:border-secondary hover:shadow-neon-blue">
+              <CardContent className="pt-8">
+                <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-lg bg-secondary/20">
+                  <Zap className="h-10 w-10 text-secondary" />
+                </div>
+                <h3 className="mb-4 text-2xl font-black uppercase">VORTEX AI</h3>
+                <p className="text-lg font-semibold text-muted-foreground">
+                  Your AI training partner. Get instant advice, form tips, and motivation 24/7.
                 </p>
               </CardContent>
             </Card>
@@ -93,15 +129,22 @@ export default function LandingPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-16 md:py-24">
+      <section className="bg-gradient-to-b from-background to-card py-24 md:py-32">
         <div className="container">
-          <div className="mx-auto max-w-2xl text-center">
-            <h2 className="mb-4 text-3xl font-bold tracking-tight">Ready to Start?</h2>
-            <p className="mb-8 text-lg text-muted-foreground">
-              Join thousands of members achieving their fitness goals with personalized training and support.
+          <div className="mx-auto max-w-3xl text-center">
+            <h2 className="mb-6 text-5xl font-black uppercase tracking-tighter text-primary">
+              No Excuses. No Limits.
+            </h2>
+            <p className="mb-12 text-2xl font-bold text-foreground/90">
+              Join the Iron Temple. Start crushing your goals today.
             </p>
-            <Button size="lg" onClick={handleGetStarted}>
-              Get Started Now
+            <Button
+              size="lg"
+              onClick={handleGetStarted}
+              className="gap-3 border-2 border-primary bg-primary px-12 py-8 text-2xl font-black uppercase tracking-wider shadow-neon-volt-lg transition-all hover:scale-105"
+            >
+              <Dumbbell className="h-8 w-8" />
+              Enter The Temple
             </Button>
           </div>
         </div>

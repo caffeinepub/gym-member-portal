@@ -1,44 +1,39 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Add detailed exercise schedule and comprehensive diet plan",
+  "title": "Add TDEE & Macro Calculator",
   "requirements": [
     {
-      "id": "REQ-45",
-      "summary": "Display seven specific exercises with sets, reps, and descriptions in exercise library browser, organized by muscle groups",
+      "id": "REQ-1",
+      "summary": "Create a TDEE and macro calculator component that calculates daily calories and macronutrients based on user input",
       "acceptanceCriteria": [
-        "All seven exercises appear in the exercise library interface",
-        "Each exercise displays its sets and reps information",
-        "Exercises can be filtered by muscle group (Legs, Chest, Shoulders, Triceps, Back, Biceps, Core/Abs)",
-        "Exercise descriptions are visible to users"
+        "Calculator accepts user inputs for weight (kg), height (cm), age, gender, activity level (sedentary, lightly active, moderately active, very active, extremely active), and fitness goal",
+        "Displays calculated TDEE in calories per day",
+        "Shows recommended daily macros breakdown: protein (grams), carbs (grams), fats (grams)",
+        "Includes explanation of calculations or formula used",
+        "Results are displayed in a clear, readable format with visual distinction between calorie and macro values"
       ],
       "file_operations": [
         {
-          "path": "frontend/src/components/exercise/ExerciseLibraryBrowser.tsx",
-          "operation": "modify",
-          "description": "Update the exercise card display to show sets and reps information from recommendedSetsRange and recommendedRepsRange fields. Ensure the seven specific exercises (Squats, Push-ups, Bench Press, Deadlift, Pull-ups/Lat Pulldown, Overhead Press, Plank) are rendered with their complete details when returned from the backend. Add visual indicators (badges or labels) for sets/reps alongside the existing difficulty badge. The muscle group filter should support filtering by Legs, Chest, Shoulders, Triceps, Back, Biceps, and Core/Abs based on the targetMuscleGroups field."
-        },
-        {
-          "path": "frontend/src/components/exercise/ExerciseDetailModal.tsx",
-          "operation": "modify",
-          "description": "Ensure the modal displays the recommendedSetsRange and recommendedRepsRange fields prominently in the exercise details view. Format these fields to show the specific set and rep information (e.g., '3 sets x 12 reps' for Squats, '3 sets x max reps' for Push-ups, '3 sets x 1 minute' for Plank). Verify that all seven exercises display their complete descriptions and target muscle groups when opened."
+          "path": "frontend/src/components/client/TDEECalculator.tsx",
+          "operation": "create",
+          "description": "Create a new TDEE calculator component that collects user inputs (weight, height, age, gender, activity level, fitness goal) via form fields with proper validation. Calculate TDEE using the Mifflin-St Jeor equation, then compute macro recommendations based on the selected fitness goal (weight loss: 40% protein, 30% carbs, 30% fats; maintenance: 30% protein, 40% carbs, 30% fats; muscle gain: 35% protein, 45% carbs, 20% fats). Display results in cards showing total calories and individual macro amounts in grams. Include a collapsible section explaining the calculation formulas. Use Shadcn UI components (Card, Input, Select, Button, Label) for consistent styling with the existing PersonalizedTracker component. Follow the color scheme and layout patterns from frontend/src/components/client/PersonalizedTracker.tsx."
         }
       ]
     },
     {
-      "id": "REQ-46",
-      "summary": "Display comprehensive diet plan with six meal times and two food options per meal in client dashboard",
+      "id": "REQ-2",
+      "summary": "Integrate TDEE calculator into client dashboard as a new tab alongside existing features",
       "acceptanceCriteria": [
-        "Diet plan view shows all six meal times in chronological order",
-        "Each meal displays both Option 1 and Option 2 food choices",
-        "Meal options match the specified Indian food items exactly",
-        "Diet plan is presented in an easy-to-read format for clients"
+        "TDEE calculator is accessible from the client dashboard navigation",
+        "Calculator tab/section follows existing UI patterns and styling",
+        "Calculator is only visible to users with client role"
       ],
       "file_operations": [
         {
-          "path": "frontend/src/components/client/DietPlanView.tsx",
+          "path": "frontend/src/pages/ClientDashboard.tsx",
           "operation": "modify",
-          "description": "Update the component to display diet plans with a structure that supports multiple options per meal time. If the backend returns meals with the six specified meal times (Breakfast, Mid-Morning, Lunch, Pre-Workout, Post-Workout, Dinner), render them in chronological order. For each meal time, display both food options clearly labeled as 'Option 1' and 'Option 2'. Show the food items, portions, and nutritional breakdown for each option. Add visual separation between meal times using cards or sections. Ensure the layout is mobile-responsive and easy to read. If the diet plan structure includes a meals array with foodItems, render all items within each meal option."
+          "description": "Add a new tab labeled 'TDEE Calculator' to the existing Tabs component in ClientDashboard. Import the TDEECalculator component and render it within a new TabsContent section. Position the new tab after the 'Personalized Tracker' tab to group similar calculation tools together. Ensure the tab follows the existing pattern with TabsTrigger and TabsContent wrappers. The calculator will automatically be protected by the client role guard that already wraps the ClientDashboard page."
         }
       ]
     }

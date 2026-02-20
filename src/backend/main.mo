@@ -3,19 +3,20 @@ import Text "mo:core/Text";
 import Map "mo:core/Map";
 import List "mo:core/List";
 import Order "mo:core/Order";
+import Array "mo:core/Array";
+import Float "mo:core/Float";
 import Runtime "mo:core/Runtime";
 import Principal "mo:core/Principal";
 import Iter "mo:core/Iter";
 import Time "mo:core/Time";
-import Array "mo:core/Array";
 import Int "mo:core/Int";
 import MixinAuthorization "authorization/MixinAuthorization";
-import MixinStorage "blob-storage/Mixin";
-import Storage "blob-storage/Storage";
 import AccessControl "authorization/access-control";
-import Migration "migration";
+import MixinStorage "blob-storage/Mixin";
+import Option "mo:core/Option";
 
-(with migration = Migration.run)
+
+
 actor {
   let accessControlState = AccessControl.initState();
   include MixinAuthorization(accessControlState);
@@ -30,6 +31,7 @@ actor {
   type TimetableId = Text;
   type DietPlanId = Text;
   type MealId = Text;
+  type ConnectionRequestId = Text;
 
   type AppUserRole = {
     #admin;
@@ -178,15 +180,247 @@ actor {
     recommendedSetsRange : Text;
   };
 
+  type ExerciseWithHistory = {
+    exercise : Exercise;
+    userHistory : ?[WeightProgressionEntry];
+  };
+
+  type WeightProgressionEntry = {
+    exerciseId : ExerciseId;
+    weight : Float;
+    reps : Nat;
+    timestamp : Int;
+  };
+
+  type WeightProgressionData = {
+    userId : UserId;
+    exerciseId : ExerciseId;
+    entries : [WeightProgressionEntry];
+  };
+
+  type WeightProgressionStats = {
+    exerciseId : ExerciseId;
+    totalSessions : Nat;
+    totalSets : Nat;
+    totalVolume : Float;
+    averageWeight : Float;
+    suggestedIncrement : Float;
+  };
+
+  type CaffeineIntake = {
+    userId : UserId;
+    amountMg : Nat;
+    intakeTime : Int;
+  };
+
+  type OptimalWorkoutTime = {
+    userId : UserId;
+    recommendedStartTime : Int;
+    recommendedEndTime : Int;
+    optimalWindow : Nat;
+  };
+
+  type LocationPreference = {
+    userId : UserId;
+    latitude : Float;
+    longitude : Float;
+    searchRadiusKm : Nat;
+    gymName : Text;
+  };
+
+  type TrainingPartnerPreference = {
+    userId : UserId;
+    fitnessGoals : [Text];
+    experienceLevel : Text;
+    preferredWorkoutTimes : [Text];
+    bio : Text;
+  };
+
+  type ConnectionRequest = {
+    id : ConnectionRequestId;
+    senderId : UserId;
+    receiverId : UserId;
+    status : { #pending; #accepted; #rejected };
+    message : Text;
+    timestamp : Int;
+  };
+
+  type NearbyUser = {
+    userId : UserId;
+    name : Text;
+    distanceKm : Float;
+    fitnessGoals : [Text];
+    experienceLevel : Text;
+  };
+
   let userStore = Map.empty<UserId, User>();
   let workoutPlanStore = Map.empty<WorkoutPlanId, WorkoutPlan>();
   let workoutRecordStore = Map.empty<RecordId, WorkoutRecord>();
   let trainerToClients = Map.empty<UserId, List.List<UserId>>();
   let workoutTimetableStore = Map.empty<TimetableId, ScheduledSession>();
   let dietPlanStore = Map.empty<DietPlanId, DietPlan>();
-  let exerciseLibraryStore = Map.empty<ExerciseId, Exercise>();
+  let weightProgressionStore = Map.empty<UserId, Map.Map<ExerciseId, List.List<WeightProgressionEntry>>>();
+  let caffeineIntakeStore = Map.empty<UserId, CaffeineIntake>();
+  let locationPreferenceStore = Map.empty<UserId, LocationPreference>();
+  let trainingPartnerPreferenceStore = Map.empty<UserId, TrainingPartnerPreference>();
+  let connectionRequestStore = Map.empty<ConnectionRequestId, ConnectionRequest>();
+  let userConnectionsStore = Map.empty<UserId, List.List<UserId>>();
 
   var brandingSettings : BrandingSettings = BrandingSettings.default();
+  var exerciseLibraryStore = Map.empty<ExerciseId, Exercise>();
+
+  public shared ({ caller }) func logWeightProgress(exerciseId : ExerciseId, weight : Float, reps : Nat) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only authenticated users can log weight progression");
+    };
+
+    let newEntry : WeightProgressionEntry = {
+      exerciseId;
+      weight;
+      reps;
+      timestamp = Time.now();
+    };
+
+    let userEntries = switch (weightProgressionStore.get(caller)) {
+      case (?entries) {
+        let updatedEntries = switch (entries.get(exerciseId)) {
+          case (?existingEntries) {
+            existingEntries.add(newEntry);
+            existingEntries;
+          };
+          case (null) {
+            let newList = List.empty<WeightProgressionEntry>();
+            newList.add(newEntry);
+            newList;
+          };
+        };
+        entries.add(exerciseId, updatedEntries);
+        entries;
+      };
+      case (null) {
+        let newEntries = Map.empty<ExerciseId, List.List<WeightProgressionEntry>>();
+        let newList = List.empty<WeightProgressionEntry>();
+        newList.add(newEntry);
+        newEntries.add(exerciseId, newList);
+        newEntries;
+      };
+    };
+
+    weightProgressionStore.add(caller, userEntries);
+  };
+
+  public query ({ caller }) func getProgressionStatsForExercise(exerciseId : ExerciseId) : async WeightProgressionStats {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only authenticated users can view progression stats");
+    };
+
+    var totalSessions = 0;
+    var totalSets = 0;
+    var totalVolume = 0.0;
+    var weightSum = 0.0;
+
+    switch (weightProgressionStore.get(caller)) {
+      case (?userData) {
+        switch (userData.get(exerciseId)) {
+          case (?entries) {
+            let entriesArray = entries.toArray();
+            totalSessions := entriesArray.size();
+            entriesArray.forEach(
+              func(entry) {
+                totalSets += entry.reps;
+                totalVolume += entry.weight * entry.reps.toFloat();
+                weightSum += entry.weight;
+              }
+            );
+          };
+          case (null) {};
+        };
+      };
+      case (null) {};
+    };
+
+    let averageWeight = if (totalSessions > 0) {
+      weightSum / totalSessions.toFloat();
+    } else { 0.0 };
+
+    let suggestedIncrement : Float = if (averageWeight < 20.0) { 2.5 } else if (averageWeight < 50.0) {
+      5.0;
+    } else if (averageWeight < 100.0) { 10.0 } else if (averageWeight < 200.0) { 20.0 } else {
+      40.0;
+    };
+
+    {
+      exerciseId;
+      totalSessions;
+      totalSets;
+      totalVolume;
+      averageWeight;
+      suggestedIncrement;
+    };
+  };
+
+  public shared ({ caller }) func logCaffeineIntake(amountMg : Nat) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only authenticated users can log caffeine intake");
+    };
+    let intake : CaffeineIntake = {
+      userId = caller;
+      amountMg;
+      intakeTime = Time.now();
+    };
+    caffeineIntakeStore.add(caller, intake);
+  };
+
+  public query ({ caller }) func getOptimalWorkoutTime() : async ?OptimalWorkoutTime {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only authenticated users can view optimal workout time");
+    };
+
+    switch (caffeineIntakeStore.get(caller)) {
+      case (?intake) {
+        let peakStartTime = intake.intakeTime + 15 * 60 * 1000000000;
+        let peakEndTime = peakStartTime + 120 * 60 * 1000000000;
+        let optimalWindow = 120;
+        ?{
+          userId = caller;
+          recommendedStartTime = peakStartTime;
+          recommendedEndTime = peakEndTime;
+          optimalWindow;
+        };
+      };
+      case (null) { null };
+    };
+  };
+
+  public query ({ caller }) func getWeightProgressionEntries(exerciseId : ExerciseId) : async [WeightProgressionEntry] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only authenticated users can view weight progression entries");
+    };
+
+    switch (weightProgressionStore.get(caller)) {
+      case (?userEntries) {
+        switch (userEntries.get(exerciseId)) {
+          case (?entries) {
+            entries.toArray();
+          };
+          case (null) {
+            [];
+          };
+        };
+      };
+      case (null) {
+        [];
+      };
+    };
+  };
+
+  public shared ({ caller }) func clearCaffeineIntake() : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only authenticated users can clear caffeine intake");
+    };
+
+    caffeineIntakeStore.remove(caller);
+  };
 
   func getAppUserRole(userId : UserId) : ?AppUserRole {
     switch (userStore.get(userId)) {
@@ -221,21 +455,6 @@ actor {
       case (?clients) { clients.any(func(id) { id == clientId }) };
       case (null) { false };
     };
-  };
-
-  func getCompletedSetsForUserExercise(userId : UserId, exerciseId : ExerciseId) : Nat {
-    let userRecords = workoutRecordStore.values().toArray().filter(
-      func(record) { record.userId == userId }
-    );
-
-    var setCount = 0;
-    for (record in userRecords.values()) {
-      switch (workoutPlanStore.get(record.planId)) {
-        case (?plan) { setCount += plan.sets.filter(func(set) { set.exerciseId == exerciseId }).size() };
-        case (null) {};
-      };
-    };
-    setCount;
   };
 
   public query ({ caller }) func getCallerUserProfile() : async ?UserProfile {
@@ -331,6 +550,31 @@ actor {
     };
     userStore.remove(id);
     trainerToClients.remove(id);
+  };
+
+  public query ({ caller }) func getAllUsers() : async [User] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can view all users");
+    };
+    userStore.values().toArray();
+  };
+
+  public query ({ caller }) func getMyClients() : async [User] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only authenticated users can view clients");
+    };
+
+    if (not isAppTrainer(caller)) {
+      Runtime.trap("Unauthorized: Only trainers can view their clients");
+    };
+
+    switch (trainerToClients.get(caller)) {
+      case (?clientIds) {
+        let clientsArray = clientIds.toArray();
+        clientsArray.filterMap(func(clientId) { userStore.get(clientId) });
+      };
+      case (null) { [] };
+    };
   };
 
   public shared ({ caller }) func assignClientToTrainer(trainerId : UserId, clientId : UserId) : async () {
@@ -466,31 +710,6 @@ actor {
     workoutRecordStore.add(recordId, newRecord);
   };
 
-  public shared ({ caller }) func updateWorkoutRecord(recordId : RecordId, completedSets : Nat, personalNotes : Text) : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only authenticated users can update workout records");
-    };
-
-    switch (workoutRecordStore.get(recordId)) {
-      case (?record) {
-        if (caller != record.userId and not isAppAdmin(caller)) {
-          Runtime.trap("Unauthorized: Can only update your own workout records");
-        };
-
-        let updatedRecord : WorkoutRecord = {
-          id = record.id;
-          planId = record.planId;
-          userId = record.userId;
-          date = record.date;
-          completedSets;
-          personalNotes;
-        };
-        workoutRecordStore.add(recordId, updatedRecord);
-      };
-      case (null) { Runtime.trap("Workout record not found") };
-    };
-  };
-
   public shared ({ caller }) func updateBrandingSettings(newSettings : BrandingSettings) : async () {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can update branding");
@@ -498,403 +717,10 @@ actor {
     brandingSettings := newSettings;
   };
 
-  public query ({ caller }) func getBrandingSettings() : async BrandingSettings {
+  public query func getBrandingSettings() : async BrandingSettings {
     brandingSettings;
   };
 
-  public shared ({ caller }) func askVortex(searchQuery : Text) : async Text {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only authenticated users can use VORTEX");
-    };
-
-    let normalizedQuery = searchQuery.toLower();
-
-    let response = switch (normalizedQuery) {
-      case (normalizedQuery) {
-        if (containsAnyPhrase(normalizedQuery, ["hello", "hi", "hey"])) {
-          ?greetingResponse()
-        } else if (containsAnyPhrase(normalizedQuery, ["how are you", "how's it going"])) {
-          ?feelingResponse()
-        } else if (containsAnyPhrase(normalizedQuery, ["who are you", "what is your name"])) {
-          ?identityResponse()
-        } else if (containsAnyPhrase(normalizedQuery, ["motivation", "encouragement", "inspiration"])) {
-          ?motivationResponse()
-        } else if (normalizedQuery.contains(#text("workout tips"))) {
-          ?workoutTipsResponse()
-        } else if (containsAnyPhrase(normalizedQuery, ["yes", "lets do it", "sure"])) {
-          ?affirmativeResponse()
-        } else if (containsAnyPhrase(normalizedQuery, ["no", "not today", "lazy", "tired"])) {
-          ?positiveOutlookResponse()
-        } else if (containsAnyPhrase(normalizedQuery, ["cant do this", "don't feel like it", "no motivation", "overwhelmed"])) {
-          ?supportResponse()
-        } else if (containsAnyPhrase(normalizedQuery, ["workout completed", "just finished", "done training", "session complete"])) {
-          ?workoutCompletionResponse()
-        } else if (containsAnyPhrase(normalizedQuery, ["diet tips", "food recommendations", "nutrition guidance"])) {
-          ?nutritionTipsResponse()
-        } else if (containsAnyPhrase(normalizedQuery, ["why work out", "what are the benefits of exercise"])) {
-          ?benefitsResponse()
-        } else {
-          null;
-        };
-      };
-    };
-
-    switch (response) {
-      case (?resp) { resp };
-      case (null) { fallbackResponse() };
-    };
-  };
-
-  func containsAnyPhrase(text : Text, phrases : [Text]) : Bool {
-    for (phrase in phrases.values()) {
-      if (text.contains(#text(phrase))) { return true };
-    };
-    false;
-  };
-
-  func greetingResponse() : Text {
-    "Hello! 👋 How can I assist you with your fitness goals today? Are you interested in creating a workout plan, checking your progress, or do you need some motivation?";
-  };
-
-  func feelingResponse() : Text {
-    "I'm doing great, thank you! I'm here to support your fitness journey. What would you like to focus on today?";
-  };
-
-  func identityResponse() : Text {
-    "I'm your personal AI fitness assistant, VORTEX. I help create effective workout plans and track your progress. Would you like to start a new workout plan or review existing ones?";
-  };
-
-  func motivationResponse() : Text {
-    "You have the power to achieve your fitness goals! 💪 Consistency is key. Every small step counts. Would you like some workout tips or help tracking a new exercise?";
-  };
-
-  func workoutTipsResponse() : Text {
-    "Based on your recent activities, I recommend implementing progressive overload to maximize your gains. Would you like suggestions for specific exercises?";
-  };
-
-  func affirmativeResponse() : Text {
-    "Awesome attitude! 💪 Let's get started on creating a customized workout plan for you. What type of results are you looking for - muscle building, fat loss, or general fitness?";
-  };
-
-  func positiveOutlookResponse() : Text {
-    "I understand, sometimes it's hard to find motivation. Let's just do a quick session to get started. Small steps lead to big results! Would you like a short workout suggestion?";
-  };
-
-  func supportResponse() : Text {
-    "I understand, staying motivated can be tough. Remember, fitness is a marathon, not a sprint. Let's set a small, achievable goal for today and build from there. Would you like a quick workout suggestion?";
-  };
-
-  func workoutCompletionResponse() : Text {
-    "Amazing work! Your dedication is inspiring - every workout brings you closer to your goal. Let's keep pushing your progress to the next level.";
-  };
-
-  func nutritionTipsResponse() : Text {
-    "Here are some nutrition tips:" # "\n\n" # "- Start your day with a balanced breakfast." # "\n" # "- Drink plenty of water." # "\n" # "- Incorporate more fruits and vegetables into your meals." # "\n" # "- Limit processed foods and sugary drinks." # "\n" # "- Practice portion control. \n\n Would you like more detailed meal plans ?";
-  };
-
-  func benefitsResponse() : Text {
-    "Regular exercise increases energy, improves mood, helps maintain a healthy weight, boosts self-confidence, and is crucial for a long, happy life. Is this the right motivation for you at the moment, or is there another reason you wish to explore?";
-  };
-
-  func fallbackResponse() : Text {
-    "I'm here to assist you with your fitness journey! You can ask me to create workout plans, log your progress, or get fitness tips. How can I help you today?";
-  };
-
-  public query ({ caller }) func getUser(id : UserId) : async ?User {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only authenticated users can view user data");
-    };
-
-    if (caller == id or isAppAdmin(caller)) {
-      return userStore.get(id);
-    };
-
-    if (isAppTrainer(caller)) {
-      switch (userStore.get(id)) {
-        case (?user) {
-          if (user.role == #client and trainerManagesClient(caller, id)) {
-            return ?user;
-          };
-        };
-        case (null) {};
-      };
-    };
-
-    Runtime.trap("Unauthorized: Cannot view this user's data");
-  };
-
-  public query ({ caller }) func getWorkoutPlan(id : WorkoutPlanId) : async ?WorkoutPlan {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only authenticated users can view workout plans");
-    };
-
-    switch (workoutPlanStore.get(id)) {
-      case (?plan) {
-        if (caller == plan.clientId or caller == plan.creatorTrainerId or isAppAdmin(caller)) {
-          return ?plan;
-        };
-        Runtime.trap("Unauthorized: Cannot view this workout plan");
-      };
-      case (null) { null };
-    };
-  };
-
-  public query ({ caller }) func getAllWorkoutPlansForUser(userId : UserId) : async [WorkoutPlan] {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only authenticated users can view workout plans");
-    };
-
-    if (caller != userId and not isAppAdmin(caller)) {
-      if (not (isAppTrainer(caller) and trainerManagesClient(caller, userId))) {
-        Runtime.trap("Unauthorized: Cannot view workout plans for this user");
-      };
-    };
-
-    let allPlans = workoutPlanStore.values().toArray();
-    allPlans.filter<WorkoutPlan>(func(plan) { plan.clientId == userId });
-  };
-
-  public query ({ caller }) func getWorkoutRecordsForUser(userId : UserId) : async [WorkoutRecord] {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only authenticated users can view workout records");
-    };
-
-    if (caller != userId and not isAppAdmin(caller)) {
-      if (not (isAppTrainer(caller) and trainerManagesClient(caller, userId))) {
-        Runtime.trap("Unauthorized: Cannot view workout records for this user");
-      };
-    };
-
-    let allRecords = workoutRecordStore.values().toArray();
-    allRecords.filter<WorkoutRecord>(func(record) { record.userId == userId });
-  };
-
-  public query ({ caller }) func getAllUsers() : async [User] {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can view all users");
-    };
-    userStore.values().toArray();
-  };
-
-  public query ({ caller }) func getTrainerClients(trainerId : UserId) : async [UserId] {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only authenticated users can view trainer-client relationships");
-    };
-
-    if (caller != trainerId and not isAppAdmin(caller)) {
-      Runtime.trap("Unauthorized: Can only view your own clients");
-    };
-
-    switch (trainerToClients.get(trainerId)) {
-      case (?clients) { clients.toArray() };
-      case (null) { [] };
-    };
-  };
-
-  // Workout Timetabling
-  public shared ({ caller }) func createScheduledSession(id : TimetableId, trainerId : UserId, clientId : UserId, workoutPlanId : WorkoutPlanId, dateTime : Int, clientNotes : Text) : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only authenticated users can create sessions");
-    };
-
-    if (not isAppTrainer(caller)) {
-      Runtime.trap("Unauthorized: Only trainers can create sessions");
-    };
-
-    if (caller != trainerId) {
-      Runtime.trap("Unauthorized: Trainers can only create sessions under their own name");
-    };
-
-    if (not trainerManagesClient(trainerId, clientId)) {
-      Runtime.trap("Unauthorized: Trainer can only create sessions for assigned clients");
-    };
-
-    let session : ScheduledSession = {
-      id;
-      trainerId;
-      clientId;
-      workoutPlanId;
-      dateTime;
-      isCompleted = false;
-      clientNotes;
-      trainerNotes = "";
-    };
-    workoutTimetableStore.add(id, session);
-  };
-
-  public shared ({ caller }) func updateScheduledSession(id : TimetableId, dateTime : Int, clientNotes : Text) : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only authenticated users can update sessions");
-    };
-
-    if (not isAppTrainer(caller)) {
-      Runtime.trap("Unauthorized: Only trainers can update sessions");
-    };
-
-    switch (workoutTimetableStore.get(id)) {
-      case (?session) {
-        if (caller != session.trainerId and not isAppAdmin(caller)) {
-          Runtime.trap("Unauthorized: Only the creator trainer or admin can update this session");
-        };
-
-        let updatedSession : ScheduledSession = {
-          id = session.id;
-          trainerId = session.trainerId;
-          clientId = session.clientId;
-          workoutPlanId = session.workoutPlanId;
-          dateTime;
-          isCompleted = session.isCompleted;
-          clientNotes;
-          trainerNotes = session.trainerNotes;
-        };
-        workoutTimetableStore.add(id, updatedSession);
-      };
-      case (null) { Runtime.trap("Scheduled session not found") };
-    };
-  };
-
-  public shared ({ caller }) func deleteScheduledSession(id : TimetableId) : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only authenticated users can delete sessions");
-    };
-
-    if (not isAppTrainer(caller)) {
-      Runtime.trap("Unauthorized: Only trainers can delete sessions");
-    };
-
-    switch (workoutTimetableStore.get(id)) {
-      case (?session) {
-        if (caller != session.trainerId and not isAppAdmin(caller)) {
-          Runtime.trap("Unauthorized: Only the creator trainer or admin can delete this session");
-        };
-        workoutTimetableStore.remove(id);
-      };
-      case (null) { Runtime.trap("Scheduled session not found") };
-    };
-  };
-
-  public query ({ caller }) func getScheduledSessionsForClient(clientId : UserId) : async [ScheduledSession] {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only authenticated users can view scheduled sessions");
-    };
-
-    if (caller != clientId and not isAppAdmin(caller)) {
-      if (not (isAppTrainer(caller) and trainerManagesClient(caller, clientId))) {
-        Runtime.trap("Unauthorized: Cannot view sessions for this client");
-      };
-    };
-
-    let allSessions = workoutTimetableStore.values().toArray();
-    allSessions.filter<ScheduledSession>(func(session) { session.clientId == clientId });
-  };
-
-  public query ({ caller }) func getScheduledSessionsForTrainer(trainerId : UserId) : async [ScheduledSession] {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only authenticated users can view scheduled sessions");
-    };
-
-    if (caller != trainerId and not isAppAdmin(caller)) {
-      Runtime.trap("Unauthorized: Can only view your own sessions");
-    };
-
-    let allSessions = workoutTimetableStore.values().toArray();
-    allSessions.filter<ScheduledSession>(func(session) { session.trainerId == trainerId });
-  };
-
-  // Diet Plan
-  public shared ({ caller }) func createDietPlan(id : DietPlanId, trainerId : UserId, clientId : UserId, name : Text, meals : [Meal], dietaryNotes : Text) : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only authenticated users can create diet plans");
-    };
-
-    if (not isAppTrainer(caller)) {
-      Runtime.trap("Unauthorized: Only trainers can create diet plans");
-    };
-
-    if (caller != trainerId) {
-      Runtime.trap("Unauthorized: Trainers can only create diet plans under their own name");
-    };
-
-    if (not trainerManagesClient(trainerId, clientId)) {
-      Runtime.trap("Unauthorized: Trainer can only create diet plans for assigned clients");
-    };
-
-    let dietPlan : DietPlan = {
-      id;
-      trainerId;
-      clientId;
-      name;
-      meals;
-      dietaryNotes;
-    };
-    dietPlanStore.add(id, dietPlan);
-  };
-
-  public shared ({ caller }) func updateDietPlan(id : DietPlanId, meals : [Meal], dietaryNotes : Text) : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only authenticated users can update diet plans");
-    };
-
-    if (not isAppTrainer(caller)) {
-      Runtime.trap("Unauthorized: Only trainers can update diet plans");
-    };
-
-    switch (dietPlanStore.get(id)) {
-      case (?plan) {
-        if (caller != plan.trainerId and not isAppAdmin(caller)) {
-          Runtime.trap("Unauthorized: Only the creator trainer or admin can update this diet plan");
-        };
-
-        let updatedPlan : DietPlan = {
-          id = plan.id;
-          trainerId = plan.trainerId;
-          clientId = plan.clientId;
-          name = plan.name;
-          meals;
-          dietaryNotes;
-        };
-        dietPlanStore.add(id, updatedPlan);
-      };
-      case (null) { Runtime.trap("Diet plan not found") };
-    };
-  };
-
-  public shared ({ caller }) func deleteDietPlan(id : DietPlanId) : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only authenticated users can delete diet plans");
-    };
-
-    if (not isAppTrainer(caller)) {
-      Runtime.trap("Unauthorized: Only trainers can delete diet plans");
-    };
-
-    switch (dietPlanStore.get(id)) {
-      case (?plan) {
-        if (caller != plan.trainerId and not isAppAdmin(caller)) {
-          Runtime.trap("Unauthorized: Only the creator trainer or admin can delete this diet plan");
-        };
-        dietPlanStore.remove(id);
-      };
-      case (null) { Runtime.trap("Diet plan not found") };
-    };
-  };
-
-  public query ({ caller }) func getDietPlansForClient(clientId : UserId) : async [DietPlan] {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only authenticated users can view diet plans");
-    };
-
-    if (caller != clientId and not isAppAdmin(caller)) {
-      if (not (isAppTrainer(caller) and trainerManagesClient(caller, clientId))) {
-        Runtime.trap("Unauthorized: Cannot view diet plans for this client");
-      };
-    };
-
-    let allPlans = dietPlanStore.values().toArray();
-    allPlans.filter<DietPlan>(func(plan) { plan.clientId == clientId });
-  };
-
-  // Exercise Library
   public shared ({ caller }) func addExerciseToLibrary(id : ExerciseId, name : Text, targetMuscleGroups : Text, difficultyLevel : Text, equipmentNeeded : Text, videoUrl : Text, description : Text, recommendedRepsRange : Text, recommendedSetsRange : Text) : async () {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can add exercises");
@@ -948,6 +774,34 @@ actor {
     exerciseLibraryStore.values().toArray();
   };
 
+  public query ({ caller }) func getExerciseWithHistory(id : ExerciseId) : async ?ExerciseWithHistory {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only authenticated users can view exercises");
+    };
+
+    switch (exerciseLibraryStore.get(id)) {
+      case (?exercise) {
+        let userHistory = switch (weightProgressionStore.get(caller)) {
+          case (?userEntries) {
+            switch (userEntries.get(id)) {
+              case (?entries) {
+                ?entries.toArray();
+              };
+              case (null) { ?[] };
+            };
+          };
+          case (null) { ?[] };
+        };
+        
+        ?{
+          exercise;
+          userHistory;
+        };
+      };
+      case (null) { null };
+    };
+  };
+
   public query ({ caller }) func getExercise(id : ExerciseId) : async ?Exercise {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only authenticated users can view exercises");
@@ -955,314 +809,389 @@ actor {
     exerciseLibraryStore.get(id);
   };
 
-  public query ({ caller }) func getDietPlanTemplate() : async [MealOption] {
-    [
+  type FormAnalysisTip = {
+    exerciseId : ExerciseId;
+    formCheckpoints : [Text];
+    commonMistakes : [Text];
+    correctionSteps : [Text];
+    videoUrl : Text;
+  };
+
+  type SupplementStack = {
+    goalType : Text;
+    products : [SupplementProduct];
+    dosageRecommendations : [DosageRecommendation];
+    timingGuidelines : [TimingGuideline];
+    benefitDescriptions : [Text];
+  };
+
+  type SupplementProduct = {
+    name : Text;
+    productType : Text;
+    description : Text;
+  };
+
+  type DosageRecommendation = {
+    productName : Text;
+    recommendedDosage : Text;
+  };
+
+  type TimingGuideline = {
+    productName : Text;
+    timing : Text;
+    purpose : Text;
+  };
+
+  var formAnalysisTipsStore = Map.empty<ExerciseId, FormAnalysisTip>();
+  var supplementStacksStore = Map.empty<Text, SupplementStack>();
+
+  public query ({ caller }) func getFormAnalysisTip(exerciseId : ExerciseId) : async ?FormAnalysisTip {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only authenticated users can view form analysis tips");
+    };
+    formAnalysisTipsStore.get(exerciseId);
+  };
+
+  public query ({ caller }) func getAllFormAnalysisTips() : async [FormAnalysisTip] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only authenticated users can view form analysis tips");
+    };
+    formAnalysisTipsStore.values().toArray();
+  };
+
+  public query ({ caller }) func getSupplementStack(goalType : Text) : async ?SupplementStack {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only authenticated users can view supplement stacks");
+    };
+    supplementStacksStore.get(goalType);
+  };
+
+  public query ({ caller }) func getAllSupplementStacks() : async [SupplementStack] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only authenticated users can view supplement stacks");
+    };
+    supplementStacksStore.values().toArray();
+  };
+
+  public shared ({ caller }) func saveLocationPreference(latitude : Float, longitude : Float, searchRadiusKm : Nat, gymName : Text) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only authenticated users can save location preferences");
+    };
+
+    let preference : LocationPreference = {
+      userId = caller;
+      latitude;
+      longitude;
+      searchRadiusKm;
+      gymName;
+    };
+    locationPreferenceStore.add(caller, preference);
+  };
+
+  public query ({ caller }) func getLocationPreference() : async ?LocationPreference {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only authenticated users can view location preferences");
+    };
+    locationPreferenceStore.get(caller);
+  };
+
+  public shared ({ caller }) func saveTrainingPartnerPreference(fitnessGoals : [Text], experienceLevel : Text, preferredWorkoutTimes : [Text], bio : Text) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only authenticated users can save training partner preferences");
+    };
+
+    let preference : TrainingPartnerPreference = {
+      userId = caller;
+      fitnessGoals;
+      experienceLevel;
+      preferredWorkoutTimes;
+      bio;
+    };
+    trainingPartnerPreferenceStore.add(caller, preference);
+  };
+
+  public query ({ caller }) func getTrainingPartnerPreference() : async ?TrainingPartnerPreference {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only authenticated users can view training partner preferences");
+    };
+    trainingPartnerPreferenceStore.get(caller);
+  };
+
+  func calculateDistance(lat1 : Float, lon1 : Float, lat2 : Float, lon2 : Float) : Float {
+    let r = 6371.0;
+    let dLat = (lat2 - lat1) * 3.14159265359 / 180.0;
+    let dLon = (lon2 - lon1) * 3.14159265359 / 180.0;
+    let a = Float.sin(dLat / 2.0) * Float.sin(dLat / 2.0) +
+            Float.cos(lat1 * 3.14159265359 / 180.0) * Float.cos(lat2 * 3.14159265359 / 180.0) *
+            Float.sin(dLon / 2.0) * Float.sin(dLon / 2.0);
+    let c = 2.0 * Float.arctan2(Float.sqrt(a), Float.sqrt(1.0 - a));
+    r * c;
+  };
+
+  public query ({ caller }) func getNearbyUsers() : async [NearbyUser] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only authenticated users can view nearby users");
+    };
+
+    switch (locationPreferenceStore.get(caller)) {
+      case (?myLocation) {
+        let nearbyUsers = List.empty<NearbyUser>();
+        
+        for ((userId, location) in locationPreferenceStore.entries()) {
+          if (userId != caller) {
+            let distance = calculateDistance(
+              myLocation.latitude,
+              myLocation.longitude,
+              location.latitude,
+              location.longitude
+            );
+            
+            if (distance <= myLocation.searchRadiusKm.toFloat()) {
+              switch (trainingPartnerPreferenceStore.get(userId)) {
+                case (?preferences) {
+                  switch (userStore.get(userId)) {
+                    case (?user) {
+                      nearbyUsers.add({
+                        userId;
+                        name = user.name;
+                        distanceKm = distance;
+                        fitnessGoals = preferences.fitnessGoals;
+                        experienceLevel = preferences.experienceLevel;
+                      });
+                    };
+                    case (null) {};
+                  };
+                };
+                case (null) {};
+              };
+            };
+          };
+        };
+        
+        nearbyUsers.toArray();
+      };
+      case (null) { [] };
+    };
+  };
+
+  public shared ({ caller }) func sendConnectionRequest(receiverId : UserId, message : Text) : async ConnectionRequestId {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only authenticated users can send connection requests");
+    };
+
+    if (caller == receiverId) {
+      Runtime.trap("Cannot send connection request to yourself");
+    };
+
+    let requestId = caller.toText() # "-" # receiverId.toText() # "-" # Time.now().toText();
+    
+    let request : ConnectionRequest = {
+      id = requestId;
+      senderId = caller;
+      receiverId;
+      status = #pending;
+      message;
+      timestamp = Time.now();
+    };
+    
+    connectionRequestStore.add(requestId, request);
+    requestId;
+  };
+
+  public shared ({ caller }) func acceptConnectionRequest(requestId : ConnectionRequestId) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only authenticated users can accept connection requests");
+    };
+
+    switch (connectionRequestStore.get(requestId)) {
+      case (?request) {
+        if (request.receiverId != caller) {
+          Runtime.trap("Unauthorized: Can only accept requests sent to you");
+        };
+
+        if (request.status != #pending) {
+          Runtime.trap("Request already processed");
+        };
+
+        let updatedRequest : ConnectionRequest = {
+          request with status = #accepted
+        };
+        connectionRequestStore.add(requestId, updatedRequest);
+
+        let senderConnections = switch (userConnectionsStore.get(request.senderId)) {
+          case (?connections) { connections };
+          case (null) { List.empty<UserId>() };
+        };
+        senderConnections.add(caller);
+        userConnectionsStore.add(request.senderId, senderConnections);
+
+        let receiverConnections = switch (userConnectionsStore.get(caller)) {
+          case (?connections) { connections };
+          case (null) { List.empty<UserId>() };
+        };
+        receiverConnections.add(request.senderId);
+        userConnectionsStore.add(caller, receiverConnections);
+      };
+      case (null) { Runtime.trap("Connection request not found") };
+    };
+  };
+
+  public shared ({ caller }) func rejectConnectionRequest(requestId : ConnectionRequestId) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only authenticated users can reject connection requests");
+    };
+
+    switch (connectionRequestStore.get(requestId)) {
+      case (?request) {
+        if (request.receiverId != caller) {
+          Runtime.trap("Unauthorized: Can only reject requests sent to you");
+        };
+
+        if (request.status != #pending) {
+          Runtime.trap("Request already processed");
+        };
+
+        let updatedRequest : ConnectionRequest = {
+          request with status = #rejected
+        };
+        connectionRequestStore.add(requestId, updatedRequest);
+      };
+      case (null) { Runtime.trap("Connection request not found") };
+    };
+  };
+
+  public query ({ caller }) func getMyConnectionRequests() : async [ConnectionRequest] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only authenticated users can view connection requests");
+    };
+
+    let requests = List.empty<ConnectionRequest>();
+    for ((_, request) in connectionRequestStore.entries()) {
+      if (request.receiverId == caller or request.senderId == caller) {
+        requests.add(request);
+      };
+    };
+    requests.toArray();
+  };
+
+  public query ({ caller }) func getMyConnections() : async [User] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only authenticated users can view connections");
+    };
+
+    switch (userConnectionsStore.get(caller)) {
+      case (?connections) {
+        let connectionsArray = connections.toArray();
+        connectionsArray.filterMap(func(userId) { userStore.get(userId) });
+      };
+      case (null) { [] };
+    };
+  };
+
+  public shared ({ caller }) func initializeFormAnalysisTipsAndSupplements() : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can initialize this data");
+    };
+
+    let formAnalysisTips : [FormAnalysisTip] = [
       {
-        mealType = "Breakfast";
-        options = [
-          {
-            description = "Option 1: 3 Boiled Eggs + Brown Bread / Roti";
-            foodItems = [
-              {
-                name = "Eggs";
-                portion = "3 boiled";
-                calories = 210;
-                protein = 18.0;
-                carbs = 1.5;
-                fats = 15.0;
-              },
-              {
-                name = "Brown Bread / Roti";
-                portion = "2 slices";
-                calories = 120;
-                protein = 4.0;
-                carbs = 24.0;
-                fats = 2.0;
-              },
-            ];
-          },
-          {
-            description = "Option 2: Oats with Milk + 1 Banana";
-            foodItems = [
-              {
-                name = "Oats";
-                portion = "1 bowl";
-                calories = 150;
-                protein = 5.0;
-                carbs = 27.0;
-                fats = 3.0;
-              },
-              {
-                name = "Milk";
-                portion = "1 cup (200ml)";
-                calories = 120;
-                protein = 8.0;
-                carbs = 12.0;
-                fats = 5.0;
-              },
-              {
-                name = "Banana";
-                portion = "1 medium";
-                calories = 90;
-                protein = 1.0;
-                carbs = 23.0;
-                fats = 0.5;
-              },
-            ];
-          },
+        exerciseId = 1;
+        formCheckpoints = [
+          "Shoulder blades retracted",
+          "Elbows at 45° angle",
+          "Controlled descent"
         ];
+        commonMistakes = [
+          "Flaring elbows",
+          "Bouncing the bar",
+          "Lifting hips"
+        ];
+        correctionSteps = [
+          "Practice with just the bar",
+          "Focus on tempo",
+          "Record yourself"
+        ];
+        videoUrl = "https://youtu.be/rT7DgCr-3pg";
       },
       {
-        mealType = "Mid-Morning";
-        options = [
-          {
-            description = "Option 1: 1 bowl Roasted Chana (High Protein)";
-            foodItems = [
-              {
-                name = "Roasted Chana";
-                portion = "1 bowl";
-                calories = 200;
-                protein = 12.0;
-                carbs = 30.0;
-                fats = 4.0;
-              },
-            ];
-          },
-          {
-            description = "Option 2: Handful of Peanuts + 1 Apple";
-            foodItems = [
-              {
-                name = "Peanuts";
-                portion = "1 handful (30g)";
-                calories = 180;
-                protein = 8.0;
-                carbs = 6.0;
-                fats = 15.0;
-              },
-              {
-                name = "Apple";
-                portion = "1 medium";
-                calories = 95;
-                protein = 0.5;
-                carbs = 25.0;
-                fats = 0.3;
-              },
-            ];
-          },
+        exerciseId = 14;
+        formCheckpoints = [
+          "Neutral spine",
+          "Knees tracking over feet",
+          "Depth below parallel"
         ];
-      },
-      {
-        mealType = "Lunch";
-        options = [
-          {
-            description = "Option 1: Dal + Rice + Curd (Dahi) + Salad";
-            foodItems = [
-              {
-                name = "Dal";
-                portion = "1 bowl";
-                calories = 150;
-                protein = 7.0;
-                carbs = 26.0;
-                fats = 3.0;
-              },
-              {
-                name = "Rice";
-                portion = "1 cup";
-                calories = 200;
-                protein = 4.0;
-                carbs = 45.0;
-                fats = 0.5;
-              },
-              {
-                name = "Curd (Dahi)";
-                portion = "1 bowl";
-                calories = 100;
-                protein = 6.0;
-                carbs = 7.0;
-                fats = 5.0;
-              },
-              {
-                name = "Salad";
-                portion = "1 serving";
-                calories = 50;
-                protein = 1.0;
-                carbs = 10.0;
-                fats = 0.5;
-              },
-            ];
-          },
-          {
-            description = "Option 2: Soya Chunks Curry + 2 Roti + Salad";
-            foodItems = [
-              {
-                name = "Soya Chunks Curry";
-                portion = "1 bowl";
-                calories = 180;
-                protein = 16.0;
-                carbs = 20.0;
-                fats = 5.0;
-              },
-              {
-                name = "Roti";
-                portion = "2 pieces";
-                calories = 120;
-                protein = 4.0;
-                carbs = 22.0;
-                fats = 2.0;
-              },
-              {
-                name = "Salad";
-                portion = "1 serving";
-                calories = 50;
-                protein = 1.0;
-                carbs = 10.0;
-                fats = 0.5;
-              },
-            ];
-          },
+        commonMistakes = [
+          "Knees collapsing inward",
+          "Heels off the ground",
+          "Rounding lower back"
         ];
-      },
-      {
-        mealType = "Pre-Workout";
-        options = [
-          {
-            description = "Option 1: 1 Banana + Black Coffee (for energy)";
-            foodItems = [
-              {
-                name = "Banana";
-                portion = "1 medium";
-                calories = 90;
-                protein = 1.0;
-                carbs = 23.0;
-                fats = 0.5;
-              },
-              {
-                name = "Black Coffee";
-                portion = "1 cup";
-                calories = 5;
-                protein = 0.0;
-                carbs = 1.0;
-                fats = 0.0;
-              },
-            ];
-          },
-          {
-            description = "Option 2: 1 Sweet Potato (Shakarkandi)";
-            foodItems = [
-              {
-                name = "Sweet Potato";
-                portion = "1 medium";
-                calories = 100;
-                protein = 2.0;
-                carbs = 23.0;
-                fats = 0.2;
-              },
-            ];
-          },
+        correctionSteps = [
+          "Mobility work",
+          "Practice with bodyweight",
+          "Use mirrors for feedback"
         ];
-      },
-      {
-        mealType = "Post-Workout";
-        options = [
-          {
-            description = "Option 1: 4 Egg Whites or Paneer (50g)";
-            foodItems = [
-              {
-                name = "Egg Whites";
-                portion = "4 pieces";
-                calories = 68;
-                protein = 14.0;
-                carbs = 0.8;
-                fats = 0.2;
-              },
-              {
-                name = "Paneer";
-                portion = "50g";
-                calories = 165;
-                protein = 10.0;
-                carbs = 5.0;
-                fats = 13.0;
-              },
-            ];
-          },
-          {
-            description = "Option 2: Sattu Drink (3-4 spoons in water/milk)";
-            foodItems = [
-              {
-                name = "Sattu Drink";
-                portion = "3-4 spoons";
-                calories = 150;
-                protein = 10.0;
-                carbs = 27.0;
-                fats = 2.5;
-              },
-              {
-                name = "Milk";
-                portion = "1 cup (200ml)";
-                calories = 120;
-                protein = 8.0;
-                carbs = 12.0;
-                fats = 5.0;
-              },
-            ];
-          },
-        ];
-      },
-      {
-        mealType = "Dinner";
-        options = [
-          {
-            description = "Option 1: Paneer Bhurji / Chicken + 2 Roti";
-            foodItems = [
-              {
-                name = "Paneer Bhurji";
-                portion = "1 bowl";
-                calories = 220;
-                protein = 12.0;
-                carbs = 8.0;
-                fats = 15.0;
-              },
-              {
-                name = "Chicken";
-                portion = "100g cooked";
-                calories = 165;
-                protein = 20.0;
-                carbs = 0.0;
-                fats = 7.0;
-              },
-              {
-                name = "Roti";
-                portion = "2 pieces";
-                calories = 120;
-                protein = 4.0;
-                carbs = 22.0;
-                fats = 2.0;
-              },
-            ];
-          },
-          {
-            description = "Option 2: Moong Dal Khichdi + Omelette";
-            foodItems = [
-              {
-                name = "Moong Dal Khichdi";
-                portion = "1 bowl";
-                calories = 250;
-                protein = 10.0;
-                carbs = 50.0;
-                fats = 3.0;
-              },
-              {
-                name = "Omelette";
-                portion = "2 eggs";
-                calories = 140;
-                protein = 12.0;
-                carbs = 2.0;
-                fats = 11.0;
-              },
-            ];
-          },
-        ];
-      },
+        videoUrl = "https://youtu.be/2MEQ6UoFflA";
+      }
     ];
+
+    let supplements : [SupplementStack] = [
+      {
+        goalType = "Muscle Gain";
+        products = [
+          { name = "Whey Protein"; productType = "Protein"; description = "Muscle building" },
+          { name = "Creatine Monohydrate"; productType = "Performance"; description = "Strength increase" },
+          { name = "BCAAs"; productType = "Amino Acids"; description = "Recovery" }
+        ];
+        dosageRecommendations = [
+          { productName = "Whey Protein"; recommendedDosage = "20-40g post-workout" },
+          { productName = "Creatine Monohydrate"; recommendedDosage = "5g daily" },
+          { productName = "BCAAs"; recommendedDosage = "5-10g intra-workout" }
+        ];
+        timingGuidelines = [
+          { productName = "Whey Protein"; timing = "Post-workout"; purpose = "Recovery" },
+          { productName = "Creatine Monohydrate"; timing = "Daily"; purpose = "Performance" },
+          { productName = "BCAAs"; timing = "During workout"; purpose = "Endurance" }
+        ];
+        benefitDescriptions = [
+          "Whey Protein aids in muscle synthesis and recovery.",
+          "Creatine enhances strength and power.",
+          "BCAAs support endurance and muscle preservation."
+        ];
+      },
+      {
+        goalType = "Fat Loss";
+        products = [
+          { name = "Green Tea Extract"; productType = "Thermogenic"; description = "Metabolism Booster" },
+          { name = "L-Carnitine"; productType = "Fat Burner"; description = "Helps transport fat" },
+          { name = "Caffeine"; productType = "Stimulant"; description = "Energy booster" }
+        ];
+        dosageRecommendations = [
+          { productName = "Green Tea Extract"; recommendedDosage = "400-500mg daily" },
+          { productName = "L-Carnitine"; recommendedDosage = "1-2g daily" },
+          { productName = "Caffeine"; recommendedDosage = "200-400mg as needed" }
+        ];
+        timingGuidelines = [
+          { productName = "Caffeine"; timing = "Pre-workout"; purpose = "Energy boost" },
+          { productName = "Green Tea Extract"; timing = "Morning/Afternoon"; purpose = "Metabolism support" },
+          { productName = "L-Carnitine"; timing = "Pre-workout"; purpose = "Fat utilization" }
+        ];
+        benefitDescriptions = [
+          "Green Tea Extract supports metabolism.",
+          "L-Carnitine helps in fat transportation.",
+          "Caffeine provides energy and focus."
+        ];
+      }
+    ];
+
+    formAnalysisTipsStore := Map.empty<ExerciseId, FormAnalysisTip>();
+    supplementStacksStore := Map.empty<Text, SupplementStack>();
+
+    for (tip in formAnalysisTips.values()) {
+      formAnalysisTipsStore.add(tip.exerciseId, tip);
+    };
+
+    for (stack in supplements.values()) {
+      supplementStacksStore.add(stack.goalType, stack);
+    };
   };
 };

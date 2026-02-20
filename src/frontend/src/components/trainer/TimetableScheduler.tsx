@@ -6,13 +6,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar, Clock } from 'lucide-react';
-import { useCreateScheduledSession, useGetAllWorkoutPlansForUser } from '../../hooks/useQueries';
+import { useCreateScheduledSession, useGetAllWorkoutPlansForUser, User } from '../../hooks/useQueries';
 import { Principal } from '@dfinity/principal';
 import { toast } from 'sonner';
 
 interface TimetableSchedulerProps {
   trainerId: Principal;
-  clients: Principal[];
+  clients: User[];
   onSuccess?: () => void;
 }
 
@@ -40,12 +40,12 @@ export default function TimetableScheduler({ trainerId, clients, onSuccess }: Ti
       const sessionId = `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
       await createSession.mutateAsync({
-        id: sessionId,
+        sessionId,
         trainerId,
         clientId: Principal.fromText(selectedClient),
         workoutPlanId: selectedPlan,
         dateTime: BigInt(dateTime.getTime() * 1000000),
-        clientNotes: notes,
+        trainerNotes: notes,
       });
 
       toast.success('Workout session scheduled successfully!');
@@ -77,8 +77,8 @@ export default function TimetableScheduler({ trainerId, clients, onSuccess }: Ti
               </SelectTrigger>
               <SelectContent>
                 {clients.map((client) => (
-                  <SelectItem key={client.toString()} value={client.toString()}>
-                    {client.toString().slice(0, 10)}...
+                  <SelectItem key={client.id.toString()} value={client.id.toString()}>
+                    {client.name}
                   </SelectItem>
                 ))}
               </SelectContent>

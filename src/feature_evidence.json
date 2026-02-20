@@ -2,11 +2,10 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-display-the-seven-exercises-squats-push-ups-bench-press-deadlift-pull-ups-lat-pulldown-overhead-press-plank-with-their-sets-reps-and-descriptions-in-the-exercise-library-browser-interface-organized-by-their-target-muscle-groups",
-      "featureTitle": "Display the seven exercises (Squats, Push-ups, Bench Press, Deadlift, Pull-ups/Lat Pulldown, Overhead Press, Plank) with their sets, reps, and descriptions in the exercise library browser interface, organized by their target muscle groups",
+      "featureId": "feature-create-a-tdee-total-daily-energy-expenditure-and-macro-calculator-component-in-the-frontend-that-calculates-daily-calories-protein-carbs-and-fats-based-on-user-input-including-weight-height-age-gender-activity-level-and-fitness-goal-weight-loss-maintenance-muscle-gain",
+      "featureTitle": "Create a TDEE (Total Daily Energy Expenditure) and macro calculator component in the frontend that calculates daily calories, protein, carbs, and fats based on user input including weight, height, age, gender, activity level, and fitness goal (weight loss, maintenance, muscle gain)",
       "files": [
-        "frontend/src/components/exercise/ExerciseDetailModal.tsx",
-        "frontend/src/components/exercise/ExerciseLibraryBrowser.tsx"
+        "frontend/src/components/client/TDEECalculator.tsx"
       ],
       "components": [
         "authorization@4.0.0",
@@ -15,18 +14,20 @@
         "shadcn-ui@1.0.0",
         "build-template-react@1.0.0",
         "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
+        "github-export-icp-cli@1.0.0",
+        "qr-code@1.0.0",
+        "camera@1.0.0"
       ],
       "testIds": [
-        "REQ-45"
+        "REQ-1"
       ],
       "confidence": "high"
     },
     {
-      "featureId": "feature-display-the-comprehensive-diet-plan-in-the-client-dashboard-diet-plan-view-showing-all-six-meal-times-breakfast-mid-morning-lunch-pre-workout-post-workout-dinner-with-both-food-options-clearly-labeled-as-option-1-and-option-2-for-each-meal",
-      "featureTitle": "Display the comprehensive diet plan in the client dashboard diet plan view showing all six meal times (Breakfast, Mid-Morning, Lunch, Pre-Workout, Post-Workout, Dinner) with both food options clearly labeled as Option 1 and Option 2 for each meal",
+      "featureId": "feature-integrate-the-tdee-calculator-into-the-client-dashboard-as-a-new-tab-or-section-accessible-alongside-existing-features-like-workout-plans-and-progress-tracking",
+      "featureTitle": "Integrate the TDEE calculator into the client dashboard as a new tab or section, accessible alongside existing features like workout plans and progress tracking",
       "files": [
-        "frontend/src/components/client/DietPlanView.tsx"
+        "frontend/src/pages/ClientDashboard.tsx"
       ],
       "components": [
         "authorization@4.0.0",
@@ -35,10 +36,12 @@
         "shadcn-ui@1.0.0",
         "build-template-react@1.0.0",
         "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
+        "github-export-icp-cli@1.0.0",
+        "qr-code@1.0.0",
+        "camera@1.0.0"
       ],
       "testIds": [
-        "REQ-46"
+        "REQ-2"
       ],
       "confidence": "high"
     }

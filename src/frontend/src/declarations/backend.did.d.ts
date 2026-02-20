@@ -19,19 +19,21 @@ export interface BrandingSettings {
   'logoUrl' : string,
   'secondaryColor' : string,
 }
-export interface DietOption {
-  'foodItems' : Array<FoodItem>,
-  'description' : string,
+export interface ConnectionRequest {
+  'id' : ConnectionRequestId,
+  'status' : { 'pending' : null } |
+    { 'rejected' : null } |
+    { 'accepted' : null },
+  'receiverId' : UserId,
+  'message' : string,
+  'timestamp' : bigint,
+  'senderId' : UserId,
 }
-export interface DietPlan {
-  'id' : DietPlanId,
-  'meals' : Array<Meal>,
-  'clientId' : UserId,
-  'name' : string,
-  'trainerId' : UserId,
-  'dietaryNotes' : string,
+export type ConnectionRequestId = string;
+export interface DosageRecommendation {
+  'productName' : string,
+  'recommendedDosage' : string,
 }
-export type DietPlanId = string;
 export interface Exercise {
   'id' : ExerciseId,
   'difficultyLevel' : string,
@@ -44,40 +46,38 @@ export interface Exercise {
   'recommendedRepsRange' : string,
 }
 export type ExerciseId = bigint;
-export interface FoodItem {
-  'carbs' : number,
-  'fats' : number,
-  'calories' : bigint,
-  'name' : string,
-  'portion' : string,
-  'protein' : number,
+export interface ExerciseWithHistory {
+  'userHistory' : [] | [Array<WeightProgressionEntry>],
+  'exercise' : Exercise,
 }
-export interface Meal {
-  'id' : MealId,
-  'foodItems' : Array<FoodItem>,
-  'carbs' : number,
-  'fats' : number,
-  'name' : string,
-  'time' : string,
-  'totalCalories' : bigint,
-  'protein' : number,
+export interface FormAnalysisTip {
+  'exerciseId' : ExerciseId,
+  'formCheckpoints' : Array<string>,
+  'commonMistakes' : Array<string>,
+  'correctionSteps' : Array<string>,
+  'videoUrl' : string,
 }
-export type MealId = string;
-export interface MealOption {
-  'options' : Array<DietOption>,
-  'mealType' : string,
+export interface LocationPreference {
+  'latitude' : number,
+  'gymName' : string,
+  'searchRadiusKm' : bigint,
+  'userId' : UserId,
+  'longitude' : number,
+}
+export interface NearbyUser {
+  'experienceLevel' : string,
+  'fitnessGoals' : Array<string>,
+  'userId' : UserId,
+  'name' : string,
+  'distanceKm' : number,
+}
+export interface OptimalWorkoutTime {
+  'recommendedEndTime' : bigint,
+  'userId' : UserId,
+  'recommendedStartTime' : bigint,
+  'optimalWindow' : bigint,
 }
 export type RecordId = string;
-export interface ScheduledSession {
-  'id' : TimetableId,
-  'clientId' : UserId,
-  'isCompleted' : boolean,
-  'trainerNotes' : string,
-  'trainerId' : UserId,
-  'clientNotes' : string,
-  'workoutPlanId' : WorkoutPlanId,
-  'dateTime' : bigint,
-}
 export interface Set {
   'id' : SetId,
   'weight' : number,
@@ -85,8 +85,30 @@ export interface Set {
   'reps' : bigint,
 }
 export type SetId = bigint;
-export type Time = bigint;
-export type TimetableId = string;
+export interface SupplementProduct {
+  'name' : string,
+  'description' : string,
+  'productType' : string,
+}
+export interface SupplementStack {
+  'goalType' : string,
+  'timingGuidelines' : Array<TimingGuideline>,
+  'benefitDescriptions' : Array<string>,
+  'products' : Array<SupplementProduct>,
+  'dosageRecommendations' : Array<DosageRecommendation>,
+}
+export interface TimingGuideline {
+  'timing' : string,
+  'productName' : string,
+  'purpose' : string,
+}
+export interface TrainingPartnerPreference {
+  'bio' : string,
+  'experienceLevel' : string,
+  'fitnessGoals' : Array<string>,
+  'preferredWorkoutTimes' : Array<string>,
+  'userId' : UserId,
+}
 export interface User {
   'id' : UserId,
   'name' : string,
@@ -102,24 +124,21 @@ export interface UserProfile {
 export type UserRole = { 'admin' : null } |
   { 'user' : null } |
   { 'guest' : null };
-export interface WorkoutPlan {
-  'id' : WorkoutPlanId,
-  'clientId' : UserId,
-  'name' : string,
-  'sets' : Array<Set>,
-  'notes' : string,
-  'restTime' : bigint,
-  'creatorTrainerId' : UserId,
+export interface WeightProgressionEntry {
+  'weight' : number,
+  'exerciseId' : ExerciseId,
+  'reps' : bigint,
+  'timestamp' : bigint,
+}
+export interface WeightProgressionStats {
+  'totalVolume' : number,
+  'exerciseId' : ExerciseId,
+  'totalSets' : bigint,
+  'averageWeight' : number,
+  'totalSessions' : bigint,
+  'suggestedIncrement' : number,
 }
 export type WorkoutPlanId = string;
-export interface WorkoutRecord {
-  'id' : RecordId,
-  'completedSets' : bigint,
-  'planId' : WorkoutPlanId,
-  'userId' : UserId,
-  'date' : Time,
-  'personalNotes' : string,
-}
 export interface _CaffeineStorageCreateCertificateResult {
   'method' : string,
   'blob_hash' : string,
@@ -148,6 +167,7 @@ export interface _SERVICE {
   >,
   '_caffeineStorageUpdateGatewayPrincipals' : ActorMethod<[], undefined>,
   '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
+  'acceptConnectionRequest' : ActorMethod<[ConnectionRequestId], undefined>,
   'addExerciseToLibrary' : ActorMethod<
     [
       ExerciseId,
@@ -163,57 +183,70 @@ export interface _SERVICE {
     undefined
   >,
   'addUser' : ActorMethod<[UserId, string, string, AppUserRole], undefined>,
-  'askVortex' : ActorMethod<[string], string>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
   'assignClientToTrainer' : ActorMethod<[UserId, UserId], undefined>,
-  'createDietPlan' : ActorMethod<
-    [DietPlanId, UserId, UserId, string, Array<Meal>, string],
-    undefined
-  >,
-  'createScheduledSession' : ActorMethod<
-    [TimetableId, UserId, UserId, WorkoutPlanId, bigint, string],
-    undefined
-  >,
+  'clearCaffeineIntake' : ActorMethod<[], undefined>,
   'createWorkoutPlan' : ActorMethod<
     [WorkoutPlanId, UserId, UserId, string, Array<Set>, bigint, string],
     undefined
   >,
-  'deleteDietPlan' : ActorMethod<[DietPlanId], undefined>,
   'deleteExerciseFromLibrary' : ActorMethod<[ExerciseId], undefined>,
-  'deleteScheduledSession' : ActorMethod<[TimetableId], undefined>,
   'deleteWorkoutPlan' : ActorMethod<[WorkoutPlanId], undefined>,
   'editUser' : ActorMethod<[UserId, string, string, AppUserRole], undefined>,
   'getAllExercises' : ActorMethod<[], Array<Exercise>>,
+  'getAllFormAnalysisTips' : ActorMethod<[], Array<FormAnalysisTip>>,
+  'getAllSupplementStacks' : ActorMethod<[], Array<SupplementStack>>,
   'getAllUsers' : ActorMethod<[], Array<User>>,
-  'getAllWorkoutPlansForUser' : ActorMethod<[UserId], Array<WorkoutPlan>>,
   'getBrandingSettings' : ActorMethod<[], BrandingSettings>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
-  'getDietPlanTemplate' : ActorMethod<[], Array<MealOption>>,
-  'getDietPlansForClient' : ActorMethod<[UserId], Array<DietPlan>>,
   'getExercise' : ActorMethod<[ExerciseId], [] | [Exercise]>,
-  'getScheduledSessionsForClient' : ActorMethod<
-    [UserId],
-    Array<ScheduledSession>
+  'getExerciseWithHistory' : ActorMethod<
+    [ExerciseId],
+    [] | [ExerciseWithHistory]
   >,
-  'getScheduledSessionsForTrainer' : ActorMethod<
-    [UserId],
-    Array<ScheduledSession>
+  'getFormAnalysisTip' : ActorMethod<[ExerciseId], [] | [FormAnalysisTip]>,
+  'getLocationPreference' : ActorMethod<[], [] | [LocationPreference]>,
+  'getMyClients' : ActorMethod<[], Array<User>>,
+  'getMyConnectionRequests' : ActorMethod<[], Array<ConnectionRequest>>,
+  'getMyConnections' : ActorMethod<[], Array<User>>,
+  'getNearbyUsers' : ActorMethod<[], Array<NearbyUser>>,
+  'getOptimalWorkoutTime' : ActorMethod<[], [] | [OptimalWorkoutTime]>,
+  'getProgressionStatsForExercise' : ActorMethod<
+    [ExerciseId],
+    WeightProgressionStats
   >,
-  'getTrainerClients' : ActorMethod<[UserId], Array<UserId>>,
-  'getUser' : ActorMethod<[UserId], [] | [User]>,
+  'getSupplementStack' : ActorMethod<[string], [] | [SupplementStack]>,
+  'getTrainingPartnerPreference' : ActorMethod<
+    [],
+    [] | [TrainingPartnerPreference]
+  >,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
-  'getWorkoutPlan' : ActorMethod<[WorkoutPlanId], [] | [WorkoutPlan]>,
-  'getWorkoutRecordsForUser' : ActorMethod<[UserId], Array<WorkoutRecord>>,
+  'getWeightProgressionEntries' : ActorMethod<
+    [ExerciseId],
+    Array<WeightProgressionEntry>
+  >,
+  'initializeFormAnalysisTipsAndSupplements' : ActorMethod<[], undefined>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
+  'logCaffeineIntake' : ActorMethod<[bigint], undefined>,
+  'logWeightProgress' : ActorMethod<[ExerciseId, number, bigint], undefined>,
   'logWorkoutCompletion' : ActorMethod<
     [RecordId, WorkoutPlanId, UserId, bigint, string],
     undefined
   >,
+  'rejectConnectionRequest' : ActorMethod<[ConnectionRequestId], undefined>,
   'removeUser' : ActorMethod<[UserId], undefined>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
+  'saveLocationPreference' : ActorMethod<
+    [number, number, bigint, string],
+    undefined
+  >,
+  'saveTrainingPartnerPreference' : ActorMethod<
+    [Array<string>, string, Array<string>, string],
+    undefined
+  >,
+  'sendConnectionRequest' : ActorMethod<[UserId, string], ConnectionRequestId>,
   'updateBrandingSettings' : ActorMethod<[BrandingSettings], undefined>,
-  'updateDietPlan' : ActorMethod<[DietPlanId, Array<Meal>, string], undefined>,
   'updateExerciseInLibrary' : ActorMethod<
     [
       ExerciseId,
@@ -228,15 +261,10 @@ export interface _SERVICE {
     ],
     undefined
   >,
-  'updateScheduledSession' : ActorMethod<
-    [TimetableId, bigint, string],
-    undefined
-  >,
   'updateWorkoutPlan' : ActorMethod<
     [WorkoutPlanId, string, Array<Set>, bigint, string],
     undefined
   >,
-  'updateWorkoutRecord' : ActorMethod<[RecordId, bigint, string], undefined>,
 }
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];

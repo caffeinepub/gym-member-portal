@@ -3,7 +3,7 @@ import { useInternetIdentity } from '../hooks/useInternetIdentity';
 import { useGetTrainerClients } from '../hooks/useQueries';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Users, TrendingUp, CalendarDays, Utensils } from 'lucide-react';
+import { Users, Calendar, Utensils } from 'lucide-react';
 import ClientList from '../components/trainer/ClientList';
 import WorkoutPlanForm from '../components/trainer/WorkoutPlanForm';
 import TimetableScheduler from '../components/trainer/TimetableScheduler';
@@ -14,26 +14,27 @@ import { Principal } from '@dfinity/principal';
 export default function TrainerDashboard() {
   const { identity } = useInternetIdentity();
   const trainerId = identity?.getPrincipal();
-  const { data: clients = [], isLoading: clientsLoading } = useGetTrainerClients(trainerId);
-  const [createPlanOpen, setCreatePlanOpen] = useState(false);
-  const [createDietOpen, setCreateDietOpen] = useState(false);
-  const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
+  const { data: clients = [], isLoading: clientsLoading } = useGetTrainerClients();
+
+  const [showPlanForm, setShowPlanForm] = useState(false);
+  const [showDietForm, setShowDietForm] = useState(false);
+  const [selectedClientId, setSelectedClientId] = useState<string>('');
 
   const handleCreatePlan = (clientId: string) => {
     setSelectedClientId(clientId);
-    setCreatePlanOpen(true);
+    setShowPlanForm(true);
   };
 
   const handleCreateDiet = (clientId: string) => {
     setSelectedClientId(clientId);
-    setCreateDietOpen(true);
+    setShowDietForm(true);
   };
 
   return (
     <div className="container py-8">
       <div className="mb-8">
         <h1 className="mb-2 text-3xl font-bold tracking-tight">Trainer Dashboard</h1>
-        <p className="text-muted-foreground">Manage your clients and their workout plans</p>
+        <p className="text-muted-foreground">Manage your clients, create workout plans, and schedule sessions</p>
       </div>
 
       <div className="mb-6 grid gap-4 md:grid-cols-3">
@@ -50,38 +51,29 @@ export default function TrainerDashboard() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Active Plans</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            <Calendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">-</div>
+            <div className="text-2xl font-bold">0</div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">This Week</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Diet Plans</CardTitle>
+            <Utensils className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">-</div>
+            <div className="text-2xl font-bold">0</div>
           </CardContent>
         </Card>
       </div>
 
       <Tabs defaultValue="clients" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="clients" className="gap-2">
-            <Users className="h-4 w-4" />
-            My Clients
-          </TabsTrigger>
-          <TabsTrigger value="timetable" className="gap-2">
-            <CalendarDays className="h-4 w-4" />
-            Timetables
-          </TabsTrigger>
-          <TabsTrigger value="diet" className="gap-2">
-            <Utensils className="h-4 w-4" />
-            Diet Plans
-          </TabsTrigger>
+          <TabsTrigger value="clients">My Clients</TabsTrigger>
+          <TabsTrigger value="timetables">Timetables</TabsTrigger>
+          <TabsTrigger value="diet">Diet Plans</TabsTrigger>
         </TabsList>
 
         <TabsContent value="clients" className="space-y-4">
@@ -92,9 +84,9 @@ export default function TrainerDashboard() {
             </CardHeader>
             <CardContent>
               {clientsLoading ? (
-                <p className="text-muted-foreground">Loading clients...</p>
+                <p className="text-center text-muted-foreground">Loading clients...</p>
               ) : clients.length === 0 ? (
-                <p className="text-muted-foreground">No clients assigned yet</p>
+                <p className="text-center text-muted-foreground">No clients assigned yet</p>
               ) : (
                 <ClientList clients={clients} onCreatePlan={handleCreatePlan} />
               )}
@@ -102,37 +94,31 @@ export default function TrainerDashboard() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="timetable" className="space-y-4">
+        <TabsContent value="timetables" className="space-y-4">
           {trainerId && <TimetableScheduler trainerId={trainerId} clients={clients} />}
         </TabsContent>
 
         <TabsContent value="diet" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Diet Plan Management</CardTitle>
-              <CardDescription>Create and manage nutrition plans for your clients</CardDescription>
+              <CardTitle>Create Diet Plan</CardTitle>
+              <CardDescription>Select a client to create a personalized nutrition plan</CardDescription>
             </CardHeader>
             <CardContent>
               {clients.length === 0 ? (
-                <p className="text-muted-foreground">No clients assigned yet</p>
+                <p className="text-center text-muted-foreground">No clients available</p>
               ) : (
-                <div className="space-y-2">
-                  {clients.map((clientId) => (
-                    <div
-                      key={clientId.toString()}
-                      className="flex items-center justify-between rounded-lg border p-4"
-                    >
-                      <div>
-                        <p className="font-medium">{clientId.toString().slice(0, 10)}...</p>
-                        <p className="text-sm text-muted-foreground">Client</p>
-                      </div>
-                      <button
-                        onClick={() => handleCreateDiet(clientId.toString())}
-                        className="text-sm text-primary hover:underline"
-                      >
-                        Create Diet Plan
-                      </button>
-                    </div>
+                <div className="space-y-3">
+                  {clients.map((client) => (
+                    <Card key={client.id.toString()} className="cursor-pointer hover:bg-accent" onClick={() => handleCreateDiet(client.id.toString())}>
+                      <CardContent className="flex items-center justify-between py-4">
+                        <div>
+                          <p className="font-semibold">{client.name}</p>
+                          <p className="text-sm text-muted-foreground">{client.email}</p>
+                        </div>
+                        <Utensils className="h-5 w-5 text-muted-foreground" />
+                      </CardContent>
+                    </Card>
                   ))}
                 </div>
               )}
@@ -141,31 +127,33 @@ export default function TrainerDashboard() {
         </TabsContent>
       </Tabs>
 
-      <Dialog open={createPlanOpen} onOpenChange={setCreatePlanOpen}>
-        <DialogContent className="max-w-2xl">
+      {/* Workout Plan Form Dialog */}
+      <Dialog open={showPlanForm} onOpenChange={setShowPlanForm}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Create Workout Plan</DialogTitle>
           </DialogHeader>
-          {selectedClientId && trainerId && (
+          {trainerId && selectedClientId && (
             <WorkoutPlanForm
               trainerId={trainerId.toString()}
               clientId={selectedClientId}
-              onSuccess={() => setCreatePlanOpen(false)}
+              onSuccess={() => setShowPlanForm(false)}
             />
           )}
         </DialogContent>
       </Dialog>
 
-      <Dialog open={createDietOpen} onOpenChange={setCreateDietOpen}>
+      {/* Diet Plan Form Dialog */}
+      <Dialog open={showDietForm} onOpenChange={setShowDietForm}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Create Diet Plan</DialogTitle>
           </DialogHeader>
-          {selectedClientId && trainerId && (
+          {trainerId && selectedClientId && (
             <DietPlanForm
               trainerId={trainerId}
               clientId={Principal.fromText(selectedClientId)}
-              onSuccess={() => setCreateDietOpen(false)}
+              onSuccess={() => setShowDietForm(false)}
             />
           )}
         </DialogContent>

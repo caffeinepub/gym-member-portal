@@ -1,7 +1,7 @@
 import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import type { WorkoutRecord } from '../../backend';
+import { WorkoutRecord } from '../../hooks/useQueries';
 
 interface ProgressChartsProps {
   records: WorkoutRecord[];

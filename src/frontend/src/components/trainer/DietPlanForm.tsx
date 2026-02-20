@@ -6,10 +6,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Plus, Trash2, Utensils } from 'lucide-react';
-import { useCreateDietPlan } from '../../hooks/useQueries';
+import { useCreateDietPlan, Meal } from '../../hooks/useQueries';
 import { Principal } from '@dfinity/principal';
 import { toast } from 'sonner';
-import type { Meal } from '../../backend';
 
 interface DietPlanFormProps {
   trainerId: Principal;
@@ -115,7 +114,7 @@ export default function DietPlanForm({ trainerId, clientId, onSuccess }: DietPla
       const dietPlanId = `diet-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
       await createDietPlan.mutateAsync({
-        id: dietPlanId,
+        planId: dietPlanId,
         trainerId,
         clientId,
         name: planName,
@@ -234,7 +233,7 @@ export default function DietPlanForm({ trainerId, clientId, onSuccess }: DietPla
                         required
                       />
                     </div>
-                    <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
+                    <div className="grid gap-3 md:grid-cols-4">
                       <Input
                         type="number"
                         placeholder="Calories"

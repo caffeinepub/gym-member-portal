@@ -3,19 +3,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Clock, Utensils, Flame, Info } from 'lucide-react';
-import { useGetDietPlanForClient, useGetDietPlanTemplate } from '../../hooks/useQueries';
+import { useGetDietPlansForClient, useGetDietPlanTemplate, DietOption } from '../../hooks/useQueries';
 import { Principal } from '@dfinity/principal';
-import type { DietOption } from '../../backend';
 
 interface DietPlanViewProps {
   userId: Principal;
 }
 
 export default function DietPlanView({ userId }: DietPlanViewProps) {
-  const { data: dietPlan, isLoading: planLoading } = useGetDietPlanForClient(userId);
+  const { data: dietPlans = [], isLoading: planLoading } = useGetDietPlansForClient(userId);
   const { data: template = [], isLoading: templateLoading } = useGetDietPlanTemplate();
 
   const isLoading = planLoading || templateLoading;
+  const dietPlan = dietPlans.length > 0 ? dietPlans[0] : null;
 
   if (isLoading) {
     return (
@@ -135,25 +135,19 @@ export default function DietPlanView({ userId }: DietPlanViewProps) {
                     </div>
                     <div className="space-y-2 pl-4 border-l-2 border-primary/20">
                       {option.foodItems.map((item, itemIdx) => (
-                        <div key={itemIdx} className="flex items-center justify-between py-1.5">
+                        <div key={itemIdx} className="flex items-center justify-between py-1">
                           <div>
-                            <p className="font-medium text-sm">{item.name}</p>
+                            <p className="text-sm font-medium">{item.name}</p>
                             <p className="text-xs text-muted-foreground">{item.portion}</p>
                           </div>
-                          <div className="flex flex-wrap gap-1.5 justify-end">
-                            <Badge variant="outline" className="gap-1 text-xs">
+                          <div className="flex items-center gap-2 text-xs">
+                            <Badge variant="outline" className="gap-1">
                               <Flame className="h-3 w-3" />
-                              {Number(item.calories)}
+                              {Number(item.calories)} cal
                             </Badge>
-                            <Badge variant="outline" className="text-xs">
-                              P: {item.protein.toFixed(0)}g
-                            </Badge>
-                            <Badge variant="outline" className="text-xs">
-                              C: {item.carbs.toFixed(0)}g
-                            </Badge>
-                            <Badge variant="outline" className="text-xs">
-                              F: {item.fats.toFixed(0)}g
-                            </Badge>
+                            <span className="text-muted-foreground">
+                              P: {item.protein.toFixed(0)}g | C: {item.carbs.toFixed(0)}g | F: {item.fats.toFixed(0)}g
+                            </span>
                           </div>
                         </div>
                       ))}
@@ -173,7 +167,7 @@ export default function DietPlanView({ userId }: DietPlanViewProps) {
     <Card>
       <CardContent className="py-8">
         <p className="text-center text-muted-foreground">
-          No diet plan available. Contact your trainer to get a personalized nutrition plan!
+          No diet plan available. Contact your trainer to get a personalized nutrition plan.
         </p>
       </CardContent>
     </Card>

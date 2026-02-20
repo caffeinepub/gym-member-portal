@@ -10,6 +10,10 @@ import ClientDashboard from './pages/ClientDashboard';
 import AdminDashboard from './pages/AdminDashboard';
 import ProfileSetup from './pages/ProfileSetup';
 import ExerciseLibraryPage from './pages/ExerciseLibraryPage';
+import FlexWallPage from './pages/FlexWallPage';
+import AnalyticsDashboardPage from './pages/AnalyticsDashboardPage';
+import SupplementStackPage from './pages/SupplementStackPage';
+import WorkoutLogsPage from './pages/WorkoutLogsPage';
 
 const rootRoute = createRootRoute({
   component: () => (
@@ -55,6 +59,30 @@ const exercisesRoute = createRoute({
   component: ExerciseLibraryPage,
 });
 
+const flexWallRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/flex-wall',
+  component: FlexWallPage,
+});
+
+const analyticsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/analytics',
+  component: AnalyticsDashboardPage,
+});
+
+const supplementsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/supplements',
+  component: SupplementStackPage,
+});
+
+const workoutLogsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/workout-logs',
+  component: WorkoutLogsPage,
+});
+
 const routeTree = rootRoute.addChildren([
   indexRoute,
   profileSetupRoute,
@@ -62,6 +90,10 @@ const routeTree = rootRoute.addChildren([
   clientRoute,
   adminRoute,
   exercisesRoute,
+  flexWallRoute,
+  analyticsRoute,
+  supplementsRoute,
+  workoutLogsRoute,
 ]);
 
 const router = createRouter({ routeTree });
@@ -74,7 +106,7 @@ declare module '@tanstack/react-router' {
 
 export default function App() {
   return (
-    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
       <BrandingProvider>
         <RouterProvider router={router} />
         <Toaster />

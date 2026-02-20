@@ -8,7 +8,7 @@ import {
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Dumbbell, Target, Wrench, TrendingUp } from 'lucide-react';
+import { Dumbbell, Target, Wrench, TrendingUp, Play } from 'lucide-react';
 import type { Exercise } from '../../backend';
 
 interface ExerciseDetailModalProps {
@@ -31,6 +31,28 @@ export default function ExerciseDetailModal({ exercise, open, onOpenChange }: Ex
     }
   };
 
+  // Convert YouTube watch URLs to embed URLs
+  const getEmbedUrl = (url: string) => {
+    if (!url) return '';
+    
+    // Handle youtube.com/watch?v= format
+    const watchMatch = url.match(/[?&]v=([^&]+)/);
+    if (watchMatch) {
+      return `https://www.youtube.com/embed/${watchMatch[1]}`;
+    }
+    
+    // Handle youtu.be/ format
+    const shortMatch = url.match(/youtu\.be\/([^?]+)/);
+    if (shortMatch) {
+      return `https://www.youtube.com/embed/${shortMatch[1]}`;
+    }
+    
+    // If already an embed URL or other format, return as is
+    return url;
+  };
+
+  const embedUrl = getEmbedUrl(exercise.videoUrl);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
@@ -52,15 +74,22 @@ export default function ExerciseDetailModal({ exercise, open, onOpenChange }: Ex
             ))}
           </div>
 
-          {exercise.videoUrl && (
-            <div className="aspect-video w-full overflow-hidden rounded-lg border bg-muted">
-              <iframe
-                src={exercise.videoUrl}
-                title={exercise.name}
-                className="h-full w-full"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              />
+          {embedUrl && (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-sm font-semibold">
+                <Play className="h-4 w-4 text-primary" />
+                Exercise Demonstration
+              </div>
+              <div className="aspect-video w-full overflow-hidden rounded-lg border bg-black">
+                <iframe
+                  src={embedUrl}
+                  title={`${exercise.name} demonstration`}
+                  className="h-full w-full"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                  loading="eager"
+                />
+              </div>
             </div>
           )}
 
@@ -92,9 +121,15 @@ export default function ExerciseDetailModal({ exercise, open, onOpenChange }: Ex
               Recommended Volume
             </div>
             <div className="rounded-lg border p-4 bg-muted/30">
-              <p className="text-lg font-bold text-primary">{exercise.recommendedRepsRange}</p>
-              <p className="text-sm text-muted-foreground mt-1">
-                Complete {exercise.recommendedSetsRange} for optimal results
+              <div className="flex items-baseline gap-2">
+                <p className="text-2xl font-bold text-primary">{exercise.recommendedSetsRange}</p>
+                <span className="text-sm text-muted-foreground">sets</span>
+                <span className="text-muted-foreground">×</span>
+                <p className="text-2xl font-bold text-primary">{exercise.recommendedRepsRange}</p>
+                <span className="text-sm text-muted-foreground">reps</span>
+              </div>
+              <p className="text-sm text-muted-foreground mt-2">
+                Complete the recommended volume for optimal results
               </p>
             </div>
           </div>

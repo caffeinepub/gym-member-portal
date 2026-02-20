@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAddExercise, useUpdateExercise } from '../../hooks/useQueries';
-import type { Exercise } from '../../hooks/useQueries';
+import type { Exercise } from '../../backend';
 import { toast } from 'sonner';
 
 interface ExerciseFormModalProps {

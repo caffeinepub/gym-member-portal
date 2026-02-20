@@ -6,7 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Search, Plus, Pencil, Trash2, Dumbbell } from 'lucide-react';
 import { useGetAllExercises, useDeleteExercise } from '../../hooks/useQueries';
 import ExerciseFormModal from './ExerciseFormModal';
-import type { Exercise } from '../../hooks/useQueries';
+import type { Exercise } from '../../backend';
 import { toast } from 'sonner';
 
 export default function ExerciseLibraryManagement() {

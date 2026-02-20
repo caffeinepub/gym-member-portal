@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Send, Sparkles } from 'lucide-react';
-import { useAskVortex } from '../../hooks/useQueries';
+import { useAskVortex, VortexMessage as VortexMessageType } from '../../hooks/useQueries';
 import VortexMessage from './VortexMessage';
 
 interface Message {
@@ -67,32 +67,36 @@ export default function VortexChat({ open, onOpenChange }: VortexChatProps) {
     setMessages((prev) => [...prev, typingIndicator]);
 
     try {
+      // Call the mutation with just the message string
       const response = await askVortex.mutateAsync(currentInput);
-      
+
       // Remove typing indicator and add actual response
       setMessages((prev) => {
-        const withoutTyping = prev.filter((msg) => !msg.isTyping);
-        const vortexMessage: Message = {
-          id: Date.now().toString(),
-          content: response,
-          isVortex: true,
-          timestamp: new Date(),
-        };
-        return [...withoutTyping, vortexMessage];
+        const withoutTyping = prev.filter((m) => !m.isTyping);
+        return [
+          ...withoutTyping,
+          {
+            id: Date.now().toString(),
+            content: response,
+            isVortex: true,
+            timestamp: new Date(),
+          },
+        ];
       });
     } catch (error) {
-      console.error('Failed to get VORTEX response:', error);
-      
-      // Remove typing indicator and add error message
+      console.error('Error getting VORTEX response:', error);
+      // Remove typing indicator and show error
       setMessages((prev) => {
-        const withoutTyping = prev.filter((msg) => !msg.isTyping);
-        const errorMessage: Message = {
-          id: Date.now().toString(),
-          content: 'I apologize, but I encountered an error processing your request. Please try again, and I\'ll do my best to help you!',
-          isVortex: true,
-          timestamp: new Date(),
-        };
-        return [...withoutTyping, errorMessage];
+        const withoutTyping = prev.filter((m) => !m.isTyping);
+        return [
+          ...withoutTyping,
+          {
+            id: Date.now().toString(),
+            content: 'Sorry, I encountered an error. Please try again.',
+            isVortex: true,
+            timestamp: new Date(),
+          },
+        ];
       });
     }
   };
@@ -106,7 +110,7 @@ export default function VortexChat({ open, onOpenChange }: VortexChatProps) {
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="flex w-full flex-col sm:max-w-md">
+      <SheetContent className="w-full sm:max-w-lg">
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-primary" />
@@ -114,32 +118,28 @@ export default function VortexChat({ open, onOpenChange }: VortexChatProps) {
           </SheetTitle>
         </SheetHeader>
 
-        <ScrollArea className="flex-1 pr-4" ref={scrollAreaRef}>
-          <div className="space-y-4 py-4">
-            {messages.map((message) => (
-              <VortexMessage key={message.id} message={message} />
-            ))}
-            <div ref={messagesEndRef} />
-          </div>
-        </ScrollArea>
+        <div className="flex h-[calc(100vh-8rem)] flex-col gap-4 pt-4">
+          <ScrollArea className="flex-1 pr-4" ref={scrollAreaRef}>
+            <div className="space-y-4">
+              {messages.map((message) => (
+                <VortexMessage key={message.id} message={message} />
+              ))}
+              <div ref={messagesEndRef} />
+            </div>
+          </ScrollArea>
 
-        <div className="flex gap-2 border-t pt-4">
-          <Input
-            placeholder="Ask VORTEX anything..."
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyPress={handleKeyPress}
-            disabled={askVortex.isPending}
-            className="flex-1"
-          />
-          <Button 
-            onClick={handleSend} 
-            disabled={askVortex.isPending || !input.trim()} 
-            size="icon"
-            className="shrink-0"
-          >
-            <Send className="h-4 w-4" />
-          </Button>
+          <div className="flex gap-2">
+            <Input
+              placeholder="Ask VORTEX anything about fitness..."
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyPress={handleKeyPress}
+              disabled={askVortex.isPending}
+            />
+            <Button onClick={handleSend} disabled={!input.trim() || askVortex.isPending} size="icon">
+              <Send className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </SheetContent>
     </Sheet>

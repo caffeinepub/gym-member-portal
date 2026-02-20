@@ -1,98 +1,57 @@
 {
   "kind": "build_request",
-  "title": "Add detailed exercise schedule and comprehensive diet plan",
-  "projectName": "Gym Member Portal",
+  "title": "Add TDEE & Macro Calculator",
+  "projectName": "Spotter AI",
   "priority": "normal",
   "requirements": [
     {
-      "id": "REQ-43",
-      "text": "Add seven specific exercises to the exercise library with complete details: Squats (Legs, 3 sets x 12 reps, description: 'Foundation for the entire body'), Push-ups (Chest/Shoulders/Triceps, 3 sets x max reps, description: 'Essential for every gym session'), Bench Press (Chest, 3 sets x 10 reps, description: 'Best exercise for broad chest'), Deadlift (Back/Overall Strength, 3 sets x 8 reps, description: 'Gives power to the entire body, focus on form'), Pull-ups/Lat Pulldown (Back/Biceps, 3 sets x 8-10 reps, description: 'Essential for V-shape body'), Overhead Press (Shoulders, 3 sets x 10 reps, description: 'For broader shoulders'), Plank (Core/Abs, 3 sets x 1 minute, description: 'Perform at the end of workout')",
-      "target": "backend",
-      "source": {
-        "messageIds": [
-          "msg-last"
-        ],
-        "quotes": [
-          "Squats (Legs): Puri body ka foundation hai. Start with 3 sets x 12 reps.",
-          "Push-ups (Chest/Shoulders/Triceps): Har gym session mein ise zaroor rakho. 3 sets x max reps.",
-          "Bench Press (Chest): Chest broad karne ke liye sabse best. 3 sets x 10 reps.",
-          "Deadlift (Back/Overall Strength): Ye poori body ko power deta hai. 3 sets x 8 reps (form par dhyan dena).",
-          "Pull-ups / Lat Pulldown (Back/Biceps): V-shape body ke liye zaruri hai. 3 sets x 8-10 reps.",
-          "Overhead Press (Shoulders): Kandhe chaudhe karne ke liye. 3 sets x 10 reps.",
-          "Plank (Core/Abs): Workout ke end mein 1 minute ke 3 sets."
-        ]
-      },
-      "acceptanceCriteria": [
-        "All seven exercises are added to the exercise library with correct muscle groups",
-        "Each exercise includes the specified sets and reps information",
-        "Exercise descriptions are stored in the backend",
-        "Exercises are accessible through the exercise library interface"
-      ]
-    },
-    {
-      "id": "REQ-44",
-      "text": "Create a comprehensive diet plan template with six meals (Breakfast, Mid-Morning, Lunch, Pre-Workout, Post-Workout, Dinner) where each meal has two food options: Breakfast Option 1: '3 Boiled Eggs + Brown Bread / Roti', Option 2: 'Oats with Milk + 1 Banana'; Mid-Morning Option 1: '1 bowl Roasted Chana (High Protein)', Option 2: 'Handful of Peanuts + 1 Apple'; Lunch Option 1: 'Dal + Rice + Curd (Dahi) + Salad', Option 2: 'Soya Chunks Curry + 2 Roti + Salad'; Pre-Workout Option 1: '1 Banana + Black Coffee (for energy)', Option 2: '1 Sweet Potato (Shakarkandi)'; Post-Workout Option 1: '4 Egg Whites or Paneer (50g)', Option 2: 'Sattu Drink (3-4 spoons in water/milk)'; Dinner Option 1: 'Paneer Bhurji / Chicken + 2 Roti', Option 2: 'Moong Dal Khichdi + Omelette'",
-      "target": "backend",
-      "source": {
-        "messageIds": [
-          "msg-last"
-        ],
-        "quotes": [
-          "Meal Time What to Eat (Option 1) What to Eat (Option 2)\nBreakfast 3 Boiled Eggs + Brown Bread / Roti Oats with Milk + 1 Banana\nMid-Morning 1 bowl Roasted Chana (Sasta & High Protein) Handful of Peanuts + 1 Apple\nLunch Dal + Rice + Curd (Dahi) + Salad Soya Chunks Curry + 2 Roti + Salad\nPre-Workout 1 Banana + Black Coffee (for energy) 1 Sweet Potato (Shakarkandi)\nPost-Workout 4 Egg Whites or Paneer (50g) Sattu Drink (3-4 spoons in water/milk)\nDinner Paneer Bhurji / Chicken + 2 Roti Moong Dal Khichdi + Omelette"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Diet plan template includes all six meal times",
-        "Each meal time has exactly two food options stored",
-        "All meal options match the specified Indian food items",
-        "Diet plan can be assigned to clients by trainers"
-      ]
-    },
-    {
-      "id": "REQ-45",
-      "text": "Display the seven exercises (Squats, Push-ups, Bench Press, Deadlift, Pull-ups/Lat Pulldown, Overhead Press, Plank) with their sets, reps, and descriptions in the exercise library browser interface, organized by their target muscle groups",
+      "id": "REQ-1",
+      "text": "Create a TDEE (Total Daily Energy Expenditure) and macro calculator component in the frontend that calculates daily calories, protein, carbs, and fats based on user input including weight, height, age, gender, activity level, and fitness goal (weight loss, maintenance, muscle gain)",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-last"
+          "msg-user-features"
+        ],
+        "quotes": [
+          "TDEE & Macro Calculator: A tool to calculate daily calories, protein, carbs, and fats based on user goals"
         ]
       },
       "acceptanceCriteria": [
-        "All seven exercises appear in the exercise library interface",
-        "Each exercise displays its sets and reps information",
-        "Exercises can be filtered by muscle group (Legs, Chest, Shoulders, Triceps, Back, Biceps, Core/Abs)",
-        "Exercise descriptions are visible to users"
+        "Calculator accepts user inputs for weight (kg), height (cm), age, gender, activity level (sedentary, lightly active, moderately active, very active, extremely active), and fitness goal",
+        "Displays calculated TDEE in calories per day",
+        "Shows recommended daily macros breakdown: protein (grams), carbs (grams), fats (grams)",
+        "Includes explanation of calculations or formula used",
+        "Results are displayed in a clear, readable format with visual distinction between calorie and macro values"
       ]
     },
     {
-      "id": "REQ-46",
-      "text": "Display the comprehensive diet plan in the client dashboard diet plan view showing all six meal times (Breakfast, Mid-Morning, Lunch, Pre-Workout, Post-Workout, Dinner) with both food options clearly labeled as Option 1 and Option 2 for each meal",
+      "id": "REQ-2",
+      "text": "Integrate the TDEE calculator into the client dashboard as a new tab or section, accessible alongside existing features like workout plans and progress tracking",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-last"
+          "msg-user-features"
         ]
       },
       "acceptanceCriteria": [
-        "Diet plan view shows all six meal times in chronological order",
-        "Each meal displays both Option 1 and Option 2 food choices",
-        "Meal options match the specified Indian food items exactly",
-        "Diet plan is presented in an easy-to-read format for clients"
+        "TDEE calculator is accessible from the client dashboard navigation",
+        "Calculator tab/section follows existing UI patterns and styling",
+        "Calculator is only visible to users with client role"
       ]
     }
   ],
   "constraints": [
-    "Maintain single-actor architecture in backend/main.mo",
-    "Do not modify immutable frontend paths (useInternetIdentity.ts, useInternetIdentity.tsx, useActor.ts, main.tsx, components/ui)",
-    "Use existing exercise library data model and CRUD functions",
-    "Use existing diet plan data model and trainer assignment functions"
+    "Do not modify Internet Identity integration files",
+    "Do not edit Shadcn UI component source files in frontend/src/components/ui",
+    "Maintain single-actor architecture in backend",
+    "Use existing PersonalizedTracker component patterns for calculation UI consistency"
   ],
   "nonGoals": [
-    "Adding video URLs for the exercises",
-    "Calculating nutritional information (calories, macros) for diet plan meals",
-    "Creating a subscription payment system",
-    "Modifying the weekly workout schedule template",
-    "Adding authentication or access control changes"
+    "Backend storage of TDEE calculation results",
+    "Historical tracking of TDEE calculations over time",
+    "Integration with diet plan generation based on TDEE results",
+    "Mobile app or push notification functionality",
+    "Integration with wearable devices or fitness trackers"
   ],
   "imageRequirements": {
     "required": [],

@@ -89,15 +89,58 @@ export class ExternalBlob {
         return this;
     }
 }
-export interface Meal {
-    id: MealId;
-    foodItems: Array<FoodItem>;
-    carbs: number;
-    fats: number;
-    name: string;
-    time: string;
-    totalCalories: bigint;
-    protein: number;
+export interface _CaffeineStorageRefillInformation {
+    proposed_top_up_amount?: bigint;
+}
+export interface _CaffeineStorageCreateCertificateResult {
+    method: string;
+    blob_hash: string;
+}
+export interface TrainingPartnerPreference {
+    bio: string;
+    experienceLevel: string;
+    fitnessGoals: Array<string>;
+    preferredWorkoutTimes: Array<string>;
+    userId: UserId;
+}
+export type RecordId = string;
+export interface FormAnalysisTip {
+    exerciseId: ExerciseId;
+    formCheckpoints: Array<string>;
+    commonMistakes: Array<string>;
+    correctionSteps: Array<string>;
+    videoUrl: string;
+}
+export interface SupplementStack {
+    goalType: string;
+    timingGuidelines: Array<TimingGuideline>;
+    benefitDescriptions: Array<string>;
+    products: Array<SupplementProduct>;
+    dosageRecommendations: Array<DosageRecommendation>;
+}
+export type WorkoutPlanId = string;
+export interface LocationPreference {
+    latitude: number;
+    gymName: string;
+    searchRadiusKm: bigint;
+    userId: UserId;
+    longitude: number;
+}
+export interface ConnectionRequest {
+    id: ConnectionRequestId;
+    status: Variant_pending_rejected_accepted;
+    receiverId: UserId;
+    message: string;
+    timestamp: bigint;
+    senderId: UserId;
+}
+export type ExerciseId = bigint;
+export type ConnectionRequestId = string;
+export interface BrandingSettings {
+    primaryColor: string;
+    accentColor: string;
+    logoUrl: string;
+    secondaryColor: string;
 }
 export interface Exercise {
     id: ExerciseId;
@@ -110,34 +153,40 @@ export interface Exercise {
     videoUrl: string;
     recommendedRepsRange: string;
 }
-export interface BrandingSettings {
-    primaryColor: string;
-    accentColor: string;
-    logoUrl: string;
-    secondaryColor: string;
-}
-export type Time = bigint;
-export type TimetableId = string;
-export interface WorkoutRecord {
-    id: RecordId;
-    completedSets: bigint;
-    planId: WorkoutPlanId;
-    userId: UserId;
-    date: Time;
-    personalNotes: string;
-}
-export interface _CaffeineStorageRefillInformation {
-    proposed_top_up_amount?: bigint;
-}
 export interface User {
     id: UserId;
     name: string;
     role: AppUserRole;
     email: string;
 }
-export interface _CaffeineStorageCreateCertificateResult {
-    method: string;
-    blob_hash: string;
+export interface DosageRecommendation {
+    productName: string;
+    recommendedDosage: string;
+}
+export interface WeightProgressionEntry {
+    weight: number;
+    exerciseId: ExerciseId;
+    reps: bigint;
+    timestamp: bigint;
+}
+export interface OptimalWorkoutTime {
+    recommendedEndTime: bigint;
+    userId: UserId;
+    recommendedStartTime: bigint;
+    optimalWindow: bigint;
+}
+export interface SupplementProduct {
+    name: string;
+    description: string;
+    productType: string;
+}
+export interface WeightProgressionStats {
+    totalVolume: number;
+    exerciseId: ExerciseId;
+    totalSets: bigint;
+    averageWeight: number;
+    totalSessions: bigint;
+    suggestedIncrement: number;
 }
 export interface Set_ {
     id: SetId;
@@ -145,64 +194,32 @@ export interface Set_ {
     exerciseId: ExerciseId;
     reps: bigint;
 }
-export interface ScheduledSession {
-    id: TimetableId;
-    clientId: UserId;
-    isCompleted: boolean;
-    trainerNotes: string;
-    trainerId: UserId;
-    clientNotes: string;
-    workoutPlanId: WorkoutPlanId;
-    dateTime: bigint;
-}
-export interface WorkoutPlan {
-    id: WorkoutPlanId;
-    clientId: UserId;
-    name: string;
-    sets: Array<Set_>;
-    notes: string;
-    restTime: bigint;
-    creatorTrainerId: UserId;
-}
-export type WorkoutPlanId = string;
 export type UserId = Principal;
-export type RecordId = string;
-export type MealId = string;
-export interface DietPlan {
-    id: DietPlanId;
-    meals: Array<Meal>;
-    clientId: UserId;
+export interface NearbyUser {
+    experienceLevel: string;
+    fitnessGoals: Array<string>;
+    userId: UserId;
     name: string;
-    trainerId: UserId;
-    dietaryNotes: string;
+    distanceKm: number;
 }
-export interface DietOption {
-    foodItems: Array<FoodItem>;
-    description: string;
+export interface ExerciseWithHistory {
+    userHistory?: Array<WeightProgressionEntry>;
+    exercise: Exercise;
 }
-export interface FoodItem {
-    carbs: number;
-    fats: number;
-    calories: bigint;
-    name: string;
-    portion: string;
-    protein: number;
+export interface TimingGuideline {
+    timing: string;
+    productName: string;
+    purpose: string;
 }
-export type ExerciseId = bigint;
-export type DietPlanId = string;
 export type SetId = bigint;
-export interface MealOption {
-    options: Array<DietOption>;
-    mealType: string;
-}
-export interface _CaffeineStorageRefillResult {
-    success?: boolean;
-    topped_up_amount?: bigint;
-}
 export interface UserProfile {
     name: string;
     role: AppUserRole;
     email: string;
+}
+export interface _CaffeineStorageRefillResult {
+    success?: boolean;
+    topped_up_amount?: bigint;
 }
 export enum AppUserRole {
     client = "client",
@@ -214,6 +231,11 @@ export enum UserRole {
     user = "user",
     guest = "guest"
 }
+export enum Variant_pending_rejected_accepted {
+    pending = "pending",
+    rejected = "rejected",
+    accepted = "accepted"
+}
 export interface backendInterface {
     _caffeineStorageBlobIsLive(hash: Uint8Array): Promise<boolean>;
     _caffeineStorageBlobsToDelete(): Promise<Array<Uint8Array>>;
@@ -222,47 +244,53 @@ export interface backendInterface {
     _caffeineStorageRefillCashier(refillInformation: _CaffeineStorageRefillInformation | null): Promise<_CaffeineStorageRefillResult>;
     _caffeineStorageUpdateGatewayPrincipals(): Promise<void>;
     _initializeAccessControlWithSecret(userSecret: string): Promise<void>;
+    acceptConnectionRequest(requestId: ConnectionRequestId): Promise<void>;
     addExerciseToLibrary(id: ExerciseId, name: string, targetMuscleGroups: string, difficultyLevel: string, equipmentNeeded: string, videoUrl: string, description: string, recommendedRepsRange: string, recommendedSetsRange: string): Promise<void>;
     addUser(id: UserId, name: string, email: string, role: AppUserRole): Promise<void>;
-    askVortex(searchQuery: string): Promise<string>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
     assignClientToTrainer(trainerId: UserId, clientId: UserId): Promise<void>;
-    createDietPlan(id: DietPlanId, trainerId: UserId, clientId: UserId, name: string, meals: Array<Meal>, dietaryNotes: string): Promise<void>;
-    createScheduledSession(id: TimetableId, trainerId: UserId, clientId: UserId, workoutPlanId: WorkoutPlanId, dateTime: bigint, clientNotes: string): Promise<void>;
+    clearCaffeineIntake(): Promise<void>;
     createWorkoutPlan(planId: WorkoutPlanId, trainerId: UserId, clientId: UserId, name: string, sets: Array<Set_>, restTime: bigint, notes: string): Promise<void>;
-    deleteDietPlan(id: DietPlanId): Promise<void>;
     deleteExerciseFromLibrary(id: ExerciseId): Promise<void>;
-    deleteScheduledSession(id: TimetableId): Promise<void>;
     deleteWorkoutPlan(planId: WorkoutPlanId): Promise<void>;
     editUser(id: UserId, name: string, email: string, role: AppUserRole): Promise<void>;
     getAllExercises(): Promise<Array<Exercise>>;
+    getAllFormAnalysisTips(): Promise<Array<FormAnalysisTip>>;
+    getAllSupplementStacks(): Promise<Array<SupplementStack>>;
     getAllUsers(): Promise<Array<User>>;
-    getAllWorkoutPlansForUser(userId: UserId): Promise<Array<WorkoutPlan>>;
     getBrandingSettings(): Promise<BrandingSettings>;
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
-    getDietPlanTemplate(): Promise<Array<MealOption>>;
-    getDietPlansForClient(clientId: UserId): Promise<Array<DietPlan>>;
     getExercise(id: ExerciseId): Promise<Exercise | null>;
-    getScheduledSessionsForClient(clientId: UserId): Promise<Array<ScheduledSession>>;
-    getScheduledSessionsForTrainer(trainerId: UserId): Promise<Array<ScheduledSession>>;
-    getTrainerClients(trainerId: UserId): Promise<Array<UserId>>;
-    getUser(id: UserId): Promise<User | null>;
+    getExerciseWithHistory(id: ExerciseId): Promise<ExerciseWithHistory | null>;
+    getFormAnalysisTip(exerciseId: ExerciseId): Promise<FormAnalysisTip | null>;
+    getLocationPreference(): Promise<LocationPreference | null>;
+    getMyClients(): Promise<Array<User>>;
+    getMyConnectionRequests(): Promise<Array<ConnectionRequest>>;
+    getMyConnections(): Promise<Array<User>>;
+    getNearbyUsers(): Promise<Array<NearbyUser>>;
+    getOptimalWorkoutTime(): Promise<OptimalWorkoutTime | null>;
+    getProgressionStatsForExercise(exerciseId: ExerciseId): Promise<WeightProgressionStats>;
+    getSupplementStack(goalType: string): Promise<SupplementStack | null>;
+    getTrainingPartnerPreference(): Promise<TrainingPartnerPreference | null>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
-    getWorkoutPlan(id: WorkoutPlanId): Promise<WorkoutPlan | null>;
-    getWorkoutRecordsForUser(userId: UserId): Promise<Array<WorkoutRecord>>;
+    getWeightProgressionEntries(exerciseId: ExerciseId): Promise<Array<WeightProgressionEntry>>;
+    initializeFormAnalysisTipsAndSupplements(): Promise<void>;
     isCallerAdmin(): Promise<boolean>;
+    logCaffeineIntake(amountMg: bigint): Promise<void>;
+    logWeightProgress(exerciseId: ExerciseId, weight: number, reps: bigint): Promise<void>;
     logWorkoutCompletion(recordId: RecordId, planId: WorkoutPlanId, userId: UserId, completedSets: bigint, personalNotes: string): Promise<void>;
+    rejectConnectionRequest(requestId: ConnectionRequestId): Promise<void>;
     removeUser(id: UserId): Promise<void>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
+    saveLocationPreference(latitude: number, longitude: number, searchRadiusKm: bigint, gymName: string): Promise<void>;
+    saveTrainingPartnerPreference(fitnessGoals: Array<string>, experienceLevel: string, preferredWorkoutTimes: Array<string>, bio: string): Promise<void>;
+    sendConnectionRequest(receiverId: UserId, message: string): Promise<ConnectionRequestId>;
     updateBrandingSettings(newSettings: BrandingSettings): Promise<void>;
-    updateDietPlan(id: DietPlanId, meals: Array<Meal>, dietaryNotes: string): Promise<void>;
     updateExerciseInLibrary(id: ExerciseId, name: string, targetMuscleGroups: string, difficultyLevel: string, equipmentNeeded: string, videoUrl: string, description: string, recommendedRepsRange: string, recommendedSetsRange: string): Promise<void>;
-    updateScheduledSession(id: TimetableId, dateTime: bigint, clientNotes: string): Promise<void>;
     updateWorkoutPlan(planId: WorkoutPlanId, name: string, sets: Array<Set_>, restTime: bigint, notes: string): Promise<void>;
-    updateWorkoutRecord(recordId: RecordId, completedSets: bigint, personalNotes: string): Promise<void>;
 }
-import type { AppUserRole as _AppUserRole, Exercise as _Exercise, User as _User, UserId as _UserId, UserProfile as _UserProfile, UserRole as _UserRole, WorkoutPlan as _WorkoutPlan, _CaffeineStorageRefillInformation as __CaffeineStorageRefillInformation, _CaffeineStorageRefillResult as __CaffeineStorageRefillResult } from "./declarations/backend.did.d.ts";
+import type { AppUserRole as _AppUserRole, ConnectionRequest as _ConnectionRequest, ConnectionRequestId as _ConnectionRequestId, Exercise as _Exercise, ExerciseWithHistory as _ExerciseWithHistory, FormAnalysisTip as _FormAnalysisTip, LocationPreference as _LocationPreference, OptimalWorkoutTime as _OptimalWorkoutTime, SupplementStack as _SupplementStack, TrainingPartnerPreference as _TrainingPartnerPreference, User as _User, UserId as _UserId, UserProfile as _UserProfile, UserRole as _UserRole, WeightProgressionEntry as _WeightProgressionEntry, _CaffeineStorageRefillInformation as __CaffeineStorageRefillInformation, _CaffeineStorageRefillResult as __CaffeineStorageRefillResult } from "./declarations/backend.did.d.ts";
 export class Backend implements backendInterface {
     constructor(private actor: ActorSubclass<_SERVICE>, private _uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, private _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, private processError?: (error: unknown) => never){}
     async _caffeineStorageBlobIsLive(arg0: Uint8Array): Promise<boolean> {
@@ -363,6 +391,20 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async acceptConnectionRequest(arg0: ConnectionRequestId): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.acceptConnectionRequest(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.acceptConnectionRequest(arg0);
+            return result;
+        }
+    }
     async addExerciseToLibrary(arg0: ExerciseId, arg1: string, arg2: string, arg3: string, arg4: string, arg5: string, arg6: string, arg7: string, arg8: string): Promise<void> {
         if (this.processError) {
             try {
@@ -388,20 +430,6 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.addUser(arg0, arg1, arg2, to_candid_AppUserRole_n8(this._uploadFile, this._downloadFile, arg3));
-            return result;
-        }
-    }
-    async askVortex(arg0: string): Promise<string> {
-        if (this.processError) {
-            try {
-                const result = await this.actor.askVortex(arg0);
-                return result;
-            } catch (e) {
-                this.processError(e);
-                throw new Error("unreachable");
-            }
-        } else {
-            const result = await this.actor.askVortex(arg0);
             return result;
         }
     }
@@ -433,31 +461,17 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async createDietPlan(arg0: DietPlanId, arg1: UserId, arg2: UserId, arg3: string, arg4: Array<Meal>, arg5: string): Promise<void> {
+    async clearCaffeineIntake(): Promise<void> {
         if (this.processError) {
             try {
-                const result = await this.actor.createDietPlan(arg0, arg1, arg2, arg3, arg4, arg5);
+                const result = await this.actor.clearCaffeineIntake();
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.createDietPlan(arg0, arg1, arg2, arg3, arg4, arg5);
-            return result;
-        }
-    }
-    async createScheduledSession(arg0: TimetableId, arg1: UserId, arg2: UserId, arg3: WorkoutPlanId, arg4: bigint, arg5: string): Promise<void> {
-        if (this.processError) {
-            try {
-                const result = await this.actor.createScheduledSession(arg0, arg1, arg2, arg3, arg4, arg5);
-                return result;
-            } catch (e) {
-                this.processError(e);
-                throw new Error("unreachable");
-            }
-        } else {
-            const result = await this.actor.createScheduledSession(arg0, arg1, arg2, arg3, arg4, arg5);
+            const result = await this.actor.clearCaffeineIntake();
             return result;
         }
     }
@@ -475,20 +489,6 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async deleteDietPlan(arg0: DietPlanId): Promise<void> {
-        if (this.processError) {
-            try {
-                const result = await this.actor.deleteDietPlan(arg0);
-                return result;
-            } catch (e) {
-                this.processError(e);
-                throw new Error("unreachable");
-            }
-        } else {
-            const result = await this.actor.deleteDietPlan(arg0);
-            return result;
-        }
-    }
     async deleteExerciseFromLibrary(arg0: ExerciseId): Promise<void> {
         if (this.processError) {
             try {
@@ -500,20 +500,6 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.deleteExerciseFromLibrary(arg0);
-            return result;
-        }
-    }
-    async deleteScheduledSession(arg0: TimetableId): Promise<void> {
-        if (this.processError) {
-            try {
-                const result = await this.actor.deleteScheduledSession(arg0);
-                return result;
-            } catch (e) {
-                this.processError(e);
-                throw new Error("unreachable");
-            }
-        } else {
-            const result = await this.actor.deleteScheduledSession(arg0);
             return result;
         }
     }
@@ -559,6 +545,34 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async getAllFormAnalysisTips(): Promise<Array<FormAnalysisTip>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getAllFormAnalysisTips();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getAllFormAnalysisTips();
+            return result;
+        }
+    }
+    async getAllSupplementStacks(): Promise<Array<SupplementStack>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getAllSupplementStacks();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getAllSupplementStacks();
+            return result;
+        }
+    }
     async getAllUsers(): Promise<Array<User>> {
         if (this.processError) {
             try {
@@ -571,20 +585,6 @@ export class Backend implements backendInterface {
         } else {
             const result = await this.actor.getAllUsers();
             return from_candid_vec_n12(this._uploadFile, this._downloadFile, result);
-        }
-    }
-    async getAllWorkoutPlansForUser(arg0: UserId): Promise<Array<WorkoutPlan>> {
-        if (this.processError) {
-            try {
-                const result = await this.actor.getAllWorkoutPlansForUser(arg0);
-                return result;
-            } catch (e) {
-                this.processError(e);
-                throw new Error("unreachable");
-            }
-        } else {
-            const result = await this.actor.getAllWorkoutPlansForUser(arg0);
-            return result;
         }
     }
     async getBrandingSettings(): Promise<BrandingSettings> {
@@ -629,34 +629,6 @@ export class Backend implements backendInterface {
             return from_candid_UserRole_n20(this._uploadFile, this._downloadFile, result);
         }
     }
-    async getDietPlanTemplate(): Promise<Array<MealOption>> {
-        if (this.processError) {
-            try {
-                const result = await this.actor.getDietPlanTemplate();
-                return result;
-            } catch (e) {
-                this.processError(e);
-                throw new Error("unreachable");
-            }
-        } else {
-            const result = await this.actor.getDietPlanTemplate();
-            return result;
-        }
-    }
-    async getDietPlansForClient(arg0: UserId): Promise<Array<DietPlan>> {
-        if (this.processError) {
-            try {
-                const result = await this.actor.getDietPlansForClient(arg0);
-                return result;
-            } catch (e) {
-                this.processError(e);
-                throw new Error("unreachable");
-            }
-        } else {
-            const result = await this.actor.getDietPlansForClient(arg0);
-            return result;
-        }
-    }
     async getExercise(arg0: ExerciseId): Promise<Exercise | null> {
         if (this.processError) {
             try {
@@ -671,60 +643,158 @@ export class Backend implements backendInterface {
             return from_candid_opt_n22(this._uploadFile, this._downloadFile, result);
         }
     }
-    async getScheduledSessionsForClient(arg0: UserId): Promise<Array<ScheduledSession>> {
+    async getExerciseWithHistory(arg0: ExerciseId): Promise<ExerciseWithHistory | null> {
         if (this.processError) {
             try {
-                const result = await this.actor.getScheduledSessionsForClient(arg0);
-                return result;
-            } catch (e) {
-                this.processError(e);
-                throw new Error("unreachable");
-            }
-        } else {
-            const result = await this.actor.getScheduledSessionsForClient(arg0);
-            return result;
-        }
-    }
-    async getScheduledSessionsForTrainer(arg0: UserId): Promise<Array<ScheduledSession>> {
-        if (this.processError) {
-            try {
-                const result = await this.actor.getScheduledSessionsForTrainer(arg0);
-                return result;
-            } catch (e) {
-                this.processError(e);
-                throw new Error("unreachable");
-            }
-        } else {
-            const result = await this.actor.getScheduledSessionsForTrainer(arg0);
-            return result;
-        }
-    }
-    async getTrainerClients(arg0: UserId): Promise<Array<UserId>> {
-        if (this.processError) {
-            try {
-                const result = await this.actor.getTrainerClients(arg0);
-                return result;
-            } catch (e) {
-                this.processError(e);
-                throw new Error("unreachable");
-            }
-        } else {
-            const result = await this.actor.getTrainerClients(arg0);
-            return result;
-        }
-    }
-    async getUser(arg0: UserId): Promise<User | null> {
-        if (this.processError) {
-            try {
-                const result = await this.actor.getUser(arg0);
+                const result = await this.actor.getExerciseWithHistory(arg0);
                 return from_candid_opt_n23(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.getUser(arg0);
+            const result = await this.actor.getExerciseWithHistory(arg0);
             return from_candid_opt_n23(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getFormAnalysisTip(arg0: ExerciseId): Promise<FormAnalysisTip | null> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getFormAnalysisTip(arg0);
+                return from_candid_opt_n27(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getFormAnalysisTip(arg0);
+            return from_candid_opt_n27(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getLocationPreference(): Promise<LocationPreference | null> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getLocationPreference();
+                return from_candid_opt_n28(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getLocationPreference();
+            return from_candid_opt_n28(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getMyClients(): Promise<Array<User>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getMyClients();
+                return from_candid_vec_n12(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getMyClients();
+            return from_candid_vec_n12(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getMyConnectionRequests(): Promise<Array<ConnectionRequest>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getMyConnectionRequests();
+                return from_candid_vec_n29(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getMyConnectionRequests();
+            return from_candid_vec_n29(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getMyConnections(): Promise<Array<User>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getMyConnections();
+                return from_candid_vec_n12(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getMyConnections();
+            return from_candid_vec_n12(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getNearbyUsers(): Promise<Array<NearbyUser>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getNearbyUsers();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getNearbyUsers();
+            return result;
+        }
+    }
+    async getOptimalWorkoutTime(): Promise<OptimalWorkoutTime | null> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getOptimalWorkoutTime();
+                return from_candid_opt_n33(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getOptimalWorkoutTime();
+            return from_candid_opt_n33(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getProgressionStatsForExercise(arg0: ExerciseId): Promise<WeightProgressionStats> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getProgressionStatsForExercise(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getProgressionStatsForExercise(arg0);
+            return result;
+        }
+    }
+    async getSupplementStack(arg0: string): Promise<SupplementStack | null> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getSupplementStack(arg0);
+                return from_candid_opt_n34(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getSupplementStack(arg0);
+            return from_candid_opt_n34(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getTrainingPartnerPreference(): Promise<TrainingPartnerPreference | null> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getTrainingPartnerPreference();
+                return from_candid_opt_n35(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getTrainingPartnerPreference();
+            return from_candid_opt_n35(this._uploadFile, this._downloadFile, result);
         }
     }
     async getUserProfile(arg0: Principal): Promise<UserProfile | null> {
@@ -741,31 +811,31 @@ export class Backend implements backendInterface {
             return from_candid_opt_n17(this._uploadFile, this._downloadFile, result);
         }
     }
-    async getWorkoutPlan(arg0: WorkoutPlanId): Promise<WorkoutPlan | null> {
+    async getWeightProgressionEntries(arg0: ExerciseId): Promise<Array<WeightProgressionEntry>> {
         if (this.processError) {
             try {
-                const result = await this.actor.getWorkoutPlan(arg0);
-                return from_candid_opt_n24(this._uploadFile, this._downloadFile, result);
-            } catch (e) {
-                this.processError(e);
-                throw new Error("unreachable");
-            }
-        } else {
-            const result = await this.actor.getWorkoutPlan(arg0);
-            return from_candid_opt_n24(this._uploadFile, this._downloadFile, result);
-        }
-    }
-    async getWorkoutRecordsForUser(arg0: UserId): Promise<Array<WorkoutRecord>> {
-        if (this.processError) {
-            try {
-                const result = await this.actor.getWorkoutRecordsForUser(arg0);
+                const result = await this.actor.getWeightProgressionEntries(arg0);
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.getWorkoutRecordsForUser(arg0);
+            const result = await this.actor.getWeightProgressionEntries(arg0);
+            return result;
+        }
+    }
+    async initializeFormAnalysisTipsAndSupplements(): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.initializeFormAnalysisTipsAndSupplements();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.initializeFormAnalysisTipsAndSupplements();
             return result;
         }
     }
@@ -783,6 +853,34 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async logCaffeineIntake(arg0: bigint): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.logCaffeineIntake(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.logCaffeineIntake(arg0);
+            return result;
+        }
+    }
+    async logWeightProgress(arg0: ExerciseId, arg1: number, arg2: bigint): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.logWeightProgress(arg0, arg1, arg2);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.logWeightProgress(arg0, arg1, arg2);
+            return result;
+        }
+    }
     async logWorkoutCompletion(arg0: RecordId, arg1: WorkoutPlanId, arg2: UserId, arg3: bigint, arg4: string): Promise<void> {
         if (this.processError) {
             try {
@@ -794,6 +892,20 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.logWorkoutCompletion(arg0, arg1, arg2, arg3, arg4);
+            return result;
+        }
+    }
+    async rejectConnectionRequest(arg0: ConnectionRequestId): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.rejectConnectionRequest(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.rejectConnectionRequest(arg0);
             return result;
         }
     }
@@ -814,14 +926,56 @@ export class Backend implements backendInterface {
     async saveCallerUserProfile(arg0: UserProfile): Promise<void> {
         if (this.processError) {
             try {
-                const result = await this.actor.saveCallerUserProfile(to_candid_UserProfile_n25(this._uploadFile, this._downloadFile, arg0));
+                const result = await this.actor.saveCallerUserProfile(to_candid_UserProfile_n36(this._uploadFile, this._downloadFile, arg0));
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.saveCallerUserProfile(to_candid_UserProfile_n25(this._uploadFile, this._downloadFile, arg0));
+            const result = await this.actor.saveCallerUserProfile(to_candid_UserProfile_n36(this._uploadFile, this._downloadFile, arg0));
+            return result;
+        }
+    }
+    async saveLocationPreference(arg0: number, arg1: number, arg2: bigint, arg3: string): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.saveLocationPreference(arg0, arg1, arg2, arg3);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.saveLocationPreference(arg0, arg1, arg2, arg3);
+            return result;
+        }
+    }
+    async saveTrainingPartnerPreference(arg0: Array<string>, arg1: string, arg2: Array<string>, arg3: string): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.saveTrainingPartnerPreference(arg0, arg1, arg2, arg3);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.saveTrainingPartnerPreference(arg0, arg1, arg2, arg3);
+            return result;
+        }
+    }
+    async sendConnectionRequest(arg0: UserId, arg1: string): Promise<ConnectionRequestId> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.sendConnectionRequest(arg0, arg1);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.sendConnectionRequest(arg0, arg1);
             return result;
         }
     }
@@ -839,20 +993,6 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async updateDietPlan(arg0: DietPlanId, arg1: Array<Meal>, arg2: string): Promise<void> {
-        if (this.processError) {
-            try {
-                const result = await this.actor.updateDietPlan(arg0, arg1, arg2);
-                return result;
-            } catch (e) {
-                this.processError(e);
-                throw new Error("unreachable");
-            }
-        } else {
-            const result = await this.actor.updateDietPlan(arg0, arg1, arg2);
-            return result;
-        }
-    }
     async updateExerciseInLibrary(arg0: ExerciseId, arg1: string, arg2: string, arg3: string, arg4: string, arg5: string, arg6: string, arg7: string, arg8: string): Promise<void> {
         if (this.processError) {
             try {
@@ -864,20 +1004,6 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.updateExerciseInLibrary(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
-            return result;
-        }
-    }
-    async updateScheduledSession(arg0: TimetableId, arg1: bigint, arg2: string): Promise<void> {
-        if (this.processError) {
-            try {
-                const result = await this.actor.updateScheduledSession(arg0, arg1, arg2);
-                return result;
-            } catch (e) {
-                this.processError(e);
-                throw new Error("unreachable");
-            }
-        } else {
-            const result = await this.actor.updateScheduledSession(arg0, arg1, arg2);
             return result;
         }
     }
@@ -895,23 +1021,15 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async updateWorkoutRecord(arg0: RecordId, arg1: bigint, arg2: string): Promise<void> {
-        if (this.processError) {
-            try {
-                const result = await this.actor.updateWorkoutRecord(arg0, arg1, arg2);
-                return result;
-            } catch (e) {
-                this.processError(e);
-                throw new Error("unreachable");
-            }
-        } else {
-            const result = await this.actor.updateWorkoutRecord(arg0, arg1, arg2);
-            return result;
-        }
-    }
 }
 function from_candid_AppUserRole_n15(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _AppUserRole): AppUserRole {
     return from_candid_variant_n16(_uploadFile, _downloadFile, value);
+}
+function from_candid_ConnectionRequest_n30(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _ConnectionRequest): ConnectionRequest {
+    return from_candid_record_n31(_uploadFile, _downloadFile, value);
+}
+function from_candid_ExerciseWithHistory_n24(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _ExerciseWithHistory): ExerciseWithHistory {
+    return from_candid_record_n25(_uploadFile, _downloadFile, value);
 }
 function from_candid_UserProfile_n18(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _UserProfile): UserProfile {
     return from_candid_record_n19(_uploadFile, _downloadFile, value);
@@ -931,10 +1049,25 @@ function from_candid_opt_n17(_uploadFile: (file: ExternalBlob) => Promise<Uint8A
 function from_candid_opt_n22(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_Exercise]): Exercise | null {
     return value.length === 0 ? null : value[0];
 }
-function from_candid_opt_n23(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_User]): User | null {
-    return value.length === 0 ? null : from_candid_User_n13(_uploadFile, _downloadFile, value[0]);
+function from_candid_opt_n23(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_ExerciseWithHistory]): ExerciseWithHistory | null {
+    return value.length === 0 ? null : from_candid_ExerciseWithHistory_n24(_uploadFile, _downloadFile, value[0]);
 }
-function from_candid_opt_n24(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_WorkoutPlan]): WorkoutPlan | null {
+function from_candid_opt_n26(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [Array<_WeightProgressionEntry>]): Array<WeightProgressionEntry> | null {
+    return value.length === 0 ? null : value[0];
+}
+function from_candid_opt_n27(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_FormAnalysisTip]): FormAnalysisTip | null {
+    return value.length === 0 ? null : value[0];
+}
+function from_candid_opt_n28(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_LocationPreference]): LocationPreference | null {
+    return value.length === 0 ? null : value[0];
+}
+function from_candid_opt_n33(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_OptimalWorkoutTime]): OptimalWorkoutTime | null {
+    return value.length === 0 ? null : value[0];
+}
+function from_candid_opt_n34(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_SupplementStack]): SupplementStack | null {
+    return value.length === 0 ? null : value[0];
+}
+function from_candid_opt_n35(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_TrainingPartnerPreference]): TrainingPartnerPreference | null {
     return value.length === 0 ? null : value[0];
 }
 function from_candid_opt_n6(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [boolean]): boolean | null {
@@ -976,6 +1109,48 @@ function from_candid_record_n19(_uploadFile: (file: ExternalBlob) => Promise<Uin
         email: value.email
     };
 }
+function from_candid_record_n25(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    userHistory: [] | [Array<_WeightProgressionEntry>];
+    exercise: _Exercise;
+}): {
+    userHistory?: Array<WeightProgressionEntry>;
+    exercise: Exercise;
+} {
+    return {
+        userHistory: record_opt_to_undefined(from_candid_opt_n26(_uploadFile, _downloadFile, value.userHistory)),
+        exercise: value.exercise
+    };
+}
+function from_candid_record_n31(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    id: _ConnectionRequestId;
+    status: {
+        pending: null;
+    } | {
+        rejected: null;
+    } | {
+        accepted: null;
+    };
+    receiverId: _UserId;
+    message: string;
+    timestamp: bigint;
+    senderId: _UserId;
+}): {
+    id: ConnectionRequestId;
+    status: Variant_pending_rejected_accepted;
+    receiverId: UserId;
+    message: string;
+    timestamp: bigint;
+    senderId: UserId;
+} {
+    return {
+        id: value.id,
+        status: from_candid_variant_n32(_uploadFile, _downloadFile, value.status),
+        receiverId: value.receiverId,
+        message: value.message,
+        timestamp: value.timestamp,
+        senderId: value.senderId
+    };
+}
 function from_candid_record_n5(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     success: [] | [boolean];
     topped_up_amount: [] | [bigint];
@@ -1006,14 +1181,26 @@ function from_candid_variant_n21(_uploadFile: (file: ExternalBlob) => Promise<Ui
 }): UserRole {
     return "admin" in value ? UserRole.admin : "user" in value ? UserRole.user : "guest" in value ? UserRole.guest : value;
 }
+function from_candid_variant_n32(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    pending: null;
+} | {
+    rejected: null;
+} | {
+    accepted: null;
+}): Variant_pending_rejected_accepted {
+    return "pending" in value ? Variant_pending_rejected_accepted.pending : "rejected" in value ? Variant_pending_rejected_accepted.rejected : "accepted" in value ? Variant_pending_rejected_accepted.accepted : value;
+}
 function from_candid_vec_n12(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_User>): Array<User> {
     return value.map((x)=>from_candid_User_n13(_uploadFile, _downloadFile, x));
+}
+function from_candid_vec_n29(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_ConnectionRequest>): Array<ConnectionRequest> {
+    return value.map((x)=>from_candid_ConnectionRequest_n30(_uploadFile, _downloadFile, x));
 }
 function to_candid_AppUserRole_n8(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: AppUserRole): _AppUserRole {
     return to_candid_variant_n9(_uploadFile, _downloadFile, value);
 }
-function to_candid_UserProfile_n25(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UserProfile): _UserProfile {
-    return to_candid_record_n26(_uploadFile, _downloadFile, value);
+function to_candid_UserProfile_n36(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UserProfile): _UserProfile {
+    return to_candid_record_n37(_uploadFile, _downloadFile, value);
 }
 function to_candid_UserRole_n10(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UserRole): _UserRole {
     return to_candid_variant_n11(_uploadFile, _downloadFile, value);
@@ -1024,7 +1211,16 @@ function to_candid__CaffeineStorageRefillInformation_n2(_uploadFile: (file: Exte
 function to_candid_opt_n1(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _CaffeineStorageRefillInformation | null): [] | [__CaffeineStorageRefillInformation] {
     return value === null ? candid_none() : candid_some(to_candid__CaffeineStorageRefillInformation_n2(_uploadFile, _downloadFile, value));
 }
-function to_candid_record_n26(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function to_candid_record_n3(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    proposed_top_up_amount?: bigint;
+}): {
+    proposed_top_up_amount: [] | [bigint];
+} {
+    return {
+        proposed_top_up_amount: value.proposed_top_up_amount ? candid_some(value.proposed_top_up_amount) : candid_none()
+    };
+}
+function to_candid_record_n37(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     name: string;
     role: AppUserRole;
     email: string;
@@ -1037,15 +1233,6 @@ function to_candid_record_n26(_uploadFile: (file: ExternalBlob) => Promise<Uint8
         name: value.name,
         role: to_candid_AppUserRole_n8(_uploadFile, _downloadFile, value.role),
         email: value.email
-    };
-}
-function to_candid_record_n3(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
-    proposed_top_up_amount?: bigint;
-}): {
-    proposed_top_up_amount: [] | [bigint];
-} {
-    return {
-        proposed_top_up_amount: value.proposed_top_up_amount ? candid_some(value.proposed_top_up_amount) : candid_none()
     };
 }
 function to_candid_variant_n11(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UserRole): {

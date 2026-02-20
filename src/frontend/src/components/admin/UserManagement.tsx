@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useGetAllUsers, useRemoveUser } from '../../hooks/useQueries';
+import { useGetAllUsers, useRemoveUser, User } from '../../hooks/useQueries';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -7,7 +7,6 @@ import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import UserFormModal from './UserFormModal';
 import { toast } from 'sonner';
-import type { User } from '../../backend';
 import { AppUserRole } from '../../backend';
 
 export default function UserManagement() {

@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dumbbell, Clock, CheckCircle2 } from 'lucide-react';
-import type { WorkoutPlan } from '../../backend';
+import { WorkoutPlan } from '../../hooks/useQueries';
 import WorkoutLogForm from './WorkoutLogForm';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 

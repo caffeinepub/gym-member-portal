@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Search, Dumbbell } from 'lucide-react';
+import { Search, Dumbbell, Play } from 'lucide-react';
 import { useGetAllExercises } from '../../hooks/useQueries';
 import ExerciseDetailModal from './ExerciseDetailModal';
 import type { Exercise } from '../../backend';
@@ -18,6 +18,7 @@ const MUSCLE_GROUPS = [
   'Biceps',
   'Core',
   'Abs',
+  'Cardio',
 ];
 
 export default function ExerciseLibraryBrowser() {
@@ -59,6 +60,9 @@ export default function ExerciseLibraryBrowser() {
             className="pl-9"
           />
         </div>
+        <div className="text-sm text-muted-foreground">
+          {filteredExercises.length} exercise{filteredExercises.length !== 1 ? 's' : ''} found
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-2">
@@ -93,15 +97,20 @@ export default function ExerciseLibraryBrowser() {
           {filteredExercises.map((exercise) => (
             <Card
               key={Number(exercise.id)}
-              className="cursor-pointer transition-all hover:shadow-lg hover:scale-[1.02]"
+              className="cursor-pointer transition-all hover:shadow-lg hover:scale-[1.02] relative group"
               onClick={() => setSelectedExercise(exercise)}
             >
               <CardHeader>
                 <div className="flex items-start justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    <Dumbbell className="h-5 w-5 text-primary" />
+                  <div className="flex items-center gap-2 flex-1">
+                    <Dumbbell className="h-5 w-5 text-primary flex-shrink-0" />
                     <CardTitle className="text-lg">{exercise.name}</CardTitle>
                   </div>
+                  {exercise.videoUrl && (
+                    <div className="flex-shrink-0 rounded-full bg-primary/10 p-2 group-hover:bg-primary/20 transition-colors">
+                      <Play className="h-4 w-4 text-primary" />
+                    </div>
+                  )}
                 </div>
                 <CardDescription className="line-clamp-2">{exercise.description}</CardDescription>
               </CardHeader>
@@ -110,18 +119,21 @@ export default function ExerciseLibraryBrowser() {
                   <Badge className={getDifficultyColor(exercise.difficultyLevel)}>
                     {exercise.difficultyLevel}
                   </Badge>
-                  {exercise.targetMuscleGroups.split(/[,/]/).map((muscle, idx) => (
+                  {exercise.targetMuscleGroups.split(/[,/]/).slice(0, 2).map((muscle, idx) => (
                     <Badge key={idx} variant="outline">
                       {muscle.trim()}
                     </Badge>
                   ))}
+                  {exercise.targetMuscleGroups.split(/[,/]/).length > 2 && (
+                    <Badge variant="outline">+{exercise.targetMuscleGroups.split(/[,/]/).length - 2}</Badge>
+                  )}
                 </div>
                 <div className="text-sm text-muted-foreground space-y-1">
                   <p>
                     <span className="font-medium">Equipment:</span> {exercise.equipmentNeeded || 'None'}
                   </p>
                   <p>
-                    <span className="font-medium">Volume:</span> {exercise.recommendedRepsRange}
+                    <span className="font-medium">Volume:</span> {exercise.recommendedSetsRange} sets × {exercise.recommendedRepsRange} reps
                   </p>
                 </div>
               </CardContent>
