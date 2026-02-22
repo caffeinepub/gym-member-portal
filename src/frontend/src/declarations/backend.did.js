@@ -138,6 +138,24 @@ export const OptimalWorkoutTime = IDL.Record({
   'recommendedStartTime' : IDL.Int,
   'optimalWindow' : IDL.Nat,
 });
+export const PRLeaderboardEntry = IDL.Record({
+  'weight' : IDL.Float64,
+  'userId' : UserId,
+  'date' : IDL.Int,
+  'name' : IDL.Text,
+  'ranking' : IDL.Nat,
+});
+export const PrType = IDL.Variant({
+  'deadlift' : IDL.Null,
+  'benchPress' : IDL.Null,
+  'shoulderPress' : IDL.Null,
+  'squat' : IDL.Null,
+  'barbellRow' : IDL.Null,
+});
+export const PRLeaderboard = IDL.Record({
+  'entries' : IDL.Vec(PRLeaderboardEntry),
+  'prType' : PrType,
+});
 export const WeightProgressionStats = IDL.Record({
   'totalVolume' : IDL.Float64,
   'exerciseId' : ExerciseId,
@@ -154,6 +172,24 @@ export const TrainingPartnerPreference = IDL.Record({
   'userId' : UserId,
 });
 export const RecordId = IDL.Text;
+export const http_header = IDL.Record({
+  'value' : IDL.Text,
+  'name' : IDL.Text,
+});
+export const http_request_result = IDL.Record({
+  'status' : IDL.Nat,
+  'body' : IDL.Vec(IDL.Nat8),
+  'headers' : IDL.Vec(http_header),
+});
+export const TransformationInput = IDL.Record({
+  'context' : IDL.Vec(IDL.Nat8),
+  'response' : http_request_result,
+});
+export const TransformationOutput = IDL.Record({
+  'status' : IDL.Nat,
+  'body' : IDL.Vec(IDL.Nat8),
+  'headers' : IDL.Vec(http_header),
+});
 
 export const idlService = IDL.Service({
   '_caffeineStorageBlobIsLive' : IDL.Func(
@@ -200,6 +236,7 @@ export const idlService = IDL.Service({
       [],
     ),
   'addUser' : IDL.Func([UserId, IDL.Text, IDL.Text, AppUserRole], [], []),
+  'askVortex' : IDL.Func([IDL.Text], [IDL.Text], []),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
   'assignClientToTrainer' : IDL.Func([UserId, UserId], [], []),
   'clearCaffeineIntake' : IDL.Func([], [], []),
@@ -263,6 +300,7 @@ export const idlService = IDL.Service({
       [IDL.Opt(OptimalWorkoutTime)],
       ['query'],
     ),
+  'getPrLeaderboard' : IDL.Func([IDL.Int], [PRLeaderboard], ['query']),
   'getProgressionStatsForExercise' : IDL.Func(
       [ExerciseId],
       [WeightProgressionStats],
@@ -314,6 +352,12 @@ export const idlService = IDL.Service({
       [UserId, IDL.Text],
       [ConnectionRequestId],
       [],
+    ),
+  'submitPersonalRecord' : IDL.Func([IDL.Int, IDL.Float64, IDL.Nat], [], []),
+  'transform' : IDL.Func(
+      [TransformationInput],
+      [TransformationOutput],
+      ['query'],
     ),
   'updateBrandingSettings' : IDL.Func([BrandingSettings], [], []),
   'updateExerciseInLibrary' : IDL.Func(
@@ -471,6 +515,24 @@ export const idlFactory = ({ IDL }) => {
     'recommendedStartTime' : IDL.Int,
     'optimalWindow' : IDL.Nat,
   });
+  const PRLeaderboardEntry = IDL.Record({
+    'weight' : IDL.Float64,
+    'userId' : UserId,
+    'date' : IDL.Int,
+    'name' : IDL.Text,
+    'ranking' : IDL.Nat,
+  });
+  const PrType = IDL.Variant({
+    'deadlift' : IDL.Null,
+    'benchPress' : IDL.Null,
+    'shoulderPress' : IDL.Null,
+    'squat' : IDL.Null,
+    'barbellRow' : IDL.Null,
+  });
+  const PRLeaderboard = IDL.Record({
+    'entries' : IDL.Vec(PRLeaderboardEntry),
+    'prType' : PrType,
+  });
   const WeightProgressionStats = IDL.Record({
     'totalVolume' : IDL.Float64,
     'exerciseId' : ExerciseId,
@@ -487,6 +549,21 @@ export const idlFactory = ({ IDL }) => {
     'userId' : UserId,
   });
   const RecordId = IDL.Text;
+  const http_header = IDL.Record({ 'value' : IDL.Text, 'name' : IDL.Text });
+  const http_request_result = IDL.Record({
+    'status' : IDL.Nat,
+    'body' : IDL.Vec(IDL.Nat8),
+    'headers' : IDL.Vec(http_header),
+  });
+  const TransformationInput = IDL.Record({
+    'context' : IDL.Vec(IDL.Nat8),
+    'response' : http_request_result,
+  });
+  const TransformationOutput = IDL.Record({
+    'status' : IDL.Nat,
+    'body' : IDL.Vec(IDL.Nat8),
+    'headers' : IDL.Vec(http_header),
+  });
   
   return IDL.Service({
     '_caffeineStorageBlobIsLive' : IDL.Func(
@@ -533,6 +610,7 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'addUser' : IDL.Func([UserId, IDL.Text, IDL.Text, AppUserRole], [], []),
+    'askVortex' : IDL.Func([IDL.Text], [IDL.Text], []),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
     'assignClientToTrainer' : IDL.Func([UserId, UserId], [], []),
     'clearCaffeineIntake' : IDL.Func([], [], []),
@@ -596,6 +674,7 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Opt(OptimalWorkoutTime)],
         ['query'],
       ),
+    'getPrLeaderboard' : IDL.Func([IDL.Int], [PRLeaderboard], ['query']),
     'getProgressionStatsForExercise' : IDL.Func(
         [ExerciseId],
         [WeightProgressionStats],
@@ -647,6 +726,12 @@ export const idlFactory = ({ IDL }) => {
         [UserId, IDL.Text],
         [ConnectionRequestId],
         [],
+      ),
+    'submitPersonalRecord' : IDL.Func([IDL.Int, IDL.Float64, IDL.Nat], [], []),
+    'transform' : IDL.Func(
+        [TransformationInput],
+        [TransformationOutput],
+        ['query'],
       ),
     'updateBrandingSettings' : IDL.Func([BrandingSettings], [], []),
     'updateExerciseInLibrary' : IDL.Func(

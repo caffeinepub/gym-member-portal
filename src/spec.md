@@ -1,14 +1,12 @@
 # Specification
 
 ## Summary
-**Goal:** Add a TDEE (Total Daily Energy Expenditure) and macro calculator to help users determine their daily calorie and macronutrient needs based on their fitness goals.
+**Goal:** Fix Vortex AI response display, replace gym locator with zip code search, and clean up unnecessary form fields.
 
 **Planned changes:**
-- Create a TDEE calculator component that accepts user inputs (weight, height, age, gender, activity level, fitness goal)
-- Display calculated TDEE in calories per day
-- Show recommended daily macros breakdown (protein, carbs, fats in grams)
-- Include explanation of calculations/formula used
-- Integrate calculator into client dashboard as a new accessible tab/section
-- Follow existing UI patterns and styling for consistency
+- Parse Vortex AI responses to display only clean conversational text without code blocks or technical artifacts
+- Replace Gym Buddy Locator with zip code/city name search system (no geolocation or maps)
+- Remove all unnecessary and empty form fields across client, trainer, and admin dashboards
+- Update VortexMessage component to properly format and display parsed AI responses
 
-**User-visible outcome:** Users can access a TDEE calculator from their client dashboard to calculate their daily calorie needs and macro breakdown based on their personal metrics and fitness goals, with clear explanations of the calculations.
+**User-visible outcome:** Users will see clean, readable AI chat responses, can search for gyms by entering their zip code or city name, and encounter streamlined forms with only relevant fields.

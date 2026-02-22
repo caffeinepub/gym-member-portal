@@ -1,39 +1,113 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Add TDEE & Macro Calculator",
+  "title": "Fix Vortex AI response parsing and replace Gym Locator with zip code search",
   "requirements": [
     {
-      "id": "REQ-1",
-      "summary": "Create a TDEE and macro calculator component that calculates daily calories and macronutrients based on user input",
+      "id": "REQ-2",
+      "summary": "Replace Gym Buddy Locator with zip code-based gym search system",
       "acceptanceCriteria": [
-        "Calculator accepts user inputs for weight (kg), height (cm), age, gender, activity level (sedentary, lightly active, moderately active, very active, extremely active), and fitness goal",
-        "Displays calculated TDEE in calories per day",
-        "Shows recommended daily macros breakdown: protein (grams), carbs (grams), fats (grams)",
-        "Includes explanation of calculations or formula used",
-        "Results are displayed in a clear, readable format with visual distinction between calorie and macro values"
+        "Users can enter their zip code or city name to search for nearby gyms",
+        "Frontend displays gym results in a list format without map integration",
+        "No geolocation permission requests are triggered"
       ],
       "file_operations": [
         {
-          "path": "frontend/src/components/client/TDEECalculator.tsx",
-          "operation": "create",
-          "description": "Create a new TDEE calculator component that collects user inputs (weight, height, age, gender, activity level, fitness goal) via form fields with proper validation. Calculate TDEE using the Mifflin-St Jeor equation, then compute macro recommendations based on the selected fitness goal (weight loss: 40% protein, 30% carbs, 30% fats; maintenance: 30% protein, 40% carbs, 30% fats; muscle gain: 35% protein, 45% carbs, 20% fats). Display results in cards showing total calories and individual macro amounts in grams. Include a collapsible section explaining the calculation formulas. Use Shadcn UI components (Card, Input, Select, Button, Label) for consistent styling with the existing PersonalizedTracker component. Follow the color scheme and layout patterns from frontend/src/components/client/PersonalizedTracker.tsx."
+          "path": "frontend/src/components/client/GymBuddyLocator.tsx",
+          "operation": "modify",
+          "description": "Replace the existing geolocation-based nearby users display with a zip code search form. Add input fields for zip code or city name with a search button. Replace the distance-based NearbyUser display with a list-based gym results display that shows gym name, address, and distance based on zip code lookup. Remove all references to getUserLocation, geolocation permissions, and distance calculations. Update the component to call a new backend method for zip code-based gym search instead of getNearbyUsers query."
+        },
+        {
+          "path": "frontend/src/hooks/useQueries.ts",
+          "operation": "modify",
+          "description": "Add a new React Query hook useSearchGymsByZipCode that accepts zip code or city name as a parameter and calls the corresponding backend method. Remove or deprecate the useGetNearbyUsers hook if it's only used for gym location purposes. Ensure the new hook is properly typed with frontend TypeScript interfaces for gym search results."
+        },
+        {
+          "path": "frontend/src/pages/ClientDashboard.tsx",
+          "operation": "modify",
+          "description": "Update the Gym Buddy tab to reflect the new zip code search functionality. Update any labels or descriptions that reference geolocation or map-based features to describe the new zip code search capability. Ensure the GymBuddyLocator component integration works with the updated props and data flow."
         }
       ]
     },
     {
-      "id": "REQ-2",
-      "summary": "Integrate TDEE calculator into client dashboard as a new tab alongside existing features",
+      "id": "REQ-3",
+      "summary": "Remove unnecessary and empty form fields throughout the application",
       "acceptanceCriteria": [
-        "TDEE calculator is accessible from the client dashboard navigation",
-        "Calculator tab/section follows existing UI patterns and styling",
-        "Calculator is only visible to users with client role"
+        "All forms display only required and actively used fields",
+        "Empty or placeholder fields that serve no purpose are removed",
+        "Form validation and submission logic still works correctly after field removal"
       ],
       "file_operations": [
         {
           "path": "frontend/src/pages/ClientDashboard.tsx",
           "operation": "modify",
-          "description": "Add a new tab labeled 'TDEE Calculator' to the existing Tabs component in ClientDashboard. Import the TDEECalculator component and render it within a new TabsContent section. Position the new tab after the 'Personalized Tracker' tab to group similar calculation tools together. Ensure the tab follows the existing pattern with TabsTrigger and TabsContent wrappers. The calculator will automatically be protected by the client role guard that already wraps the ClientDashboard page."
+          "description": "Audit all forms and input fields in the client dashboard tabs. Remove any empty placeholder fields, unused input components, or form sections that are not actively collecting data. Verify that PersonalizedTracker, TDEECalculator, and other embedded form components only display necessary fields."
+        },
+        {
+          "path": "frontend/src/pages/TrainerDashboard.tsx",
+          "operation": "modify",
+          "description": "Review WorkoutPlanForm and DietPlanForm modal dialogs for unnecessary fields. Remove any empty or unused input fields from the workout plan creation, diet plan creation, and timetable scheduling forms. Ensure form validation logic remains intact after field removal."
+        },
+        {
+          "path": "frontend/src/pages/AdminDashboard.tsx",
+          "operation": "modify",
+          "description": "Audit the admin dashboard tabs for unused form fields. Review UserFormModal, ExerciseFormModal, and ClientAssignment components to remove any placeholder or consistently empty fields. Ensure all remaining fields are actively used and validated."
+        },
+        {
+          "path": "frontend/src/pages/ProfileSetup.tsx",
+          "operation": "modify",
+          "description": "Remove any unnecessary fields from the initial profile setup form. Keep only essential fields (name, email, role) and remove any additional fields that users consistently leave empty or that serve no purpose in the profile creation flow."
+        },
+        {
+          "path": "frontend/src/components/client/LocationPreferenceForm.tsx",
+          "operation": "modify",
+          "description": "Remove latitude and longitude input fields since the new zip code search system will not require manual coordinate entry. Keep only the gym name, zip code/city field, and search radius fields that are relevant to the new search functionality."
+        },
+        {
+          "path": "frontend/src/components/trainer/WorkoutPlanForm.tsx",
+          "operation": "modify",
+          "description": "Review and remove any empty or unused fields in the workout plan creation form. Ensure only actively used fields (exercise selection, sets, reps, weight, rest time, notes) remain."
+        },
+        {
+          "path": "frontend/src/components/trainer/DietPlanForm.tsx",
+          "operation": "modify",
+          "description": "Audit the diet plan form for unnecessary fields. Remove any placeholder fields or sections that are not being actively populated. Ensure the meal and food item forms contain only essential nutritional data fields."
+        },
+        {
+          "path": "frontend/src/components/client/TrainingPartnerPreferenceForm.tsx",
+          "operation": "modify",
+          "description": "Review the training partner preference form for unused fields. Remove any empty checkboxes, dropdowns, or text inputs that are not actively used. Keep only fitness goals, experience level, preferred workout times, and bio fields that are essential."
+        }
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "summary": "Update VortexMessage component to display parsed AI responses without code syntax or technical artifacts",
+      "acceptanceCriteria": [
+        "VortexMessage component displays formatted text with proper paragraphs and lists",
+        "No code syntax, brackets, or technical formatting appears in rendered messages",
+        "Message formatting remains readable and conversational"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/vortex/VortexMessage.tsx",
+          "operation": "modify",
+          "description": "Update the message rendering logic to strip code blocks, technical metadata, and formatting artifacts from AI responses. Implement text parsing that removes markdown code fences (```), inline code backticks, JSON brackets, and other technical syntax before rendering. Enhance the paragraph and list detection to handle various response formats. Ensure the component only displays clean conversational text while maintaining support for basic formatting like paragraphs, numbered lists, and bullet points. Add safeguards to filter out any raw backend code, script tags, or technical metadata that may appear in responses."
+        },
+        {
+          "path": "frontend/src/components/vortex/VortexChat.tsx",
+          "operation": "modify",
+          "description": "Add client-side response parsing before passing messages to VortexMessage component. Implement a preprocessing function that extracts only the message content from the backend response and strips any code blocks or technical formatting. Handle cases where the AI service returns wrapped responses with metadata. Ensure the message history state only stores clean, user-friendly text content."
+        },
+        {
+          "path": "frontend/src/hooks/useQueries.ts",
+          "operation": "modify",
+          "description": "Update the useAskVortex mutation hook to include response parsing logic. Add a response transformation step that extracts clean message content from the backend response before returning it to the component. Strip any code syntax, JSON formatting, or technical artifacts from the response string. Ensure the hook returns only conversational text suitable for display."
+        },
+        {
+          "path": "frontend/src/pages/VortexAIPage.tsx",
+          "operation": "modify",
+          "description": "Verify that the VortexChat component integration properly handles parsed responses. Ensure no additional response processing is needed at the page level since parsing will be handled in lower-level components and hooks."
         }
       ]
     }

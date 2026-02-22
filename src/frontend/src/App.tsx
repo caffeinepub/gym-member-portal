@@ -14,12 +14,18 @@ import FlexWallPage from './pages/FlexWallPage';
 import AnalyticsDashboardPage from './pages/AnalyticsDashboardPage';
 import SupplementStackPage from './pages/SupplementStackPage';
 import WorkoutLogsPage from './pages/WorkoutLogsPage';
+import VortexAIPage from './pages/VortexAIPage';
 
 const rootRoute = createRootRoute({
   component: () => (
-    <AppLayout>
-      <Outlet />
-    </AppLayout>
+    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+      <BrandingProvider>
+        <AppLayout>
+          <Outlet />
+        </AppLayout>
+        <Toaster />
+      </BrandingProvider>
+    </ThemeProvider>
   ),
 });
 
@@ -35,19 +41,19 @@ const profileSetupRoute = createRoute({
   component: ProfileSetup,
 });
 
-const trainerRoute = createRoute({
+const trainerDashboardRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/trainer-dashboard',
   component: TrainerDashboard,
 });
 
-const clientRoute = createRoute({
+const clientDashboardRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/client-dashboard',
   component: ClientDashboard,
 });
 
-const adminRoute = createRoute({
+const adminDashboardRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/admin-dashboard',
   component: AdminDashboard,
@@ -83,17 +89,24 @@ const workoutLogsRoute = createRoute({
   component: WorkoutLogsPage,
 });
 
+const vortexAIRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/vortex-ai',
+  component: VortexAIPage,
+});
+
 const routeTree = rootRoute.addChildren([
   indexRoute,
   profileSetupRoute,
-  trainerRoute,
-  clientRoute,
-  adminRoute,
+  trainerDashboardRoute,
+  clientDashboardRoute,
+  adminDashboardRoute,
   exercisesRoute,
   flexWallRoute,
   analyticsRoute,
   supplementsRoute,
   workoutLogsRoute,
+  vortexAIRoute,
 ]);
 
 const router = createRouter({ routeTree });
@@ -105,12 +118,5 @@ declare module '@tanstack/react-router' {
 }
 
 export default function App() {
-  return (
-    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
-      <BrandingProvider>
-        <RouterProvider router={router} />
-        <Toaster />
-      </BrandingProvider>
-    </ThemeProvider>
-  );
+  return <RouterProvider router={router} />;
 }

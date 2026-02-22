@@ -13,10 +13,39 @@ interface VortexMessageProps {
   message: Message;
 }
 
+// Helper function to clean and parse message content
+function cleanMessageContent(content: string): string {
+  // Remove code blocks (```...```)
+  let cleaned = content.replace(/```[\s\S]*?```/g, '');
+  
+  // Remove inline code backticks
+  cleaned = cleaned.replace(/`([^`]+)`/g, '$1');
+  
+  // Remove JSON brackets and technical metadata
+  cleaned = cleaned.replace(/^\s*[\{\[]\s*/g, '');
+  cleaned = cleaned.replace(/\s*[\}\]]\s*$/g, '');
+  
+  // Remove script tags and HTML
+  cleaned = cleaned.replace(/<script[\s\S]*?<\/script>/gi, '');
+  cleaned = cleaned.replace(/<[^>]+>/g, '');
+  
+  // Remove common technical prefixes
+  cleaned = cleaned.replace(/^(response|data|result|output):\s*/gi, '');
+  
+  // Clean up excessive whitespace
+  cleaned = cleaned.replace(/\n{3,}/g, '\n\n');
+  cleaned = cleaned.trim();
+  
+  return cleaned;
+}
+
 // Helper function to parse and format message content
 function formatMessageContent(content: string): React.ReactNode {
+  // First clean the content
+  const cleanedContent = cleanMessageContent(content);
+  
   // Split by double newlines for paragraphs
-  const paragraphs = content.split(/\n\n+/);
+  const paragraphs = cleanedContent.split(/\n\n+/);
   
   return paragraphs.map((paragraph, pIndex) => {
     const lines = paragraph.split('\n');

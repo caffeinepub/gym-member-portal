@@ -1,29 +1,36 @@
 {
   "schemaVersion": "1.0.0",
   "projectStateVersion": 3,
-  "summary": "Fitness platform with progressive feature integration including TDEE calculator, exercise videos, PR leaderboard, supplement reminders, recovery guide, transformation gallery, workout log, diet filters, community chat, and affiliate shop",
+  "summary": "Fitness app with Vortex AI chatbot and gym locator feature",
   "architectural_notes": [
-    "UI cleanup required to remove empty/redundant data fields before feature integration",
-    "Features to be implemented incrementally one at a time to avoid build failures"
+    "Vortex AI should parse API responses to display clean text only, not raw code",
+    "Gym Locator replaced with manual location/zip code entry system (no geolocation/map API)",
+    "Remove unnecessary empty fields throughout the application"
   ],
-  "known_issues": [
-    "Previous bulk feature requests failed due to request scope being too broad"
-  ],
-  "isFixRequest": false,
+  "known_issues": [],
+  "isFixRequest": true,
   "existing_features": [
     {
-      "id": "feature-create-a-tdee-total-daily-energy-expenditure-and-macro-calculator-component-in-the-frontend-that-calculates-daily-calories-protein-carbs-and-fats-based-on-user-input-including-weight-height-age-gender-activity-level-and-fitness-goal-weight-loss-maintenance-muscle-gain",
-      "title": "Create a TDEE (Total Daily Energy Expenditure) and macro calculator component in the frontend that calculates daily calories, protein, carbs, and fats based on user input including weight, height, age, gender, activity level, and fitness goal (weight loss, maintenance, muscle gain)",
+      "id": "feature-replace-the-gym-buddy-locator-component-with-a-zip-code-based-gym-search-system-add-a-backend-method-to-store-and-retrieve-gym-locations-by-zip-code-or-city-name-remove-any-geolocation-or-map-api-dependencies-from-the-frontend-component",
+      "title": "Replace the Gym Buddy Locator component with a zip code-based gym search system. Add a backend method to store and retrieve gym locations by zip code or city name. Remove any geolocation or map API dependencies from the frontend component.",
       "reqIds": [
-        "REQ-1"
+        "REQ-2"
       ],
       "version": 1
     },
     {
-      "id": "feature-integrate-the-tdee-calculator-into-the-client-dashboard-as-a-new-tab-or-section-accessible-alongside-existing-features-like-workout-plans-and-progress-tracking",
-      "title": "Integrate the TDEE calculator into the client dashboard as a new tab or section, accessible alongside existing features like workout plans and progress tracking",
+      "id": "feature-remove-all-unnecessary-or-empty-form-fields-throughout-the-application-audit-all-forms-in-the-client-dashboard-trainer-dashboard-admin-dashboard-and-profile-setup-to-identify-and-remove-fields-that-are-not-being-used-or-are-consistently-left-empty",
+      "title": "Remove all unnecessary or empty form fields throughout the application. Audit all forms in the client dashboard, trainer dashboard, admin dashboard, and profile setup to identify and remove fields that are not being used or are consistently left empty.",
       "reqIds": [
-        "REQ-2"
+        "REQ-3"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-vortexmessage-component-to-handle-and-display-parsed-ai-responses-correctly-ensuring-proper-text-formatting-without-rendering-any-code-syntax-or-technical-artifacts",
+      "title": "Update the VortexMessage component to handle and display parsed AI responses correctly, ensuring proper text formatting without rendering any code syntax or technical artifacts.",
+      "reqIds": [
+        "REQ-4"
       ],
       "version": 1
     }
@@ -31,66 +38,14 @@
   "new_feature_requests": [
     {
       "id": "AR-1",
-      "summary": "TDEE & Macro Calculator for daily calories and macros",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-2",
-      "summary": "Exercise Video Library with proper form demonstrations",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-3",
-      "summary": "PR Leaderboard Hall of Fame for max lift records",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-4",
-      "summary": "Daily Supplement Reminders via push notifications",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-5",
-      "summary": "Rest Day Recovery Guide with stretching and sleep tips",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-6",
-      "summary": "Weekly Transformation Gallery with before/after slider",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-7",
-      "summary": "Workout Log History with calendar view",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-8",
-      "summary": "Vegetarian/Vegan Diet Filters for meal plans",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-9",
-      "summary": "Find a Spotter community chatroom feature",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-10",
-      "summary": "Supplements Shop affiliate tab for monetization",
-      "reqIds": [],
+      "summary": "Fix Vortex AI chat to display only clean text responses instead of raw backend code or scripts. Parse the HTTP outcall response from the AI service to extract only the message content and strip any code blocks, technical metadata, or formatting artifacts before displaying to users.",
+      "reqIds": [
+        "REQ-1"
+      ],
       "status": "pending"
     }
   ],
-  "projectName": "Spotter AI",
+  "projectName": "Iron Temple",
   "clarification_mode": "instant",
   "clarification_rounds": 0
 }

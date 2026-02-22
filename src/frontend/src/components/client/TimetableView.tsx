@@ -20,7 +20,7 @@ const weeklySchedule = [
 ];
 
 export default function TimetableView({ userId }: TimetableViewProps) {
-  const { data: sessions = [], isLoading } = useGetScheduledSessionsForClient(userId);
+  const { data: sessions = [], isLoading } = useGetScheduledSessionsForClient();
 
   const sortedSessions = [...sessions].sort((a, b) => Number(a.dateTime - b.dateTime));
   const now = BigInt(Date.now() * 1000000);

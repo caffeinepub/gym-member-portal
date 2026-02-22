@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate, useLocation } from '@tanstack/react-router';
 import { useInternetIdentity } from '../../hooks/useInternetIdentity';
 import { useGetCallerUserProfile } from '../../hooks/useQueries';
@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Menu, MessageSquare, Dumbbell, Users, TrendingUp, Pill, User, ClipboardList } from 'lucide-react';
 import { AppUserRole } from '../../backend';
-import VortexChat from '../vortex/VortexChat';
 import { useQueryClient } from '@tanstack/react-query';
 
 export default function Header() {
@@ -16,17 +15,11 @@ export default function Header() {
   const { identity, clear, login, loginStatus } = useInternetIdentity();
   const { data: userProfile } = useGetCallerUserProfile();
   const { branding } = useBranding();
-  const [vortexOpen, setVortexOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const queryClient = useQueryClient();
 
   const isAuthenticated = !!identity;
   const isLoggingIn = loginStatus === 'logging-in';
-
-  // Auto-open VORTEX on mount
-  useEffect(() => {
-    setVortexOpen(true);
-  }, []);
 
   const handleAuth = async () => {
     if (isAuthenticated) {
@@ -63,13 +56,13 @@ export default function Header() {
           </button>
 
           {isAuthenticated && userProfile && (
-            <nav className="hidden items-center gap-2 lg:flex">
+            <nav className="hidden items-center gap-3 lg:flex">
               {userProfile.role === AppUserRole.client && (
                 <>
                   <Button
                     variant={isActive('/client-dashboard') ? 'default' : 'ghost'}
                     onClick={() => navigate({ to: '/client-dashboard' })}
-                    className="gap-2 font-extrabold"
+                    className="gap-2 font-extrabold min-h-[44px] px-4"
                   >
                     <User className="h-4 w-4" />
                     Profile
@@ -77,7 +70,7 @@ export default function Header() {
                   <Button
                     variant={isActive('/workout-logs') ? 'default' : 'ghost'}
                     onClick={() => navigate({ to: '/workout-logs' })}
-                    className="gap-2 font-extrabold"
+                    className="gap-2 font-extrabold min-h-[44px] px-4"
                   >
                     <Dumbbell className="h-4 w-4" />
                     Workout Logs
@@ -85,7 +78,7 @@ export default function Header() {
                   <Button
                     variant={isActive('/flex-wall') ? 'default' : 'ghost'}
                     onClick={() => navigate({ to: '/flex-wall' })}
-                    className="gap-2 font-extrabold"
+                    className="gap-2 font-extrabold min-h-[44px] px-4"
                   >
                     <Users className="h-4 w-4" />
                     Flex Wall
@@ -93,7 +86,7 @@ export default function Header() {
                   <Button
                     variant={isActive('/analytics') ? 'default' : 'ghost'}
                     onClick={() => navigate({ to: '/analytics' })}
-                    className="gap-2 font-extrabold"
+                    className="gap-2 font-extrabold min-h-[44px] px-4"
                   >
                     <TrendingUp className="h-4 w-4" />
                     Analytics
@@ -101,7 +94,7 @@ export default function Header() {
                   <Button
                     variant={isActive('/supplements') ? 'default' : 'ghost'}
                     onClick={() => navigate({ to: '/supplements' })}
-                    className="gap-2 font-extrabold"
+                    className="gap-2 font-extrabold min-h-[44px] px-4"
                   >
                     <Pill className="h-4 w-4" />
                     Supplements
@@ -112,7 +105,7 @@ export default function Header() {
                 <Button
                   variant={isActive('/trainer-dashboard') ? 'default' : 'ghost'}
                   onClick={() => navigate({ to: '/trainer-dashboard' })}
-                  className="font-extrabold"
+                  className="font-extrabold min-h-[44px] px-4"
                 >
                   Dashboard
                 </Button>
@@ -121,7 +114,7 @@ export default function Header() {
                 <Button
                   variant={isActive('/admin-dashboard') ? 'default' : 'ghost'}
                   onClick={() => navigate({ to: '/admin-dashboard' })}
-                  className="font-extrabold"
+                  className="font-extrabold min-h-[44px] px-4"
                 >
                   Admin
                 </Button>
@@ -129,7 +122,7 @@ export default function Header() {
               <Button
                 variant={isActive('/exercises') ? 'default' : 'ghost'}
                 onClick={() => navigate({ to: '/exercises' })}
-                className="gap-2 font-extrabold"
+                className="gap-2 font-extrabold min-h-[44px] px-4"
               >
                 <ClipboardList className="h-4 w-4" />
                 Exercises
@@ -139,22 +132,23 @@ export default function Header() {
         </div>
 
         <div className="flex items-center gap-3">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setVortexOpen(true)}
-            className="gap-2 border-secondary font-extrabold text-secondary hover:bg-secondary/10 hover:text-secondary"
-          >
-            <MessageSquare className="h-4 w-4" />
-            <span className="hidden sm:inline">VORTEX AI</span>
-          </Button>
+          {isAuthenticated && userProfile && (
+            <Button
+              variant={isActive('/vortex-ai') ? 'default' : 'ghost'}
+              onClick={() => navigate({ to: '/vortex-ai' })}
+              className="hidden lg:flex gap-2 font-extrabold min-h-[44px] px-4 border-secondary text-secondary hover:bg-secondary/10"
+            >
+              <MessageSquare className="h-4 w-4" />
+              VORTEX AI
+            </Button>
+          )}
 
           <Button
             onClick={handleAuth}
             disabled={isLoggingIn}
             variant={isAuthenticated ? 'outline' : 'default'}
             size="sm"
-            className="font-extrabold"
+            className="font-extrabold min-h-[44px] px-6"
           >
             {isLoggingIn ? 'Logging in...' : isAuthenticated ? 'Logout' : 'Login'}
           </Button>
@@ -162,7 +156,7 @@ export default function Header() {
           {isAuthenticated && userProfile && (
             <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
               <SheetTrigger asChild className="lg:hidden">
-                <Button variant="ghost" size="icon">
+                <Button variant="ghost" size="icon" className="min-h-[44px] min-w-[44px]">
                   <Menu className="h-6 w-6" />
                 </Button>
               </SheetTrigger>
@@ -176,7 +170,7 @@ export default function Header() {
                           navigate({ to: '/client-dashboard' });
                           setMobileMenuOpen(false);
                         }}
-                        className="gap-2 font-extrabold"
+                        className="gap-2 font-extrabold min-h-[44px] justify-start"
                       >
                         <User className="h-4 w-4" />
                         Profile
@@ -187,7 +181,7 @@ export default function Header() {
                           navigate({ to: '/workout-logs' });
                           setMobileMenuOpen(false);
                         }}
-                        className="gap-2 font-extrabold"
+                        className="gap-2 font-extrabold min-h-[44px] justify-start"
                       >
                         <Dumbbell className="h-4 w-4" />
                         Workout Logs
@@ -198,7 +192,7 @@ export default function Header() {
                           navigate({ to: '/flex-wall' });
                           setMobileMenuOpen(false);
                         }}
-                        className="gap-2 font-extrabold"
+                        className="gap-2 font-extrabold min-h-[44px] justify-start"
                       >
                         <Users className="h-4 w-4" />
                         Flex Wall
@@ -209,7 +203,7 @@ export default function Header() {
                           navigate({ to: '/analytics' });
                           setMobileMenuOpen(false);
                         }}
-                        className="gap-2 font-extrabold"
+                        className="gap-2 font-extrabold min-h-[44px] justify-start"
                       >
                         <TrendingUp className="h-4 w-4" />
                         Analytics
@@ -220,36 +214,73 @@ export default function Header() {
                           navigate({ to: '/supplements' });
                           setMobileMenuOpen(false);
                         }}
-                        className="gap-2 font-extrabold"
+                        className="gap-2 font-extrabold min-h-[44px] justify-start"
                       >
                         <Pill className="h-4 w-4" />
                         Supplements
                       </Button>
+                      <Button
+                        variant={isActive('/vortex-ai') ? 'default' : 'ghost'}
+                        onClick={() => {
+                          navigate({ to: '/vortex-ai' });
+                          setMobileMenuOpen(false);
+                        }}
+                        className="gap-2 font-extrabold min-h-[44px] justify-start border-secondary text-secondary"
+                      >
+                        <MessageSquare className="h-4 w-4" />
+                        VORTEX AI
+                      </Button>
                     </>
                   )}
                   {userProfile.role === AppUserRole.trainer && (
-                    <Button
-                      variant={isActive('/trainer-dashboard') ? 'default' : 'ghost'}
-                      onClick={() => {
-                        navigate({ to: '/trainer-dashboard' });
-                        setMobileMenuOpen(false);
-                      }}
-                      className="font-extrabold"
-                    >
-                      Trainer Dashboard
-                    </Button>
+                    <>
+                      <Button
+                        variant={isActive('/trainer-dashboard') ? 'default' : 'ghost'}
+                        onClick={() => {
+                          navigate({ to: '/trainer-dashboard' });
+                          setMobileMenuOpen(false);
+                        }}
+                        className="font-extrabold min-h-[44px] justify-start"
+                      >
+                        Trainer Dashboard
+                      </Button>
+                      <Button
+                        variant={isActive('/vortex-ai') ? 'default' : 'ghost'}
+                        onClick={() => {
+                          navigate({ to: '/vortex-ai' });
+                          setMobileMenuOpen(false);
+                        }}
+                        className="gap-2 font-extrabold min-h-[44px] justify-start border-secondary text-secondary"
+                      >
+                        <MessageSquare className="h-4 w-4" />
+                        VORTEX AI
+                      </Button>
+                    </>
                   )}
                   {userProfile.role === AppUserRole.admin && (
-                    <Button
-                      variant={isActive('/admin-dashboard') ? 'default' : 'ghost'}
-                      onClick={() => {
-                        navigate({ to: '/admin-dashboard' });
-                        setMobileMenuOpen(false);
-                      }}
-                      className="font-extrabold"
-                    >
-                      Admin Dashboard
-                    </Button>
+                    <>
+                      <Button
+                        variant={isActive('/admin-dashboard') ? 'default' : 'ghost'}
+                        onClick={() => {
+                          navigate({ to: '/admin-dashboard' });
+                          setMobileMenuOpen(false);
+                        }}
+                        className="font-extrabold min-h-[44px] justify-start"
+                      >
+                        Admin Dashboard
+                      </Button>
+                      <Button
+                        variant={isActive('/vortex-ai') ? 'default' : 'ghost'}
+                        onClick={() => {
+                          navigate({ to: '/vortex-ai' });
+                          setMobileMenuOpen(false);
+                        }}
+                        className="gap-2 font-extrabold min-h-[44px] justify-start border-secondary text-secondary"
+                      >
+                        <MessageSquare className="h-4 w-4" />
+                        VORTEX AI
+                      </Button>
+                    </>
                   )}
                   <Button
                     variant={isActive('/exercises') ? 'default' : 'ghost'}
@@ -257,7 +288,7 @@ export default function Header() {
                       navigate({ to: '/exercises' });
                       setMobileMenuOpen(false);
                     }}
-                    className="gap-2 font-extrabold"
+                    className="gap-2 font-extrabold min-h-[44px] justify-start"
                   >
                     <ClipboardList className="h-4 w-4" />
                     Exercise Library
@@ -268,8 +299,6 @@ export default function Header() {
           )}
         </div>
       </div>
-
-      <VortexChat open={vortexOpen} onOpenChange={setVortexOpen} />
     </header>
   );
 }

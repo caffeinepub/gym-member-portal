@@ -13,19 +13,18 @@ export default function ProfileSetup() {
   const navigate = useNavigate();
   const saveProfile = useSaveCallerUserProfile();
   const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
   const [role, setRole] = useState<AppUserRole>(AppUserRole.client);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!name.trim() || !email.trim()) {
-      toast.error('Please fill in all fields');
+    if (!name.trim()) {
+      toast.error('Please enter your name');
       return;
     }
 
     try {
-      await saveProfile.mutateAsync({ name, email, role });
+      await saveProfile.mutateAsync({ name, email: '', role });
       toast.success('Profile created successfully!');
       
       // Navigate to appropriate dashboard
@@ -62,18 +61,7 @@ export default function ProfileSetup() {
                 placeholder="John Doe"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="john@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                className="min-h-[44px]"
                 required
               />
             </div>
@@ -81,7 +69,7 @@ export default function ProfileSetup() {
             <div className="space-y-2">
               <Label htmlFor="role">I am a...</Label>
               <Select value={role} onValueChange={(value) => setRole(value as AppUserRole)}>
-                <SelectTrigger id="role">
+                <SelectTrigger id="role" className="min-h-[44px]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -92,7 +80,7 @@ export default function ProfileSetup() {
               </Select>
             </div>
 
-            <Button type="submit" className="w-full" disabled={saveProfile.isPending}>
+            <Button type="submit" className="w-full min-h-[44px]" disabled={saveProfile.isPending}>
               {saveProfile.isPending ? 'Creating Profile...' : 'Create Profile'}
             </Button>
           </form>

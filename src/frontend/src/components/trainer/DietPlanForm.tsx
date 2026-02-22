@@ -6,7 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Plus, Trash2, Utensils } from 'lucide-react';
-import { useCreateDietPlan, Meal } from '../../hooks/useQueries';
+import { useCreateDietPlan, type Meal } from '../../hooks/useQueries';
 import { Principal } from '@dfinity/principal';
 import { toast } from 'sonner';
 
@@ -41,14 +41,11 @@ export default function DietPlanForm({ trainerId, clientId, onSuccess }: DietPla
   const createDietPlan = useCreateDietPlan();
 
   const addMeal = () => {
-    setMeals([
-      ...meals,
-      { name: '', time: '', foodItems: [{ name: '', portion: '', calories: '', protein: '', carbs: '', fats: '' }] },
-    ]);
+    setMeals([...meals, { name: '', time: '', foodItems: [{ name: '', portion: '', calories: '', protein: '', carbs: '', fats: '' }] }]);
   };
 
   const removeMeal = (mealIndex: number) => {
-    setMeals(meals.filter((_, idx) => idx !== mealIndex));
+    setMeals(meals.filter((_, i) => i !== mealIndex));
   };
 
   const addFoodItem = (mealIndex: number) => {
@@ -59,7 +56,7 @@ export default function DietPlanForm({ trainerId, clientId, onSuccess }: DietPla
 
   const removeFoodItem = (mealIndex: number, foodIndex: number) => {
     const newMeals = [...meals];
-    newMeals[mealIndex].foodItems = newMeals[mealIndex].foodItems.filter((_, idx) => idx !== foodIndex);
+    newMeals[mealIndex].foodItems = newMeals[mealIndex].foodItems.filter((_, i) => i !== foodIndex);
     setMeals(newMeals);
   };
 
@@ -83,38 +80,43 @@ export default function DietPlanForm({ trainerId, clientId, onSuccess }: DietPla
       return;
     }
 
+    if (meals.length === 0) {
+      toast.error('Please add at least one meal');
+      return;
+    }
+
     try {
+      const planId = `diet_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
       const formattedMeals: Meal[] = meals.map((meal, idx) => {
         const foodItems = meal.foodItems.map((item) => ({
           name: item.name,
           portion: item.portion,
-          calories: BigInt(parseInt(item.calories) || 0),
+          calories: parseInt(item.calories) || 0,
           protein: parseFloat(item.protein) || 0,
           carbs: parseFloat(item.carbs) || 0,
           fats: parseFloat(item.fats) || 0,
         }));
 
-        const totalCalories = foodItems.reduce((sum, item) => sum + Number(item.calories), 0);
+        const totalCalories = foodItems.reduce((sum, item) => sum + item.calories, 0);
         const totalProtein = foodItems.reduce((sum, item) => sum + item.protein, 0);
         const totalCarbs = foodItems.reduce((sum, item) => sum + item.carbs, 0);
         const totalFats = foodItems.reduce((sum, item) => sum + item.fats, 0);
 
         return {
-          id: `meal-${idx}`,
+          id: `meal_${idx}`,
           name: meal.name,
           time: meal.time,
           foodItems,
-          totalCalories: BigInt(totalCalories),
+          totalCalories,
           protein: totalProtein,
           carbs: totalCarbs,
           fats: totalFats,
         };
       });
 
-      const dietPlanId = `diet-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-
       await createDietPlan.mutateAsync({
-        planId: dietPlanId,
+        planId,
         trainerId,
         clientId,
         name: planName,
@@ -123,10 +125,10 @@ export default function DietPlanForm({ trainerId, clientId, onSuccess }: DietPla
       });
 
       toast.success('Diet plan created successfully!');
-      onSuccess?.();
-    } catch (error) {
-      console.error('Error creating diet plan:', error);
-      toast.error('Failed to create diet plan');
+      if (onSuccess) onSuccess();
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to create diet plan');
+      console.error(error);
     }
   };
 
@@ -135,25 +137,26 @@ export default function DietPlanForm({ trainerId, clientId, onSuccess }: DietPla
       <Card>
         <CardHeader>
           <CardTitle>Diet Plan Details</CardTitle>
-          <CardDescription>Create a comprehensive nutrition plan for your client</CardDescription>
+          <CardDescription>Create a personalized nutrition plan for your client</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="planName">Plan Name</Label>
             <Input
               id="planName"
-              placeholder="e.g., Muscle Building Diet"
+              placeholder="e.g., Muscle Gain Plan"
               value={planName}
               onChange={(e) => setPlanName(e.target.value)}
               required
+              className="min-h-[44px]"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="dietaryNotes">Dietary Notes & Guidelines</Label>
+            <Label htmlFor="dietaryNotes">Dietary Notes</Label>
             <Textarea
               id="dietaryNotes"
-              placeholder="Add any dietary guidelines, restrictions, or general notes..."
+              placeholder="Special instructions, allergies, preferences..."
               value={dietaryNotes}
               onChange={(e) => setDietaryNotes(e.target.value)}
               rows={3}
@@ -162,128 +165,167 @@ export default function DietPlanForm({ trainerId, clientId, onSuccess }: DietPla
         </CardContent>
       </Card>
 
-      <div className="space-y-4">
-        {meals.map((meal, mealIndex) => (
-          <Card key={mealIndex}>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Utensils className="h-5 w-5 text-primary" />
-                  <CardTitle className="text-lg">Meal {mealIndex + 1}</CardTitle>
-                </div>
-                {meals.length > 1 && (
-                  <Button type="button" variant="ghost" size="sm" onClick={() => removeMeal(mealIndex)}>
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                )}
+      {meals.map((meal, mealIndex) => (
+        <Card key={mealIndex}>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Utensils className="h-5 w-5" />
+                <CardTitle>Meal {mealIndex + 1}</CardTitle>
               </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label>Meal Name</Label>
-                  <Input
-                    placeholder="e.g., Breakfast"
-                    value={meal.name}
-                    onChange={(e) => updateMeal(mealIndex, 'name', e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Time</Label>
-                  <Input
-                    type="time"
-                    value={meal.time}
-                    onChange={(e) => updateMeal(mealIndex, 'time', e.target.value)}
-                    required
-                  />
-                </div>
+              {meals.length > 1 && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => removeMeal(mealIndex)}
+                  className="h-8 text-destructive hover:text-destructive"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Meal Name</Label>
+                <Input
+                  placeholder="e.g., Breakfast"
+                  value={meal.name}
+                  onChange={(e) => updateMeal(mealIndex, 'name', e.target.value)}
+                  required
+                  className="min-h-[44px]"
+                />
               </div>
+              <div className="space-y-2">
+                <Label>Time</Label>
+                <Input
+                  type="time"
+                  value={meal.time}
+                  onChange={(e) => updateMeal(mealIndex, 'time', e.target.value)}
+                  required
+                  className="min-h-[44px]"
+                />
+              </div>
+            </div>
 
-              <Separator />
+            <Separator />
 
-              <div className="space-y-3">
-                <Label className="text-sm font-semibold">Food Items</Label>
-                {meal.foodItems.map((item, foodIndex) => (
-                  <div key={foodIndex} className="space-y-3 rounded-lg border p-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium">Item {foodIndex + 1}</span>
-                      {meal.foodItems.length > 1 && (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => removeFoodItem(mealIndex, foodIndex)}
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
-                      )}
-                    </div>
-                    <div className="grid gap-3 md:grid-cols-2">
+            <div className="space-y-3">
+              <Label>Food Items</Label>
+              {meal.foodItems.map((foodItem, foodIndex) => (
+                <div key={foodIndex} className="space-y-3 rounded-lg border p-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Food Item {foodIndex + 1}</span>
+                    {meal.foodItems.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeFoodItem(mealIndex, foodIndex)}
+                        className="h-8 text-destructive hover:text-destructive"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-2">
+                      <Label>Food Name</Label>
                       <Input
-                        placeholder="Food name"
-                        value={item.name}
+                        placeholder="e.g., Chicken Breast"
+                        value={foodItem.name}
                         onChange={(e) => updateFoodItem(mealIndex, foodIndex, 'name', e.target.value)}
                         required
-                      />
-                      <Input
-                        placeholder="Portion (e.g., 100g)"
-                        value={item.portion}
-                        onChange={(e) => updateFoodItem(mealIndex, foodIndex, 'portion', e.target.value)}
-                        required
+                        className="min-h-[44px]"
                       />
                     </div>
-                    <div className="grid gap-3 md:grid-cols-4">
+                    <div className="space-y-2">
+                      <Label>Portion</Label>
                       <Input
-                        type="number"
-                        placeholder="Calories"
-                        value={item.calories}
-                        onChange={(e) => updateFoodItem(mealIndex, foodIndex, 'calories', e.target.value)}
+                        placeholder="e.g., 200g"
+                        value={foodItem.portion}
+                        onChange={(e) => updateFoodItem(mealIndex, foodIndex, 'portion', e.target.value)}
                         required
-                      />
-                      <Input
-                        type="number"
-                        step="0.1"
-                        placeholder="Protein (g)"
-                        value={item.protein}
-                        onChange={(e) => updateFoodItem(mealIndex, foodIndex, 'protein', e.target.value)}
-                        required
-                      />
-                      <Input
-                        type="number"
-                        step="0.1"
-                        placeholder="Carbs (g)"
-                        value={item.carbs}
-                        onChange={(e) => updateFoodItem(mealIndex, foodIndex, 'carbs', e.target.value)}
-                        required
-                      />
-                      <Input
-                        type="number"
-                        step="0.1"
-                        placeholder="Fats (g)"
-                        value={item.fats}
-                        onChange={(e) => updateFoodItem(mealIndex, foodIndex, 'fats', e.target.value)}
-                        required
+                        className="min-h-[44px]"
                       />
                     </div>
                   </div>
-                ))}
-                <Button type="button" variant="outline" size="sm" onClick={() => addFoodItem(mealIndex)} className="w-full">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add Food Item
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
 
-      <Button type="button" variant="outline" onClick={addMeal} className="w-full">
+                  <div className="grid grid-cols-4 gap-3">
+                    <div className="space-y-2">
+                      <Label>Calories</Label>
+                      <Input
+                        type="number"
+                        min="0"
+                        value={foodItem.calories}
+                        onChange={(e) => updateFoodItem(mealIndex, foodIndex, 'calories', e.target.value)}
+                        required
+                        className="min-h-[44px]"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Protein (g)</Label>
+                      <Input
+                        type="number"
+                        step="0.1"
+                        min="0"
+                        value={foodItem.protein}
+                        onChange={(e) => updateFoodItem(mealIndex, foodIndex, 'protein', e.target.value)}
+                        required
+                        className="min-h-[44px]"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Carbs (g)</Label>
+                      <Input
+                        type="number"
+                        step="0.1"
+                        min="0"
+                        value={foodItem.carbs}
+                        onChange={(e) => updateFoodItem(mealIndex, foodIndex, 'carbs', e.target.value)}
+                        required
+                        className="min-h-[44px]"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Fats (g)</Label>
+                      <Input
+                        type="number"
+                        step="0.1"
+                        min="0"
+                        value={foodItem.fats}
+                        onChange={(e) => updateFoodItem(mealIndex, foodIndex, 'fats', e.target.value)}
+                        required
+                        className="min-h-[44px]"
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => addFoodItem(mealIndex)}
+                className="w-full min-h-[44px]"
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Add Food Item
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+
+      <Button type="button" variant="outline" onClick={addMeal} className="w-full min-h-[44px]">
         <Plus className="mr-2 h-4 w-4" />
         Add Meal
       </Button>
 
-      <Button type="submit" className="w-full" disabled={createDietPlan.isPending}>
+      <Button type="submit" className="w-full min-h-[44px]" disabled={createDietPlan.isPending}>
         {createDietPlan.isPending ? 'Creating...' : 'Create Diet Plan'}
       </Button>
     </form>

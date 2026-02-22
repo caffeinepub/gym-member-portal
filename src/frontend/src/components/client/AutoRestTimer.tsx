@@ -22,7 +22,6 @@ export default function AutoRestTimer({ restTime }: AutoRestTimerProps) {
           if (time <= 1) {
             setIsActive(false);
             setHasCompleted(true);
-            // Play completion sound (optional)
             return 0;
           }
           return time - 1;
@@ -88,19 +87,19 @@ export default function AutoRestTimer({ restTime }: AutoRestTimerProps) {
         <Progress value={progressPercentage} className="h-2" />
 
         {/* Controls */}
-        <div className="flex gap-2">
+        <div className="flex gap-3">
           {!isActive ? (
-            <Button size="lg" className="flex-1" onClick={handleStart}>
+            <Button size="lg" className="flex-1 min-h-[44px] px-6" onClick={handleStart}>
               <Play className="mr-2 h-5 w-5" />
               Start
             </Button>
           ) : (
-            <Button size="lg" variant="outline" className="flex-1" onClick={handlePause}>
+            <Button size="lg" variant="outline" className="flex-1 min-h-[44px] px-6" onClick={handlePause}>
               <Pause className="mr-2 h-5 w-5" />
               Pause
             </Button>
           )}
-          <Button size="lg" variant="outline" onClick={handleReset}>
+          <Button size="lg" variant="outline" onClick={handleReset} className="min-h-[44px] min-w-[44px]">
             <RotateCcw className="h-5 w-5" />
           </Button>
         </div>

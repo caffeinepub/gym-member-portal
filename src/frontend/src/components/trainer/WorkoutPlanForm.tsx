@@ -1,44 +1,47 @@
 import React, { useState } from 'react';
-import { Principal } from '@dfinity/principal';
-import { useCreateWorkoutPlan } from '../../hooks/useQueries';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
 import { Plus, Trash2 } from 'lucide-react';
+import { useCreateWorkoutPlan } from '../../hooks/useQueries';
+import { Principal } from '@dfinity/principal';
 import { toast } from 'sonner';
-import type { Set_ } from '../../backend';
 
 interface WorkoutPlanFormProps {
-  clientId: string;
-  trainerId: string;
-  onSuccess: () => void;
+  trainerId: Principal;
+  clientId: Principal;
+  onSuccess?: () => void;
 }
 
-interface ExerciseSet {
-  id: number;
-  exerciseId: number;
-  reps: number;
-  weight: number;
+interface SetForm {
+  exerciseId: string;
+  reps: string;
+  weight: string;
 }
 
-export default function WorkoutPlanForm({ clientId, trainerId, onSuccess }: WorkoutPlanFormProps) {
-  const createPlan = useCreateWorkoutPlan();
+export default function WorkoutPlanForm({ trainerId, clientId, onSuccess }: WorkoutPlanFormProps) {
   const [planName, setPlanName] = useState('');
-  const [restTime, setRestTime] = useState(60);
+  const [restTime, setRestTime] = useState('60');
   const [notes, setNotes] = useState('');
-  const [sets, setSets] = useState<ExerciseSet[]>([{ id: 0, exerciseId: 1, reps: 10, weight: 0 }]);
+  const [sets, setSets] = useState<SetForm[]>([{ exerciseId: '1', reps: '10', weight: '50' }]);
+
+  const createPlan = useCreateWorkoutPlan();
 
   const addSet = () => {
-    setSets([...sets, { id: sets.length, exerciseId: 1, reps: 10, weight: 0 }]);
+    setSets([...sets, { exerciseId: '1', reps: '10', weight: '50' }]);
   };
 
-  const removeSet = (id: number) => {
-    setSets(sets.filter((s) => s.id !== id));
+  const removeSet = (index: number) => {
+    setSets(sets.filter((_, i) => i !== index));
   };
 
-  const updateSet = (id: number, field: 'exerciseId' | 'reps' | 'weight', value: number) => {
-    setSets(sets.map((s) => (s.id === id ? { ...s, [field]: value } : s)));
+  const updateSet = (index: number, field: keyof SetForm, value: string) => {
+    const newSets = [...sets];
+    newSets[index][field] = value;
+    setSets(newSets);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -56,115 +59,153 @@ export default function WorkoutPlanForm({ clientId, trainerId, onSuccess }: Work
 
     try {
       const planId = `plan_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      const backendSets: Set_[] = sets.map((s) => ({
-        id: BigInt(s.id),
-        exerciseId: BigInt(s.exerciseId),
-        reps: BigInt(s.reps),
-        weight: s.weight,
+
+      const formattedSets = sets.map((set, idx) => ({
+        id: BigInt(idx),
+        exerciseId: BigInt(set.exerciseId),
+        reps: BigInt(set.reps),
+        weight: parseFloat(set.weight),
       }));
 
       await createPlan.mutateAsync({
         planId,
-        trainerId: Principal.fromText(trainerId),
-        clientId: Principal.fromText(clientId),
+        trainerId,
+        clientId,
         name: planName,
-        sets: backendSets,
+        sets: formattedSets,
         restTime: BigInt(restTime),
         notes,
       });
 
       toast.success('Workout plan created successfully!');
-      onSuccess();
-    } catch (error) {
-      toast.error('Failed to create workout plan');
+      if (onSuccess) onSuccess();
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to create workout plan');
       console.error(error);
     }
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="space-y-2">
-        <Label htmlFor="planName">Plan Name</Label>
-        <Input
-          id="planName"
-          placeholder="e.g., Upper Body Strength"
-          value={planName}
-          onChange={(e) => setPlanName(e.target.value)}
-          required
-        />
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Workout Plan Details</CardTitle>
+          <CardDescription>Create a personalized workout plan for your client</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="planName">Plan Name</Label>
+            <Input
+              id="planName"
+              placeholder="e.g., Upper Body Strength"
+              value={planName}
+              onChange={(e) => setPlanName(e.target.value)}
+              required
+              className="min-h-[44px]"
+            />
+          </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="restTime">Rest Time (seconds)</Label>
-        <Input
-          id="restTime"
-          type="number"
-          min="0"
-          value={restTime}
-          onChange={(e) => setRestTime(parseInt(e.target.value) || 0)}
-          required
-        />
-      </div>
+          <div className="space-y-2">
+            <Label htmlFor="restTime">Rest Time (seconds)</Label>
+            <Input
+              id="restTime"
+              type="number"
+              min="0"
+              value={restTime}
+              onChange={(e) => setRestTime(e.target.value)}
+              required
+              className="min-h-[44px]"
+            />
+          </div>
 
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <Label>Sets</Label>
-          <Button type="button" size="sm" variant="outline" onClick={addSet} className="gap-2">
-            <Plus className="h-4 w-4" />
+          <div className="space-y-2">
+            <Label htmlFor="notes">Notes</Label>
+            <Textarea
+              id="notes"
+              placeholder="Special instructions or focus areas..."
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={3}
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Exercise Sets</CardTitle>
+          <CardDescription>Add exercises and their target sets, reps, and weights</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {sets.map((set, index) => (
+            <div key={index} className="space-y-3 rounded-lg border p-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">Set {index + 1}</span>
+                {sets.length > 1 && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => removeSet(index)}
+                    className="h-8 text-destructive hover:text-destructive"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+
+              <Separator />
+
+              <div className="grid grid-cols-3 gap-3">
+                <div className="space-y-2">
+                  <Label>Exercise ID</Label>
+                  <Input
+                    type="number"
+                    min="1"
+                    value={set.exerciseId}
+                    onChange={(e) => updateSet(index, 'exerciseId', e.target.value)}
+                    required
+                    className="min-h-[44px]"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Reps</Label>
+                  <Input
+                    type="number"
+                    min="1"
+                    value={set.reps}
+                    onChange={(e) => updateSet(index, 'reps', e.target.value)}
+                    required
+                    className="min-h-[44px]"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Weight (kg)</Label>
+                  <Input
+                    type="number"
+                    step="0.5"
+                    min="0"
+                    value={set.weight}
+                    onChange={(e) => updateSet(index, 'weight', e.target.value)}
+                    required
+                    className="min-h-[44px]"
+                  />
+                </div>
+              </div>
+            </div>
+          ))}
+
+          <Button type="button" variant="outline" onClick={addSet} className="w-full min-h-[44px]">
+            <Plus className="mr-2 h-4 w-4" />
             Add Set
           </Button>
-        </div>
+        </CardContent>
+      </Card>
 
-        {sets.map((set, index) => (
-          <div key={set.id} className="flex items-center gap-3 rounded-lg border p-3">
-            <span className="text-sm font-medium text-muted-foreground">Set {index + 1}</span>
-            <Input
-              type="number"
-              placeholder="Exercise ID"
-              min="1"
-              value={set.exerciseId}
-              onChange={(e) => updateSet(set.id, 'exerciseId', parseInt(e.target.value) || 1)}
-              className="w-28"
-            />
-            <Input
-              type="number"
-              placeholder="Reps"
-              min="1"
-              value={set.reps}
-              onChange={(e) => updateSet(set.id, 'reps', parseInt(e.target.value) || 0)}
-              className="w-24"
-            />
-            <Input
-              type="number"
-              placeholder="Weight (lbs)"
-              min="0"
-              step="0.5"
-              value={set.weight}
-              onChange={(e) => updateSet(set.id, 'weight', parseFloat(e.target.value) || 0)}
-              className="w-32"
-            />
-            {sets.length > 1 && (
-              <Button type="button" size="icon" variant="ghost" onClick={() => removeSet(set.id)}>
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            )}
-          </div>
-        ))}
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="notes">Notes</Label>
-        <Textarea
-          id="notes"
-          placeholder="Add any special instructions or notes for the client..."
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          rows={4}
-        />
-      </div>
-
-      <Button type="submit" className="w-full" disabled={createPlan.isPending}>
-        {createPlan.isPending ? 'Creating Plan...' : 'Create Workout Plan'}
+      <Button type="submit" className="w-full min-h-[44px]" disabled={createPlan.isPending}>
+        {createPlan.isPending ? 'Creating...' : 'Create Workout Plan'}
       </Button>
     </form>
   );

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -62,7 +61,7 @@ export default function TrainingPartnerPreferenceForm() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-xl font-black uppercase">
           <Target className="h-5 w-5 text-secondary" />
-          Training Partner Preferences
+          Training Preferences
         </CardTitle>
         <CardDescription className="font-semibold">
           Tell others about your fitness goals and availability
@@ -74,7 +73,7 @@ export default function TrainingPartnerPreferenceForm() {
             <Label className="font-bold uppercase text-sm">Fitness Goals</Label>
             <div className="grid gap-3 md:grid-cols-2">
               {FITNESS_GOALS.map((goal) => (
-                <div key={goal} className="flex items-center space-x-2">
+                <div key={goal} className="flex items-center space-x-2 min-h-[32px]">
                   <Checkbox
                     id={`goal-${goal}`}
                     checked={fitnessGoals.includes(goal)}
@@ -96,7 +95,7 @@ export default function TrainingPartnerPreferenceForm() {
               Experience Level
             </Label>
             <Select value={experienceLevel} onValueChange={setExperienceLevel}>
-              <SelectTrigger className="border-2 font-semibold">
+              <SelectTrigger className="border-2 font-semibold min-h-[44px]">
                 <SelectValue placeholder="Select your experience level" />
               </SelectTrigger>
               <SelectContent>
@@ -113,7 +112,7 @@ export default function TrainingPartnerPreferenceForm() {
             <Label className="font-bold uppercase text-sm">Preferred Workout Times</Label>
             <div className="grid gap-3 md:grid-cols-2">
               {WORKOUT_TIMES.map((time) => (
-                <div key={time} className="flex items-center space-x-2">
+                <div key={time} className="flex items-center space-x-2 min-h-[32px]">
                   <Checkbox
                     id={`time-${time}`}
                     checked={preferredWorkoutTimes.includes(time)}
@@ -138,15 +137,15 @@ export default function TrainingPartnerPreferenceForm() {
               id="bio"
               value={bio}
               onChange={(e) => setBio(e.target.value)}
-              placeholder="Tell potential training partners about yourself, your workout style, and what you're looking for..."
+              placeholder="Tell potential training partners about yourself and your workout style..."
               rows={4}
-              className="resize-none border-2 font-semibold"
+              className="resize-none border-2 font-semibold min-h-[100px]"
             />
           </div>
 
           <Button
             type="submit"
-            className="w-full font-bold"
+            className="w-full font-bold min-h-[44px]"
             disabled={savePreference.isPending || isLoading || !experienceLevel || fitnessGoals.length === 0}
           >
             <Save className="mr-2 h-4 w-4" />

@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Clock, Utensils, Flame, Info } from 'lucide-react';
-import { useGetDietPlansForClient, useGetDietPlanTemplate, DietOption } from '../../hooks/useQueries';
+import { useGetDietPlansForClient, useGetDietPlanTemplate, type DietOption } from '../../hooks/useQueries';
 import { Principal } from '@dfinity/principal';
 
 interface DietPlanViewProps {
@@ -11,7 +11,7 @@ interface DietPlanViewProps {
 }
 
 export default function DietPlanView({ userId }: DietPlanViewProps) {
-  const { data: dietPlans = [], isLoading: planLoading } = useGetDietPlansForClient(userId);
+  const { data: dietPlans = [], isLoading: planLoading } = useGetDietPlansForClient();
   const { data: template = [], isLoading: templateLoading } = useGetDietPlanTemplate();
 
   const isLoading = planLoading || templateLoading;

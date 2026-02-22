@@ -1,41 +1,44 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Timer, Play, Pause, RotateCcw, Square } from 'lucide-react';
+import { Timer, Play, Pause, RotateCcw, Settings } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
+
+type Phase = 'work' | 'rest';
 
 export default function HIITClockTimer() {
   const [workDuration, setWorkDuration] = useState(30);
   const [restDuration, setRestDuration] = useState(15);
   const [rounds, setRounds] = useState(8);
   const [currentRound, setCurrentRound] = useState(1);
+  const [currentPhase, setCurrentPhase] = useState<Phase>('work');
   const [timeRemaining, setTimeRemaining] = useState(workDuration);
   const [isActive, setIsActive] = useState(false);
-  const [isWorkPhase, setIsWorkPhase] = useState(true);
-  const [isConfiguring, setIsConfiguring] = useState(true);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [isConfiguring, setIsConfiguring] = useState(false);
 
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
 
-    if (isActive && !isConfiguring) {
+    if (isActive && timeRemaining > 0) {
       interval = setInterval(() => {
         setTimeRemaining((time) => {
           if (time <= 1) {
-            playBeep();
-            if (isWorkPhase) {
-              setIsWorkPhase(false);
+            // Phase complete
+            if (currentPhase === 'work') {
+              // Switch to rest
+              setCurrentPhase('rest');
               return restDuration;
             } else {
+              // Rest complete, move to next round
               if (currentRound < rounds) {
                 setCurrentRound((r) => r + 1);
-                setIsWorkPhase(true);
+                setCurrentPhase('work');
                 return workDuration;
               } else {
+                // All rounds complete
                 setIsActive(false);
-                setIsConfiguring(true);
                 return 0;
               }
             }
@@ -48,34 +51,11 @@ export default function HIITClockTimer() {
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [isActive, isWorkPhase, currentRound, rounds, workDuration, restDuration, isConfiguring]);
-
-  const playBeep = () => {
-    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
-    
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-    
-    oscillator.frequency.value = 800;
-    oscillator.type = 'sine';
-    
-    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
-    
-    oscillator.start(audioContext.currentTime);
-    oscillator.stop(audioContext.currentTime + 0.1);
-  };
+  }, [isActive, timeRemaining, currentPhase, currentRound, rounds, workDuration, restDuration]);
 
   const handleStart = () => {
-    if (isConfiguring) {
-      setIsConfiguring(false);
-      setCurrentRound(1);
-      setIsWorkPhase(true);
-      setTimeRemaining(workDuration);
-    }
     setIsActive(true);
+    setIsConfiguring(false);
   };
 
   const handlePause = () => {
@@ -84,18 +64,14 @@ export default function HIITClockTimer() {
 
   const handleReset = () => {
     setIsActive(false);
-    setIsConfiguring(true);
     setCurrentRound(1);
-    setIsWorkPhase(true);
+    setCurrentPhase('work');
     setTimeRemaining(workDuration);
   };
 
-  const handleStop = () => {
+  const handleConfigure = () => {
+    setIsConfiguring(!isConfiguring);
     setIsActive(false);
-    setIsConfiguring(true);
-    setCurrentRound(1);
-    setIsWorkPhase(true);
-    setTimeRemaining(workDuration);
   };
 
   const formatTime = (seconds: number) => {
@@ -104,131 +80,114 @@ export default function HIITClockTimer() {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const currentPhaseDuration = isWorkPhase ? workDuration : restDuration;
-  const progressPercentage = ((currentPhaseDuration - timeRemaining) / currentPhaseDuration) * 100;
+  const currentDuration = currentPhase === 'work' ? workDuration : restDuration;
+  const progressPercentage = ((currentDuration - timeRemaining) / currentDuration) * 100;
 
   return (
-    <Card className="border-2 border-primary/30">
+    <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-xl font-black uppercase">
-          <Timer className="h-5 w-5 text-primary" />
-          HIIT Clock
+        <CardTitle className="flex items-center gap-2">
+          <Timer className="h-5 w-5" />
+          HIIT Clock Timer
         </CardTitle>
-        <CardDescription className="font-semibold">
-          High-Intensity Interval Training timer
-        </CardDescription>
+        <CardDescription>High-Intensity Interval Training timer</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         {isConfiguring ? (
           <div className="space-y-4">
-            <div className="grid gap-4 md:grid-cols-3">
-              <div className="space-y-2">
-                <Label htmlFor="workDuration" className="font-bold uppercase text-sm">
-                  Work (seconds)
-                </Label>
-                <Input
-                  id="workDuration"
-                  type="number"
-                  min="5"
-                  max="300"
-                  value={workDuration}
-                  onChange={(e) => setWorkDuration(parseInt(e.target.value) || 30)}
-                  className="border-2 font-semibold"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="restDuration" className="font-bold uppercase text-sm">
-                  Rest (seconds)
-                </Label>
-                <Input
-                  id="restDuration"
-                  type="number"
-                  min="5"
-                  max="300"
-                  value={restDuration}
-                  onChange={(e) => setRestDuration(parseInt(e.target.value) || 15)}
-                  className="border-2 font-semibold"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="rounds" className="font-bold uppercase text-sm">
-                  Rounds
-                </Label>
-                <Input
-                  id="rounds"
-                  type="number"
-                  min="1"
-                  max="50"
-                  value={rounds}
-                  onChange={(e) => setRounds(parseInt(e.target.value) || 8)}
-                  className="border-2 font-semibold"
-                />
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="workDuration">Work Duration (seconds)</Label>
+              <Input
+                id="workDuration"
+                type="number"
+                min="5"
+                max="300"
+                value={workDuration}
+                onChange={(e) => setWorkDuration(parseInt(e.target.value) || 30)}
+                className="min-h-[44px]"
+              />
             </div>
-            <Button size="lg" className="w-full font-bold" onClick={handleStart}>
-              <Play className="mr-2 h-5 w-5" />
-              Start HIIT Session
+            <div className="space-y-2">
+              <Label htmlFor="restDuration">Rest Duration (seconds)</Label>
+              <Input
+                id="restDuration"
+                type="number"
+                min="5"
+                max="300"
+                value={restDuration}
+                onChange={(e) => setRestDuration(parseInt(e.target.value) || 15)}
+                className="min-h-[44px]"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="rounds">Number of Rounds</Label>
+              <Input
+                id="rounds"
+                type="number"
+                min="1"
+                max="50"
+                value={rounds}
+                onChange={(e) => setRounds(parseInt(e.target.value) || 8)}
+                className="min-h-[44px]"
+              />
+            </div>
+            <Button onClick={handleConfigure} className="w-full min-h-[44px]">
+              Done
             </Button>
           </div>
         ) : (
-          <div className="space-y-6">
+          <>
+            {/* Timer Display */}
             <div className="text-center">
-              <div
-                className={`mb-4 rounded-lg border-4 p-6 transition-all ${
-                  isWorkPhase
-                    ? 'border-primary bg-primary/10 shadow-[0_0_30px_rgba(204,255,0,0.3)]'
-                    : 'border-secondary bg-secondary/10 shadow-[0_0_30px_rgba(0,212,255,0.3)]'
-                }`}
-              >
-                <div className={`text-8xl font-black ${isWorkPhase ? 'text-primary' : 'text-secondary'}`}>
-                  {formatTime(timeRemaining)}
-                </div>
-                <div className={`mt-4 text-3xl font-black uppercase ${isWorkPhase ? 'text-primary' : 'text-secondary'}`}>
-                  {isWorkPhase ? 'WORK' : 'REST'}
-                </div>
-              </div>
-              <div className="text-xl font-bold text-muted-foreground">
+              <div className="mb-2 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
                 Round {currentRound} of {rounds}
               </div>
+              <div
+                className={`text-7xl font-bold ${
+                  currentPhase === 'work' ? 'text-primary' : 'text-secondary'
+                }`}
+              >
+                {formatTime(timeRemaining)}
+              </div>
+              <p className="mt-2 text-lg font-bold uppercase tracking-wide">
+                {currentPhase === 'work' ? '💪 WORK' : '😮‍💨 REST'}
+              </p>
             </div>
 
-            <Progress value={progressPercentage} className="h-3" />
+            {/* Progress Bar */}
+            <Progress value={progressPercentage} className="h-2" />
 
-            <div className="grid grid-cols-2 gap-3">
-              {!isActive ? (
-                <Button size="lg" className="font-bold" onClick={handleStart}>
-                  <Play className="mr-2 h-5 w-5" />
-                  Resume
+            {/* Controls */}
+            <div className="flex flex-col gap-4">
+              <div className="flex gap-3">
+                {!isActive ? (
+                  <Button size="lg" className="flex-1 min-h-[44px] px-6" onClick={handleStart}>
+                    <Play className="mr-2 h-5 w-5" />
+                    Start
+                  </Button>
+                ) : (
+                  <Button size="lg" variant="outline" className="flex-1 min-h-[44px] px-6" onClick={handlePause}>
+                    <Pause className="mr-2 h-5 w-5" />
+                    Pause
+                  </Button>
+                )}
+                <Button size="lg" variant="outline" onClick={handleReset} className="min-h-[44px] min-w-[44px]">
+                  <RotateCcw className="h-5 w-5" />
                 </Button>
-              ) : (
-                <Button size="lg" variant="outline" className="font-bold" onClick={handlePause}>
-                  <Pause className="mr-2 h-5 w-5" />
-                  Pause
-                </Button>
-              )}
-              <Button size="lg" variant="outline" className="font-bold" onClick={handleReset}>
-                <RotateCcw className="mr-2 h-5 w-5" />
-                Reset
+              </div>
+              <Button variant="outline" onClick={handleConfigure} className="w-full min-h-[44px] gap-2">
+                <Settings className="h-4 w-4" />
+                Configure Timer
               </Button>
             </div>
 
-            <Button size="lg" variant="destructive" className="w-full font-bold" onClick={handleStop}>
-              <Square className="mr-2 h-5 w-5" />
-              Stop Session
-            </Button>
-
-            {timeRemaining <= 3 && isActive && (
-              <div
-                className={`animate-pulse rounded-md p-4 text-center ${
-                  isWorkPhase ? 'bg-primary/20' : 'bg-secondary/20'
-                }`}
-              >
-                <p className={`text-lg font-black uppercase ${isWorkPhase ? 'text-primary' : 'text-secondary'}`}>
-                  {isWorkPhase ? '⚡ PUSH HARDER!' : '💨 BREATHE!'}
-                </p>
+            {/* Status */}
+            {timeRemaining === 0 && currentRound === rounds && (
+              <div className="rounded-md bg-primary/10 p-3 text-center">
+                <p className="font-semibold text-primary">🎉 HIIT Session Complete!</p>
               </div>
             )}
-          </div>
+          </>
         )}
       </CardContent>
     </Card>

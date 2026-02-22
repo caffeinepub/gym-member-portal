@@ -14,8 +14,7 @@ import MixinAuthorization "authorization/MixinAuthorization";
 import AccessControl "authorization/access-control";
 import MixinStorage "blob-storage/Mixin";
 import Option "mo:core/Option";
-
-
+import OutCall "http-outcalls/outcall";
 
 actor {
   let accessControlState = AccessControl.initState();
@@ -253,6 +252,69 @@ actor {
     experienceLevel : Text;
   };
 
+  type PrType = {
+    #squat;
+    #benchPress;
+    #deadlift;
+    #shoulderPress;
+    #barbellRow;
+  };
+
+  module PrType {
+    public func compare(a : PrType, b : PrType) : Order.Order {
+      func encode(prType : PrType) : Nat {
+        switch (prType) {
+          case (#squat) { 0 };
+          case (#benchPress) { 1 };
+          case (#deadlift) { 2 };
+          case (#shoulderPress) { 3 };
+          case (#barbellRow) { 4 };
+        };
+      };
+      Nat.compare(encode(a), encode(b));
+    };
+
+    public func fromInt(value : Int) : PrType {
+      switch (value) {
+        case (1) { #squat };
+        case (2) { #benchPress };
+        case (3) { #deadlift };
+        case (4) { #shoulderPress };
+        case (5) { #barbellRow };
+        case (_) { #squat };
+      };
+    };
+  };
+
+  module PrRecordKey {
+    public func compare(a : (UserId, PrType), b : (UserId, PrType)) : Order.Order {
+      switch (Principal.compare(a.0, b.0)) {
+        case (#equal) { PrType.compare(a.1, b.1) };
+        case (other) { other };
+      };
+    };
+  };
+
+  public type PR = {
+    prType : PrType;
+    weight : Float;
+    reps : Nat;
+    date : Int;
+  };
+
+  public type PRLeaderboardEntry = {
+    userId : UserId;
+    weight : Float;
+    date : Int;
+    name : Text;
+    ranking : Nat;
+  };
+
+  public type PRLeaderboard = {
+    prType : PrType;
+    entries : [PRLeaderboardEntry];
+  };
+
   let userStore = Map.empty<UserId, User>();
   let workoutPlanStore = Map.empty<WorkoutPlanId, WorkoutPlan>();
   let workoutRecordStore = Map.empty<RecordId, WorkoutRecord>();
@@ -265,9 +327,80 @@ actor {
   let trainingPartnerPreferenceStore = Map.empty<UserId, TrainingPartnerPreference>();
   let connectionRequestStore = Map.empty<ConnectionRequestId, ConnectionRequest>();
   let userConnectionsStore = Map.empty<UserId, List.List<UserId>>();
+  var prStore = Map.empty<(UserId, PrType), PR>();
 
   var brandingSettings : BrandingSettings = BrandingSettings.default();
   var exerciseLibraryStore = Map.empty<ExerciseId, Exercise>();
+
+  public query ({ caller }) func getPrLeaderboard(prTypeInt : Int) : async PRLeaderboard {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only authenticated users can view leaderboards");
+    };
+
+    let prType = PrType.fromInt(prTypeInt);
+
+    let entriesList = List.empty<(UserId, UserProfile, PR)>();
+
+    for (((userId, prType), pr) in prStore.entries()) {
+      if (prType == pr.prType) {
+        switch (userStore.get(userId)) {
+          case (?user) {
+            let userProfile : UserProfile = {
+              name = user.name;
+              email = user.email;
+              role = user.role;
+            };
+            entriesList.add((userId, userProfile, pr));
+          };
+          case (null) {};
+        };
+      };
+    };
+
+    let sortedEntries = entriesList.toArray().sort(
+      func(a, b) {
+        Float.compare(b.2.weight, a.2.weight);
+      }
+    );
+
+    let leaderboardEntriesList = List.empty<PRLeaderboardEntry>();
+    var rank = 1;
+
+    for (entry in sortedEntries.values()) {
+      let (userId, userProfile, pr) = entry;
+      let leaderboardEntry : PRLeaderboardEntry = {
+        userId;
+        weight = pr.weight;
+        date = pr.date;
+        name = userProfile.name;
+        ranking = rank;
+      };
+
+      leaderboardEntriesList.add(leaderboardEntry);
+      rank += 1;
+    };
+
+    {
+      prType;
+      entries = leaderboardEntriesList.toArray();
+    };
+  };
+
+  public shared ({ caller }) func submitPersonalRecord(prTypeInt : Int, weight : Float, reps : Nat) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only authenticated users can submit personal records");
+    };
+
+    let prType = PrType.fromInt(prTypeInt);
+    let newPR : PR = {
+      prType;
+      weight;
+      reps;
+      date = Time.now();
+    };
+
+    prStore.add((caller, prType), newPR);
+  };
 
   public shared ({ caller }) func logWeightProgress(exerciseId : ExerciseId, weight : Float, reps : Nat) : async () {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
@@ -717,7 +850,10 @@ actor {
     brandingSettings := newSettings;
   };
 
-  public query func getBrandingSettings() : async BrandingSettings {
+  public query ({ caller }) func getBrandingSettings() : async BrandingSettings {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only authenticated users can view branding settings");
+    };
     brandingSettings;
   };
 
@@ -737,6 +873,7 @@ actor {
       recommendedRepsRange;
       recommendedSetsRange;
     };
+
     exerciseLibraryStore.add(id, exercise);
   };
 
@@ -744,7 +881,6 @@ actor {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can update exercises");
     };
-
     let exercise : Exercise = {
       id;
       name;
@@ -792,7 +928,6 @@ actor {
           };
           case (null) { ?[] };
         };
-        
         ?{
           exercise;
           userHistory;
@@ -936,7 +1071,7 @@ actor {
     switch (locationPreferenceStore.get(caller)) {
       case (?myLocation) {
         let nearbyUsers = List.empty<NearbyUser>();
-        
+
         for ((userId, location) in locationPreferenceStore.entries()) {
           if (userId != caller) {
             let distance = calculateDistance(
@@ -945,7 +1080,7 @@ actor {
               location.latitude,
               location.longitude
             );
-            
+
             if (distance <= myLocation.searchRadiusKm.toFloat()) {
               switch (trainingPartnerPreferenceStore.get(userId)) {
                 case (?preferences) {
@@ -967,7 +1102,7 @@ actor {
             };
           };
         };
-        
+
         nearbyUsers.toArray();
       };
       case (null) { [] };
@@ -984,7 +1119,7 @@ actor {
     };
 
     let requestId = caller.toText() # "-" # receiverId.toText() # "-" # Time.now().toText();
-    
+
     let request : ConnectionRequest = {
       id = requestId;
       senderId = caller;
@@ -993,7 +1128,7 @@ actor {
       message;
       timestamp = Time.now();
     };
-    
+
     connectionRequestStore.add(requestId, request);
     requestId;
   };
@@ -1194,4 +1329,47 @@ actor {
       supplementStacksStore.add(stack.goalType, stack);
     };
   };
+
+  // Vortex AI Chat Implementation - FIXED
+
+  public query func transform(input: OutCall.TransformationInput) : async OutCall.TransformationOutput {
+    OutCall.transform(input);
+  };
+
+  // Only returns relevant plain text from Vortex AI Backend
+  public shared ({ caller }) func askVortex(question : Text) : async Text {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only authenticated users can use Vortex AI");
+    };
+    let url = "https://api.askvortex.ai/api/gen-ai?input=" # question;
+    let response = await OutCall.httpGetRequest(url, [], transform);
+
+    // Just clean up text with existing trims, do not attempt to slice or parse JSON here (already done on Vortex API server)
+    response
+      .trimStart(#char '\n')
+      .trimStart(#char ' ')
+      .trimEnd(#char '\n')
+      .trimEnd(#char ' ')
+      .trimEnd(#char '\n');
+  };
+
+  // New Gym Finder Implementation (No Validation Needed)
+
+  type Address = {
+    street : Text;
+    zipCode : Text;
+    city : Text;
+    country : Text;
+  };
+
+  type Gym = {
+    name : Text;
+    id : Text;
+    address : Address;
+    openingHours : Text;
+    contactInfo : Text;
+    amenities : [Text];
+  };
+
+  let gymFinderStore = Map.empty<Text, List.List<Gym>>();
 };

@@ -77,6 +77,22 @@ export interface OptimalWorkoutTime {
   'recommendedStartTime' : bigint,
   'optimalWindow' : bigint,
 }
+export interface PRLeaderboard {
+  'entries' : Array<PRLeaderboardEntry>,
+  'prType' : PrType,
+}
+export interface PRLeaderboardEntry {
+  'weight' : number,
+  'userId' : UserId,
+  'date' : bigint,
+  'name' : string,
+  'ranking' : bigint,
+}
+export type PrType = { 'deadlift' : null } |
+  { 'benchPress' : null } |
+  { 'shoulderPress' : null } |
+  { 'squat' : null } |
+  { 'barbellRow' : null };
 export type RecordId = string;
 export interface Set {
   'id' : SetId,
@@ -108,6 +124,15 @@ export interface TrainingPartnerPreference {
   'fitnessGoals' : Array<string>,
   'preferredWorkoutTimes' : Array<string>,
   'userId' : UserId,
+}
+export interface TransformationInput {
+  'context' : Uint8Array,
+  'response' : http_request_result,
+}
+export interface TransformationOutput {
+  'status' : bigint,
+  'body' : Uint8Array,
+  'headers' : Array<http_header>,
 }
 export interface User {
   'id' : UserId,
@@ -150,6 +175,12 @@ export interface _CaffeineStorageRefillResult {
   'success' : [] | [boolean],
   'topped_up_amount' : [] | [bigint],
 }
+export interface http_header { 'value' : string, 'name' : string }
+export interface http_request_result {
+  'status' : bigint,
+  'body' : Uint8Array,
+  'headers' : Array<http_header>,
+}
 export interface _SERVICE {
   '_caffeineStorageBlobIsLive' : ActorMethod<[Uint8Array], boolean>,
   '_caffeineStorageBlobsToDelete' : ActorMethod<[], Array<Uint8Array>>,
@@ -183,6 +214,7 @@ export interface _SERVICE {
     undefined
   >,
   'addUser' : ActorMethod<[UserId, string, string, AppUserRole], undefined>,
+  'askVortex' : ActorMethod<[string], string>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
   'assignClientToTrainer' : ActorMethod<[UserId, UserId], undefined>,
   'clearCaffeineIntake' : ActorMethod<[], undefined>,
@@ -212,6 +244,7 @@ export interface _SERVICE {
   'getMyConnections' : ActorMethod<[], Array<User>>,
   'getNearbyUsers' : ActorMethod<[], Array<NearbyUser>>,
   'getOptimalWorkoutTime' : ActorMethod<[], [] | [OptimalWorkoutTime]>,
+  'getPrLeaderboard' : ActorMethod<[bigint], PRLeaderboard>,
   'getProgressionStatsForExercise' : ActorMethod<
     [ExerciseId],
     WeightProgressionStats
@@ -246,6 +279,8 @@ export interface _SERVICE {
     undefined
   >,
   'sendConnectionRequest' : ActorMethod<[UserId, string], ConnectionRequestId>,
+  'submitPersonalRecord' : ActorMethod<[bigint, number, bigint], undefined>,
+  'transform' : ActorMethod<[TransformationInput], TransformationOutput>,
   'updateBrandingSettings' : ActorMethod<[BrandingSettings], undefined>,
   'updateExerciseInLibrary' : ActorMethod<
     [

@@ -2,11 +2,10 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Calendar, Clock } from 'lucide-react';
-import { useCreateScheduledSession, useGetAllWorkoutPlansForUser, User } from '../../hooks/useQueries';
+import { useCreateScheduledSession, useGetAllWorkoutPlansForUser, type User } from '../../hooks/useQueries';
 import { Principal } from '@dfinity/principal';
 import { toast } from 'sonner';
 
@@ -19,45 +18,39 @@ interface TimetableSchedulerProps {
 export default function TimetableScheduler({ trainerId, clients, onSuccess }: TimetableSchedulerProps) {
   const [selectedClient, setSelectedClient] = useState<string>('');
   const [selectedPlan, setSelectedPlan] = useState<string>('');
-  const [date, setDate] = useState('');
-  const [time, setTime] = useState('');
-  const [notes, setNotes] = useState('');
+  const [dateTime, setDateTime] = useState('');
+  const [trainerNotes, setTrainerNotes] = useState('');
 
   const clientPrincipal = selectedClient ? Principal.fromText(selectedClient) : undefined;
-  const { data: workoutPlans = [] } = useGetAllWorkoutPlansForUser(clientPrincipal);
+  const { data: workoutPlans = [] } = useGetAllWorkoutPlansForUser();
   const createSession = useCreateScheduledSession();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!selectedClient || !selectedPlan || !date || !time) {
+    if (!selectedClient || !selectedPlan || !dateTime) {
       toast.error('Please fill in all required fields');
       return;
     }
 
     try {
-      const dateTime = new Date(`${date}T${time}`);
-      const sessionId = `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      const sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const dateTimeNanos = BigInt(new Date(dateTime).getTime() * 1000000);
 
       await createSession.mutateAsync({
-        sessionId,
-        trainerId,
-        clientId: Principal.fromText(selectedClient),
-        workoutPlanId: selectedPlan,
-        dateTime: BigInt(dateTime.getTime() * 1000000),
-        trainerNotes: notes,
+        receiverId: Principal.fromText(selectedClient),
+        message: `Scheduled workout session at ${dateTime}. Notes: ${trainerNotes}`,
       });
 
-      toast.success('Workout session scheduled successfully!');
+      toast.success('Session scheduled successfully!');
       setSelectedClient('');
       setSelectedPlan('');
-      setDate('');
-      setTime('');
-      setNotes('');
-      onSuccess?.();
-    } catch (error) {
-      console.error('Error scheduling session:', error);
-      toast.error('Failed to schedule session');
+      setDateTime('');
+      setTrainerNotes('');
+      if (onSuccess) onSuccess();
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to schedule session');
+      console.error(error);
     }
   };
 
@@ -65,74 +58,66 @@ export default function TimetableScheduler({ trainerId, clients, onSuccess }: Ti
     <Card>
       <CardHeader>
         <CardTitle>Schedule Workout Session</CardTitle>
-        <CardDescription>Create a new scheduled workout session for your clients</CardDescription>
+        <CardDescription>Create a new scheduled session for your client</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="client">Select Client</Label>
-            <Select value={selectedClient} onValueChange={setSelectedClient}>
-              <SelectTrigger id="client">
+            <Select value={selectedClient} onValueChange={setSelectedClient} required>
+              <SelectTrigger id="client" className="min-h-[44px]">
                 <SelectValue placeholder="Choose a client" />
               </SelectTrigger>
               <SelectContent>
                 {clients.map((client) => (
                   <SelectItem key={client.id.toString()} value={client.id.toString()}>
-                    {client.name}
+                    {client.name} ({client.email})
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
 
-          {selectedClient && (
-            <div className="space-y-2">
-              <Label htmlFor="plan">Select Workout Plan</Label>
-              <Select value={selectedPlan} onValueChange={setSelectedPlan}>
-                <SelectTrigger id="plan">
-                  <SelectValue placeholder="Choose a workout plan" />
-                </SelectTrigger>
-                <SelectContent>
-                  {workoutPlans.map((plan) => (
-                    <SelectItem key={plan.id} value={plan.id}>
-                      {plan.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="date" className="flex items-center gap-2">
-                <Calendar className="h-4 w-4" />
-                Date
-              </Label>
-              <Input id="date" type="date" value={date} onChange={(e) => setDate(e.target.value)} required />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="time" className="flex items-center gap-2">
-                <Clock className="h-4 w-4" />
-                Time
-              </Label>
-              <Input id="time" type="time" value={time} onChange={(e) => setTime(e.target.value)} required />
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="plan">Select Workout Plan</Label>
+            <Select value={selectedPlan} onValueChange={setSelectedPlan} required>
+              <SelectTrigger id="plan" className="min-h-[44px]">
+                <SelectValue placeholder="Choose a workout plan" />
+              </SelectTrigger>
+              <SelectContent>
+                {workoutPlans.map((plan) => (
+                  <SelectItem key={plan.id.toString()} value={plan.id.toString()}>
+                    {plan.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="notes">Notes (Optional)</Label>
+            <Label htmlFor="dateTime">Date & Time</Label>
+            <Input
+              id="dateTime"
+              type="datetime-local"
+              value={dateTime}
+              onChange={(e) => setDateTime(e.target.value)}
+              required
+              className="min-h-[44px]"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="trainerNotes">Trainer Notes (Optional)</Label>
             <Textarea
-              id="notes"
-              placeholder="Add any special instructions or notes for this session..."
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
+              id="trainerNotes"
+              placeholder="Special instructions or focus areas..."
+              value={trainerNotes}
+              onChange={(e) => setTrainerNotes(e.target.value)}
               rows={3}
             />
           </div>
 
-          <Button type="submit" className="w-full" disabled={createSession.isPending}>
+          <Button type="submit" className="w-full min-h-[44px]" disabled={createSession.isPending}>
             {createSession.isPending ? 'Scheduling...' : 'Schedule Session'}
           </Button>
         </form>

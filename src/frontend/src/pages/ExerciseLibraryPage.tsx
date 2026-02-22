@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import ExerciseLibraryBrowser from '../components/exercise/ExerciseLibraryBrowser';
+import WorkoutTechniqueGallery from '../components/exercise/WorkoutTechniqueGallery';
 import { Button } from '@/components/ui/button';
 import { QrCode } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -27,7 +28,10 @@ export default function ExerciseLibraryPage() {
         </Button>
       </div>
 
-      <ExerciseLibraryBrowser />
+      <div className="space-y-8">
+        <WorkoutTechniqueGallery />
+        <ExerciseLibraryBrowser />
+      </div>
 
       <Dialog open={qrScannerOpen} onOpenChange={setQrScannerOpen}>
         <DialogContent className="max-w-4xl">

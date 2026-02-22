@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { MapPin, Save } from 'lucide-react';
 import { useGetLocationPreference, useSaveLocationPreference } from '../../hooks/useQueries';
@@ -11,27 +11,25 @@ export default function LocationPreferenceForm() {
   const savePreference = useSaveLocationPreference();
 
   const [gymName, setGymName] = useState('');
-  const [latitude, setLatitude] = useState('');
-  const [longitude, setLongitude] = useState('');
-  const [searchRadius, setSearchRadius] = useState('10');
+  const [zipCode, setZipCode] = useState('');
+  const [searchRadiusKm, setSearchRadiusKm] = useState('10');
 
   useEffect(() => {
     if (currentPreference) {
       setGymName(currentPreference.gymName);
-      setLatitude(currentPreference.latitude.toString());
-      setLongitude(currentPreference.longitude.toString());
-      setSearchRadius(currentPreference.searchRadiusKm.toString());
+      setSearchRadiusKm(currentPreference.searchRadiusKm.toString());
     }
   }, [currentPreference]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      // Use placeholder coordinates since we're not using geolocation
       await savePreference.mutateAsync({
+        latitude: 0,
+        longitude: 0,
+        searchRadiusKm: BigInt(searchRadiusKm),
         gymName,
-        latitude: parseFloat(latitude),
-        longitude: parseFloat(longitude),
-        searchRadiusKm: BigInt(searchRadius),
       });
     } catch (error) {
       console.error('Failed to save location preference:', error);
@@ -39,11 +37,11 @@ export default function LocationPreferenceForm() {
   };
 
   return (
-    <Card className="border-2 border-primary/30">
+    <Card className="border-2 border-secondary/30">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-xl font-black uppercase">
-          <MapPin className="h-5 w-5 text-primary" />
-          Location Preferences
+          <MapPin className="h-5 w-5 text-secondary" />
+          Gym Location
         </CardTitle>
         <CardDescription className="font-semibold">
           Set your gym location to find nearby training partners
@@ -57,49 +55,12 @@ export default function LocationPreferenceForm() {
             </Label>
             <Input
               id="gymName"
+              placeholder="e.g., Gold's Gym Downtown"
               value={gymName}
               onChange={(e) => setGymName(e.target.value)}
-              placeholder="e.g., Iron Temple Gym"
-              className="border-2 font-semibold"
+              className="border-2 font-semibold min-h-[44px]"
               required
             />
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="latitude" className="font-bold uppercase text-sm">
-                Latitude
-              </Label>
-              <Input
-                id="latitude"
-                type="number"
-                step="any"
-                value={latitude}
-                onChange={(e) => setLatitude(e.target.value)}
-                placeholder="e.g., 40.7128"
-                className="border-2 font-semibold"
-                required
-              />
-              <p className="text-xs text-muted-foreground font-semibold">
-                Use Google Maps to find coordinates
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="longitude" className="font-bold uppercase text-sm">
-                Longitude
-              </Label>
-              <Input
-                id="longitude"
-                type="number"
-                step="any"
-                value={longitude}
-                onChange={(e) => setLongitude(e.target.value)}
-                placeholder="e.g., -74.0060"
-                className="border-2 font-semibold"
-                required
-              />
-            </div>
           </div>
 
           <div className="space-y-2">
@@ -111,17 +72,18 @@ export default function LocationPreferenceForm() {
               type="number"
               min="1"
               max="100"
-              value={searchRadius}
-              onChange={(e) => setSearchRadius(e.target.value)}
-              className="border-2 font-semibold"
+              value={searchRadiusKm}
+              onChange={(e) => setSearchRadiusKm(e.target.value)}
+              className="border-2 font-semibold min-h-[44px]"
               required
             />
-            <p className="text-xs text-muted-foreground font-semibold">
-              How far you're willing to travel to meet training partners
-            </p>
           </div>
 
-          <Button type="submit" className="w-full font-bold" disabled={savePreference.isPending || isLoading}>
+          <Button
+            type="submit"
+            className="w-full font-bold min-h-[44px]"
+            disabled={savePreference.isPending || isLoading}
+          >
             <Save className="mr-2 h-4 w-4" />
             {savePreference.isPending ? 'Saving...' : 'Save Location'}
           </Button>

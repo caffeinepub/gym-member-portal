@@ -2,10 +2,10 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-create-a-tdee-total-daily-energy-expenditure-and-macro-calculator-component-in-the-frontend-that-calculates-daily-calories-protein-carbs-and-fats-based-on-user-input-including-weight-height-age-gender-activity-level-and-fitness-goal-weight-loss-maintenance-muscle-gain",
-      "featureTitle": "Create a TDEE (Total Daily Energy Expenditure) and macro calculator component in the frontend that calculates daily calories, protein, carbs, and fats based on user input including weight, height, age, gender, activity level, and fitness goal (weight loss, maintenance, muscle gain)",
+      "featureId": "feature-replace-the-gym-buddy-locator-component-with-a-zip-code-based-gym-search-system-add-a-backend-method-to-store-and-retrieve-gym-locations-by-zip-code-or-city-name-remove-any-geolocation-or-map-api-dependencies-from-the-frontend-component",
+      "featureTitle": "Replace the Gym Buddy Locator component with a zip code-based gym search system. Add a backend method to store and retrieve gym locations by zip code or city name. Remove any geolocation or map API dependencies from the frontend component.",
       "files": [
-        "frontend/src/components/client/TDEECalculator.tsx"
+        "frontend/src/components/client/GymBuddyLocator.tsx"
       ],
       "components": [
         "authorization@4.0.0",
@@ -16,18 +16,23 @@
         "initial-app@1.0.0",
         "github-export-icp-cli@1.0.0",
         "qr-code@1.0.0",
-        "camera@1.0.0"
+        "camera@1.0.0",
+        "http-outcalls@3.0.0"
       ],
       "testIds": [
-        "REQ-1"
+        "REQ-2"
       ],
       "confidence": "high"
     },
     {
-      "featureId": "feature-integrate-the-tdee-calculator-into-the-client-dashboard-as-a-new-tab-or-section-accessible-alongside-existing-features-like-workout-plans-and-progress-tracking",
-      "featureTitle": "Integrate the TDEE calculator into the client dashboard as a new tab or section, accessible alongside existing features like workout plans and progress tracking",
+      "featureId": "feature-remove-all-unnecessary-or-empty-form-fields-throughout-the-application-audit-all-forms-in-the-client-dashboard-trainer-dashboard-admin-dashboard-and-profile-setup-to-identify-and-remove-fields-that-are-not-being-used-or-are-consistently-left-empty",
+      "featureTitle": "Remove all unnecessary or empty form fields throughout the application. Audit all forms in the client dashboard, trainer dashboard, admin dashboard, and profile setup to identify and remove fields that are not being used or are consistently left empty.",
       "files": [
-        "frontend/src/pages/ClientDashboard.tsx"
+        "frontend/src/components/client/LocationPreferenceForm.tsx",
+        "frontend/src/components/client/TrainingPartnerPreferenceForm.tsx",
+        "frontend/src/components/trainer/DietPlanForm.tsx",
+        "frontend/src/components/trainer/WorkoutPlanForm.tsx",
+        "frontend/src/pages/ProfileSetup.tsx"
       ],
       "components": [
         "authorization@4.0.0",
@@ -38,10 +43,35 @@
         "initial-app@1.0.0",
         "github-export-icp-cli@1.0.0",
         "qr-code@1.0.0",
-        "camera@1.0.0"
+        "camera@1.0.0",
+        "http-outcalls@3.0.0"
       ],
       "testIds": [
-        "REQ-2"
+        "REQ-3"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-update-the-vortexmessage-component-to-handle-and-display-parsed-ai-responses-correctly-ensuring-proper-text-formatting-without-rendering-any-code-syntax-or-technical-artifacts",
+      "featureTitle": "Update the VortexMessage component to handle and display parsed AI responses correctly, ensuring proper text formatting without rendering any code syntax or technical artifacts.",
+      "files": [
+        "frontend/src/components/vortex/VortexChat.tsx",
+        "frontend/src/components/vortex/VortexMessage.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "qr-code@1.0.0",
+        "camera@1.0.0",
+        "http-outcalls@3.0.0"
+      ],
+      "testIds": [
+        "REQ-4"
       ],
       "confidence": "high"
     }

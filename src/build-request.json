@@ -1,57 +1,94 @@
 {
   "kind": "build_request",
-  "title": "Add TDEE & Macro Calculator",
-  "projectName": "Spotter AI",
-  "priority": "normal",
+  "title": "Fix Vortex AI response parsing and replace Gym Locator with zip code search",
+  "projectName": "Iron Temple",
+  "priority": "high",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Create a TDEE (Total Daily Energy Expenditure) and macro calculator component in the frontend that calculates daily calories, protein, carbs, and fats based on user input including weight, height, age, gender, activity level, and fitness goal (weight loss, maintenance, muscle gain)",
-      "target": "frontend",
+      "text": "Fix Vortex AI chat to display only clean text responses instead of raw backend code or scripts. Parse the HTTP outcall response from the AI service to extract only the message content and strip any code blocks, technical metadata, or formatting artifacts before displaying to users.",
+      "target": "backend",
       "source": {
         "messageIds": [
-          "msg-user-features"
+          "msg-14"
         ],
         "quotes": [
-          "TDEE & Macro Calculator: A tool to calculate daily calories, protein, carbs, and fats based on user goals"
+          "the Vortex AI is malfunctioning: instead of providing a normal chat response, it is displaying raw backend code and scripts on the screen"
         ]
       },
       "acceptanceCriteria": [
-        "Calculator accepts user inputs for weight (kg), height (cm), age, gender, activity level (sedentary, lightly active, moderately active, very active, extremely active), and fitness goal",
-        "Displays calculated TDEE in calories per day",
-        "Shows recommended daily macros breakdown: protein (grams), carbs (grams), fats (grams)",
-        "Includes explanation of calculations or formula used",
-        "Results are displayed in a clear, readable format with visual distinction between calorie and macro values"
+        "Vortex AI responses show only conversational text without code blocks",
+        "Backend properly parses the AI service response to extract clean message content",
+        "No technical metadata or formatting artifacts are visible in the chat interface"
       ]
     },
     {
       "id": "REQ-2",
-      "text": "Integrate the TDEE calculator into the client dashboard as a new tab or section, accessible alongside existing features like workout plans and progress tracking",
-      "target": "frontend",
+      "text": "Replace the Gym Buddy Locator component with a zip code-based gym search system. Add a backend method to store and retrieve gym locations by zip code or city name. Remove any geolocation or map API dependencies from the frontend component.",
+      "target": "both",
       "source": {
         "messageIds": [
-          "msg-user-features"
+          "msg-14"
+        ],
+        "quotes": [
+          "the Gym Locator is not working; please check the Map API key and Geolocation permissions"
         ]
       },
       "acceptanceCriteria": [
-        "TDEE calculator is accessible from the client dashboard navigation",
-        "Calculator tab/section follows existing UI patterns and styling",
-        "Calculator is only visible to users with client role"
+        "Users can enter their zip code or city name to search for nearby gyms",
+        "Backend stores gym data searchable by location without requiring geolocation APIs",
+        "Frontend displays gym results in a list format without map integration",
+        "No geolocation permission requests are triggered"
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "text": "Remove all unnecessary or empty form fields throughout the application. Audit all forms in the client dashboard, trainer dashboard, admin dashboard, and profile setup to identify and remove fields that are not being used or are consistently left empty.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-13",
+          "msg-14"
+        ],
+        "quotes": [
+          "Remove unnecessary fields",
+          "clean up any remaining empty fields in the process"
+        ]
+      },
+      "acceptanceCriteria": [
+        "All forms display only required and actively used fields",
+        "Empty or placeholder fields that serve no purpose are removed",
+        "Form validation and submission logic still works correctly after field removal"
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "text": "Update the VortexMessage component to handle and display parsed AI responses correctly, ensuring proper text formatting without rendering any code syntax or technical artifacts.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-14"
+        ],
+        "quotes": [
+          "fix the API response parsing so it only shows clean text to the user"
+        ]
+      },
+      "acceptanceCriteria": [
+        "VortexMessage component displays formatted text with proper paragraphs and lists",
+        "No code syntax, brackets, or technical formatting appears in rendered messages",
+        "Message formatting remains readable and conversational"
       ]
     }
   ],
   "constraints": [
-    "Do not modify Internet Identity integration files",
-    "Do not edit Shadcn UI component source files in frontend/src/components/ui",
-    "Maintain single-actor architecture in backend",
-    "Use existing PersonalizedTracker component patterns for calculation UI consistency"
+    "Do not use geolocation APIs or external map services",
+    "Maintain single-actor backend architecture",
+    "Preserve existing authentication and authorization logic"
   ],
   "nonGoals": [
-    "Backend storage of TDEE calculation results",
-    "Historical tracking of TDEE calculations over time",
-    "Integration with diet plan generation based on TDEE results",
-    "Mobile app or push notification functionality",
-    "Integration with wearable devices or fitness trackers"
+    "Adding real-time location tracking",
+    "Integrating external map visualization libraries",
+    "Changing the overall UI theme or branding system"
   ],
   "imageRequirements": {
     "required": [],

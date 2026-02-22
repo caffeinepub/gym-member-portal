@@ -7,6 +7,18 @@ export interface None {
     __kind__: "None";
 }
 export type Option<T> = Some<T> | None;
+export interface TransformationOutput {
+    status: bigint;
+    body: Uint8Array;
+    headers: Array<http_header>;
+}
+export interface PRLeaderboardEntry {
+    weight: number;
+    userId: UserId;
+    date: bigint;
+    name: string;
+    ranking: bigint;
+}
 export interface TrainingPartnerPreference {
     bio: string;
     experienceLevel: string;
@@ -36,6 +48,10 @@ export interface LocationPreference {
     searchRadiusKm: bigint;
     userId: UserId;
     longitude: number;
+}
+export interface TransformationInput {
+    context: Uint8Array;
+    response: http_request_result;
 }
 export interface ConnectionRequest {
     id: ConnectionRequestId;
@@ -70,9 +86,9 @@ export interface User {
     role: AppUserRole;
     email: string;
 }
-export interface DosageRecommendation {
-    productName: string;
-    recommendedDosage: string;
+export interface PRLeaderboard {
+    entries: Array<PRLeaderboardEntry>;
+    prType: PrType;
 }
 export interface WeightProgressionEntry {
     weight: number;
@@ -80,16 +96,19 @@ export interface WeightProgressionEntry {
     reps: bigint;
     timestamp: bigint;
 }
+export interface DosageRecommendation {
+    productName: string;
+    recommendedDosage: string;
+}
 export interface OptimalWorkoutTime {
     recommendedEndTime: bigint;
     userId: UserId;
     recommendedStartTime: bigint;
     optimalWindow: bigint;
 }
-export interface SupplementProduct {
+export interface http_header {
+    value: string;
     name: string;
-    description: string;
-    productType: string;
 }
 export interface WeightProgressionStats {
     totalVolume: number;
@@ -99,13 +118,23 @@ export interface WeightProgressionStats {
     totalSessions: bigint;
     suggestedIncrement: number;
 }
+export interface http_request_result {
+    status: bigint;
+    body: Uint8Array;
+    headers: Array<http_header>;
+}
+export type UserId = Principal;
+export interface SupplementProduct {
+    name: string;
+    description: string;
+    productType: string;
+}
 export interface Set_ {
     id: SetId;
     weight: number;
     exerciseId: ExerciseId;
     reps: bigint;
 }
-export type UserId = Principal;
 export interface NearbyUser {
     experienceLevel: string;
     fitnessGoals: Array<string>;
@@ -133,6 +162,13 @@ export enum AppUserRole {
     admin = "admin",
     trainer = "trainer"
 }
+export enum PrType {
+    deadlift = "deadlift",
+    benchPress = "benchPress",
+    shoulderPress = "shoulderPress",
+    squat = "squat",
+    barbellRow = "barbellRow"
+}
 export enum UserRole {
     admin = "admin",
     user = "user",
@@ -147,6 +183,7 @@ export interface backendInterface {
     acceptConnectionRequest(requestId: ConnectionRequestId): Promise<void>;
     addExerciseToLibrary(id: ExerciseId, name: string, targetMuscleGroups: string, difficultyLevel: string, equipmentNeeded: string, videoUrl: string, description: string, recommendedRepsRange: string, recommendedSetsRange: string): Promise<void>;
     addUser(id: UserId, name: string, email: string, role: AppUserRole): Promise<void>;
+    askVortex(question: string): Promise<string>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
     assignClientToTrainer(trainerId: UserId, clientId: UserId): Promise<void>;
     clearCaffeineIntake(): Promise<void>;
@@ -170,6 +207,7 @@ export interface backendInterface {
     getMyConnections(): Promise<Array<User>>;
     getNearbyUsers(): Promise<Array<NearbyUser>>;
     getOptimalWorkoutTime(): Promise<OptimalWorkoutTime | null>;
+    getPrLeaderboard(prTypeInt: bigint): Promise<PRLeaderboard>;
     getProgressionStatsForExercise(exerciseId: ExerciseId): Promise<WeightProgressionStats>;
     getSupplementStack(goalType: string): Promise<SupplementStack | null>;
     getTrainingPartnerPreference(): Promise<TrainingPartnerPreference | null>;
@@ -186,6 +224,8 @@ export interface backendInterface {
     saveLocationPreference(latitude: number, longitude: number, searchRadiusKm: bigint, gymName: string): Promise<void>;
     saveTrainingPartnerPreference(fitnessGoals: Array<string>, experienceLevel: string, preferredWorkoutTimes: Array<string>, bio: string): Promise<void>;
     sendConnectionRequest(receiverId: UserId, message: string): Promise<ConnectionRequestId>;
+    submitPersonalRecord(prTypeInt: bigint, weight: number, reps: bigint): Promise<void>;
+    transform(input: TransformationInput): Promise<TransformationOutput>;
     updateBrandingSettings(newSettings: BrandingSettings): Promise<void>;
     updateExerciseInLibrary(id: ExerciseId, name: string, targetMuscleGroups: string, difficultyLevel: string, equipmentNeeded: string, videoUrl: string, description: string, recommendedRepsRange: string, recommendedSetsRange: string): Promise<void>;
     updateWorkoutPlan(planId: WorkoutPlanId, name: string, sets: Array<Set_>, restTime: bigint, notes: string): Promise<void>;

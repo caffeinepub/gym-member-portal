@@ -135,8 +135,8 @@ export default function TrainerDashboard() {
           </DialogHeader>
           {trainerId && selectedClientId && (
             <WorkoutPlanForm
-              trainerId={trainerId.toString()}
-              clientId={selectedClientId}
+              trainerId={trainerId}
+              clientId={Principal.fromText(selectedClientId)}
               onSuccess={() => setShowPlanForm(false)}
             />
           )}

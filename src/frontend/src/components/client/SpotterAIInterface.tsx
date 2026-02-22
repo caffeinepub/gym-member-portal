@@ -1,225 +1,210 @@
 import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Eye, AlertCircle, CheckCircle, Play } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Brain, CheckCircle2, AlertTriangle, Lightbulb, Play } from 'lucide-react';
-import { useGetAllExercises, useGetFormAnalysisTip } from '../../hooks/useQueries';
-import type { ExerciseId } from '../../backend';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { useGetAllFormAnalysisTips } from '../../hooks/useQueries';
 
+// Utility function to convert YouTube URLs to embed format
 function convertToEmbedUrl(url: string): string {
   if (!url) return '';
   
-  // Handle youtu.be short links
-  if (url.includes('youtu.be/')) {
-    const videoId = url.split('youtu.be/')[1]?.split('?')[0];
-    return `https://www.youtube.com/embed/${videoId}`;
-  }
-  
-  // Handle youtube.com/watch?v= links
-  if (url.includes('watch?v=')) {
-    const videoId = url.split('watch?v=')[1]?.split('&')[0];
-    return `https://www.youtube.com/embed/${videoId}`;
-  }
-  
-  // Handle youtube.com/embed/ links (already embedded)
-  if (url.includes('/embed/')) {
+  // Already an embed URL
+  if (url.includes('youtube.com/embed/')) {
     return url;
   }
   
-  // Return as-is if not a recognized YouTube format
+  // Standard YouTube watch URL
+  const watchMatch = url.match(/youtube\.com\/watch\?v=([a-zA-Z0-9_-]+)/);
+  if (watchMatch) {
+    return `https://www.youtube.com/embed/${watchMatch[1]}`;
+  }
+  
+  // Shortened youtu.be URL
+  const shortMatch = url.match(/youtu\.be\/([a-zA-Z0-9_-]+)/);
+  if (shortMatch) {
+    return `https://www.youtube.com/embed/${shortMatch[1]}`;
+  }
+  
   return url;
 }
 
 export default function SpotterAIInterface() {
-  const { data: exercises = [], isLoading: exercisesLoading } = useGetAllExercises();
-  const [selectedExerciseId, setSelectedExerciseId] = useState<ExerciseId | null>(null);
-  const { data: formTip, isLoading: tipLoading } = useGetFormAnalysisTip(selectedExerciseId || BigInt(0));
+  const { data: formTips = [], isLoading } = useGetAllFormAnalysisTips();
+  const [selectedExerciseId, setSelectedExerciseId] = useState<string>('');
 
-  const selectedExercise = exercises.find((ex) => ex.id === selectedExerciseId);
+  const selectedTip = formTips.find(
+    (tip) => tip.exerciseId.toString() === selectedExerciseId
+  );
+
+  if (isLoading) {
+    return (
+      <div className="flex h-64 items-center justify-center">
+        <div className="text-center">
+          <div className="mb-4 h-12 w-12 animate-spin rounded-full border-4 border-volt-green border-t-transparent"></div>
+          <p className="text-zinc-400">Loading form analysis tips...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
-      <Card className="border-2 border-primary/30 bg-gradient-to-br from-card to-card/50">
+      <div className="flex items-center gap-3">
+        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-volt-green to-electric-blue">
+          <Eye className="h-6 w-6 text-zinc-950" />
+        </div>
+        <div>
+          <h2 className="text-2xl font-black text-white">Spotter AI</h2>
+          <p className="text-sm text-zinc-400">
+            AI-powered form analysis and correction tips
+          </p>
+        </div>
+      </div>
+
+      <Card className="border-zinc-800 bg-zinc-900">
         <CardHeader>
-          <div className="flex items-center gap-3">
-            <div className="rounded-full bg-primary/20 p-3">
-              <Brain className="h-8 w-8 text-primary" />
-            </div>
-            <div>
-              <CardTitle className="text-3xl font-black uppercase tracking-tight">SPOTTER AI</CardTitle>
-              <CardDescription className="text-base font-semibold">
-                Form analysis and posture correction guidance
-              </CardDescription>
-            </div>
-          </div>
+          <CardTitle className="text-white">Select Exercise</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="space-y-2">
-            <label className="text-sm font-bold uppercase text-muted-foreground">Select Exercise</label>
-            <Select
-              value={selectedExerciseId?.toString() || ''}
-              onValueChange={(value) => setSelectedExerciseId(BigInt(value))}
-            >
-              <SelectTrigger className="border-2 border-primary/30 font-semibold">
-                <SelectValue placeholder="Choose an exercise to analyze..." />
-              </SelectTrigger>
-              <SelectContent>
-                {exercisesLoading ? (
-                  <SelectItem value="loading" disabled>
-                    Loading exercises...
-                  </SelectItem>
-                ) : (
-                  exercises.map((exercise) => (
-                    <SelectItem key={Number(exercise.id)} value={exercise.id.toString()}>
-                      {exercise.name}
-                    </SelectItem>
-                  ))
-                )}
-              </SelectContent>
-            </Select>
-          </div>
+        <CardContent>
+          <Select value={selectedExerciseId} onValueChange={setSelectedExerciseId}>
+            <SelectTrigger className="h-12 border-zinc-800 bg-zinc-950 text-white">
+              <SelectValue placeholder="Choose an exercise for form tips" />
+            </SelectTrigger>
+            <SelectContent className="border-zinc-800 bg-zinc-950 text-white">
+              {formTips.map((tip) => (
+                <SelectItem
+                  key={tip.exerciseId.toString()}
+                  value={tip.exerciseId.toString()}
+                  className="focus:bg-zinc-800 focus:text-white"
+                >
+                  Exercise #{tip.exerciseId.toString()}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </CardContent>
+      </Card>
 
-          {selectedExerciseId && selectedExercise && (
-            <div className="space-y-4">
-              <div className="rounded-lg border-2 border-primary/30 bg-muted/30 p-4">
-                <h3 className="mb-2 text-xl font-black uppercase text-primary">{selectedExercise.name}</h3>
-                <p className="text-sm font-semibold text-muted-foreground">{selectedExercise.description}</p>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <Badge variant="outline" className="font-bold">
-                    {selectedExercise.difficultyLevel}
-                  </Badge>
-                  <Badge variant="outline" className="font-bold">
-                    {selectedExercise.targetMuscleGroups}
-                  </Badge>
-                </div>
-              </div>
-
-              {tipLoading ? (
-                <Card className="border-2 border-primary/20">
-                  <CardContent className="py-8">
-                    <p className="text-center font-semibold text-muted-foreground">Loading form analysis...</p>
-                  </CardContent>
-                </Card>
-              ) : formTip ? (
-                <div className="space-y-4">
-                  {/* Video Demonstration */}
-                  {formTip.videoUrl && (
-                    <Card className="border-2 border-secondary/30 overflow-hidden">
-                      <CardHeader className="bg-secondary/10">
-                        <CardTitle className="flex items-center gap-2 text-lg font-black uppercase">
-                          <Play className="h-5 w-5 text-secondary" />
-                          Video Demonstration
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="p-0">
-                        <div className="aspect-video w-full">
-                          <iframe
-                            src={convertToEmbedUrl(formTip.videoUrl)}
-                            className="h-full w-full"
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                            allowFullScreen
-                            title={`${selectedExercise.name} demonstration`}
-                          />
-                        </div>
-                      </CardContent>
-                    </Card>
-                  )}
-
-                  {/* Form Checkpoints */}
-                  <Card className="border-2 border-primary/30">
-                    <CardHeader className="bg-primary/10">
-                      <CardTitle className="flex items-center gap-2 text-lg font-black uppercase">
-                        <CheckCircle2 className="h-5 w-5 text-primary" />
-                        Form Checkpoints
-                      </CardTitle>
-                      <CardDescription className="font-semibold">Key points for perfect execution</CardDescription>
-                    </CardHeader>
-                    <CardContent className="pt-6">
-                      <ul className="space-y-3">
-                        {formTip.formCheckpoints.map((checkpoint, idx) => (
-                          <li key={idx} className="flex items-start gap-3">
-                            <div className="mt-1 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-primary/20">
-                              <CheckCircle2 className="h-4 w-4 text-primary" />
-                            </div>
-                            <span className="font-semibold text-foreground">{checkpoint}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </CardContent>
-                  </Card>
-
-                  {/* Common Mistakes */}
-                  <Card className="border-2 border-destructive/30">
-                    <CardHeader className="bg-destructive/10">
-                      <CardTitle className="flex items-center gap-2 text-lg font-black uppercase">
-                        <AlertTriangle className="h-5 w-5 text-destructive" />
-                        Common Mistakes
-                      </CardTitle>
-                      <CardDescription className="font-semibold">Watch out for these errors</CardDescription>
-                    </CardHeader>
-                    <CardContent className="pt-6">
-                      <ul className="space-y-3">
-                        {formTip.commonMistakes.map((mistake, idx) => (
-                          <li key={idx} className="flex items-start gap-3">
-                            <div className="mt-1 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-destructive/20">
-                              <AlertTriangle className="h-4 w-4 text-destructive" />
-                            </div>
-                            <span className="font-semibold text-foreground">{mistake}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </CardContent>
-                  </Card>
-
-                  {/* Correction Steps */}
-                  <Card className="border-2 border-secondary/30">
-                    <CardHeader className="bg-secondary/10">
-                      <CardTitle className="flex items-center gap-2 text-lg font-black uppercase">
-                        <Lightbulb className="h-5 w-5 text-secondary" />
-                        Correction Steps
-                      </CardTitle>
-                      <CardDescription className="font-semibold">How to improve your form</CardDescription>
-                    </CardHeader>
-                    <CardContent className="pt-6">
-                      <ul className="space-y-3">
-                        {formTip.correctionSteps.map((step, idx) => (
-                          <li key={idx} className="flex items-start gap-3">
-                            <div className="mt-1 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-secondary/20 font-black text-secondary">
-                              {idx + 1}
-                            </div>
-                            <span className="font-semibold text-foreground">{step}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </CardContent>
-                  </Card>
-                </div>
-              ) : (
-                <Card className="border-2 border-muted">
-                  <CardContent className="py-8">
-                    <p className="text-center font-semibold text-muted-foreground">
-                      No form analysis available for this exercise yet. Check back soon!
-                    </p>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
-          )}
-
-          {!selectedExerciseId && (
-            <Card className="border-2 border-muted">
-              <CardContent className="py-12">
-                <div className="text-center">
-                  <Brain className="mx-auto mb-4 h-16 w-16 text-muted-foreground/50" />
-                  <p className="text-lg font-semibold text-muted-foreground">
-                    Select an exercise above to view form analysis and correction tips
-                  </p>
+      {selectedTip && (
+        <div className="space-y-6">
+          {/* Video Demonstration */}
+          {selectedTip.videoUrl && (
+            <Card className="overflow-hidden border-zinc-800 bg-zinc-900">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-white">
+                  <Play className="h-5 w-5 text-volt-green" />
+                  Video Demonstration
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div className="relative aspect-video w-full bg-zinc-950">
+                  <iframe
+                    src={convertToEmbedUrl(selectedTip.videoUrl)}
+                    className="absolute inset-0 h-full w-full"
+                    title="Exercise demonstration"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
                 </div>
               </CardContent>
             </Card>
           )}
-        </CardContent>
-      </Card>
+
+          {/* Form Checkpoints */}
+          <Card className="border-zinc-800 bg-zinc-900">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-white">
+                <CheckCircle className="h-5 w-5 text-volt-green" />
+                Form Checkpoints
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-3">
+                {selectedTip.formCheckpoints.map((checkpoint, idx) => (
+                  <li key={idx} className="flex items-start gap-3">
+                    <Badge className="mt-1 bg-volt-green text-zinc-950">
+                      {idx + 1}
+                    </Badge>
+                    <span className="text-zinc-300">{checkpoint}</span>
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+
+          {/* Common Mistakes */}
+          <Card className="border-zinc-800 bg-zinc-900">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-white">
+                <AlertCircle className="h-5 w-5 text-red-500" />
+                Common Mistakes
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-3">
+                {selectedTip.commonMistakes.map((mistake, idx) => (
+                  <li key={idx} className="flex items-start gap-3">
+                    <Badge
+                      variant="outline"
+                      className="mt-1 border-red-500 text-red-500"
+                    >
+                      {idx + 1}
+                    </Badge>
+                    <span className="text-zinc-300">{mistake}</span>
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+
+          {/* Correction Steps */}
+          <Card className="border-zinc-800 bg-zinc-900">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-white">
+                <Eye className="h-5 w-5 text-electric-blue" />
+                Correction Steps
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-3">
+                {selectedTip.correctionSteps.map((step, idx) => (
+                  <li key={idx} className="flex items-start gap-3">
+                    <Badge className="mt-1 bg-electric-blue text-zinc-950">
+                      {idx + 1}
+                    </Badge>
+                    <span className="text-zinc-300">{step}</span>
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {!selectedTip && formTips.length > 0 && (
+        <Card className="border-zinc-800 bg-zinc-900/50">
+          <CardContent className="flex h-64 items-center justify-center">
+            <p className="text-zinc-500">
+              Select an exercise to view form analysis tips
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
+      {formTips.length === 0 && (
+        <Card className="border-zinc-800 bg-zinc-900/50">
+          <CardContent className="flex h-64 items-center justify-center">
+            <p className="text-zinc-500">No form analysis tips available yet</p>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

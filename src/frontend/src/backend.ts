@@ -89,12 +89,24 @@ export class ExternalBlob {
         return this;
     }
 }
+export interface TransformationOutput {
+    status: bigint;
+    body: Uint8Array;
+    headers: Array<http_header>;
+}
 export interface _CaffeineStorageRefillInformation {
     proposed_top_up_amount?: bigint;
 }
 export interface _CaffeineStorageCreateCertificateResult {
     method: string;
     blob_hash: string;
+}
+export interface PRLeaderboardEntry {
+    weight: number;
+    userId: UserId;
+    date: bigint;
+    name: string;
+    ranking: bigint;
 }
 export interface TrainingPartnerPreference {
     bio: string;
@@ -125,6 +137,10 @@ export interface LocationPreference {
     searchRadiusKm: bigint;
     userId: UserId;
     longitude: number;
+}
+export interface TransformationInput {
+    context: Uint8Array;
+    response: http_request_result;
 }
 export interface ConnectionRequest {
     id: ConnectionRequestId;
@@ -159,9 +175,9 @@ export interface User {
     role: AppUserRole;
     email: string;
 }
-export interface DosageRecommendation {
-    productName: string;
-    recommendedDosage: string;
+export interface PRLeaderboard {
+    entries: Array<PRLeaderboardEntry>;
+    prType: PrType;
 }
 export interface WeightProgressionEntry {
     weight: number;
@@ -169,16 +185,19 @@ export interface WeightProgressionEntry {
     reps: bigint;
     timestamp: bigint;
 }
+export interface DosageRecommendation {
+    productName: string;
+    recommendedDosage: string;
+}
 export interface OptimalWorkoutTime {
     recommendedEndTime: bigint;
     userId: UserId;
     recommendedStartTime: bigint;
     optimalWindow: bigint;
 }
-export interface SupplementProduct {
+export interface http_header {
+    value: string;
     name: string;
-    description: string;
-    productType: string;
 }
 export interface WeightProgressionStats {
     totalVolume: number;
@@ -188,13 +207,23 @@ export interface WeightProgressionStats {
     totalSessions: bigint;
     suggestedIncrement: number;
 }
+export interface http_request_result {
+    status: bigint;
+    body: Uint8Array;
+    headers: Array<http_header>;
+}
+export type UserId = Principal;
+export interface SupplementProduct {
+    name: string;
+    description: string;
+    productType: string;
+}
 export interface Set_ {
     id: SetId;
     weight: number;
     exerciseId: ExerciseId;
     reps: bigint;
 }
-export type UserId = Principal;
 export interface NearbyUser {
     experienceLevel: string;
     fitnessGoals: Array<string>;
@@ -212,19 +241,26 @@ export interface TimingGuideline {
     purpose: string;
 }
 export type SetId = bigint;
+export interface _CaffeineStorageRefillResult {
+    success?: boolean;
+    topped_up_amount?: bigint;
+}
 export interface UserProfile {
     name: string;
     role: AppUserRole;
     email: string;
 }
-export interface _CaffeineStorageRefillResult {
-    success?: boolean;
-    topped_up_amount?: bigint;
-}
 export enum AppUserRole {
     client = "client",
     admin = "admin",
     trainer = "trainer"
+}
+export enum PrType {
+    deadlift = "deadlift",
+    benchPress = "benchPress",
+    shoulderPress = "shoulderPress",
+    squat = "squat",
+    barbellRow = "barbellRow"
 }
 export enum UserRole {
     admin = "admin",
@@ -247,6 +283,7 @@ export interface backendInterface {
     acceptConnectionRequest(requestId: ConnectionRequestId): Promise<void>;
     addExerciseToLibrary(id: ExerciseId, name: string, targetMuscleGroups: string, difficultyLevel: string, equipmentNeeded: string, videoUrl: string, description: string, recommendedRepsRange: string, recommendedSetsRange: string): Promise<void>;
     addUser(id: UserId, name: string, email: string, role: AppUserRole): Promise<void>;
+    askVortex(question: string): Promise<string>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
     assignClientToTrainer(trainerId: UserId, clientId: UserId): Promise<void>;
     clearCaffeineIntake(): Promise<void>;
@@ -270,6 +307,7 @@ export interface backendInterface {
     getMyConnections(): Promise<Array<User>>;
     getNearbyUsers(): Promise<Array<NearbyUser>>;
     getOptimalWorkoutTime(): Promise<OptimalWorkoutTime | null>;
+    getPrLeaderboard(prTypeInt: bigint): Promise<PRLeaderboard>;
     getProgressionStatsForExercise(exerciseId: ExerciseId): Promise<WeightProgressionStats>;
     getSupplementStack(goalType: string): Promise<SupplementStack | null>;
     getTrainingPartnerPreference(): Promise<TrainingPartnerPreference | null>;
@@ -286,11 +324,13 @@ export interface backendInterface {
     saveLocationPreference(latitude: number, longitude: number, searchRadiusKm: bigint, gymName: string): Promise<void>;
     saveTrainingPartnerPreference(fitnessGoals: Array<string>, experienceLevel: string, preferredWorkoutTimes: Array<string>, bio: string): Promise<void>;
     sendConnectionRequest(receiverId: UserId, message: string): Promise<ConnectionRequestId>;
+    submitPersonalRecord(prTypeInt: bigint, weight: number, reps: bigint): Promise<void>;
+    transform(input: TransformationInput): Promise<TransformationOutput>;
     updateBrandingSettings(newSettings: BrandingSettings): Promise<void>;
     updateExerciseInLibrary(id: ExerciseId, name: string, targetMuscleGroups: string, difficultyLevel: string, equipmentNeeded: string, videoUrl: string, description: string, recommendedRepsRange: string, recommendedSetsRange: string): Promise<void>;
     updateWorkoutPlan(planId: WorkoutPlanId, name: string, sets: Array<Set_>, restTime: bigint, notes: string): Promise<void>;
 }
-import type { AppUserRole as _AppUserRole, ConnectionRequest as _ConnectionRequest, ConnectionRequestId as _ConnectionRequestId, Exercise as _Exercise, ExerciseWithHistory as _ExerciseWithHistory, FormAnalysisTip as _FormAnalysisTip, LocationPreference as _LocationPreference, OptimalWorkoutTime as _OptimalWorkoutTime, SupplementStack as _SupplementStack, TrainingPartnerPreference as _TrainingPartnerPreference, User as _User, UserId as _UserId, UserProfile as _UserProfile, UserRole as _UserRole, WeightProgressionEntry as _WeightProgressionEntry, _CaffeineStorageRefillInformation as __CaffeineStorageRefillInformation, _CaffeineStorageRefillResult as __CaffeineStorageRefillResult } from "./declarations/backend.did.d.ts";
+import type { AppUserRole as _AppUserRole, ConnectionRequest as _ConnectionRequest, ConnectionRequestId as _ConnectionRequestId, Exercise as _Exercise, ExerciseWithHistory as _ExerciseWithHistory, FormAnalysisTip as _FormAnalysisTip, LocationPreference as _LocationPreference, OptimalWorkoutTime as _OptimalWorkoutTime, PRLeaderboard as _PRLeaderboard, PRLeaderboardEntry as _PRLeaderboardEntry, PrType as _PrType, SupplementStack as _SupplementStack, TrainingPartnerPreference as _TrainingPartnerPreference, User as _User, UserId as _UserId, UserProfile as _UserProfile, UserRole as _UserRole, WeightProgressionEntry as _WeightProgressionEntry, _CaffeineStorageRefillInformation as __CaffeineStorageRefillInformation, _CaffeineStorageRefillResult as __CaffeineStorageRefillResult } from "./declarations/backend.did.d.ts";
 export class Backend implements backendInterface {
     constructor(private actor: ActorSubclass<_SERVICE>, private _uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, private _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, private processError?: (error: unknown) => never){}
     async _caffeineStorageBlobIsLive(arg0: Uint8Array): Promise<boolean> {
@@ -430,6 +470,20 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.addUser(arg0, arg1, arg2, to_candid_AppUserRole_n8(this._uploadFile, this._downloadFile, arg3));
+            return result;
+        }
+    }
+    async askVortex(arg0: string): Promise<string> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.askVortex(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.askVortex(arg0);
             return result;
         }
     }
@@ -755,6 +809,20 @@ export class Backend implements backendInterface {
             return from_candid_opt_n33(this._uploadFile, this._downloadFile, result);
         }
     }
+    async getPrLeaderboard(arg0: bigint): Promise<PRLeaderboard> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getPrLeaderboard(arg0);
+                return from_candid_PRLeaderboard_n34(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getPrLeaderboard(arg0);
+            return from_candid_PRLeaderboard_n34(this._uploadFile, this._downloadFile, result);
+        }
+    }
     async getProgressionStatsForExercise(arg0: ExerciseId): Promise<WeightProgressionStats> {
         if (this.processError) {
             try {
@@ -773,28 +841,28 @@ export class Backend implements backendInterface {
         if (this.processError) {
             try {
                 const result = await this.actor.getSupplementStack(arg0);
-                return from_candid_opt_n34(this._uploadFile, this._downloadFile, result);
+                return from_candid_opt_n38(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getSupplementStack(arg0);
-            return from_candid_opt_n34(this._uploadFile, this._downloadFile, result);
+            return from_candid_opt_n38(this._uploadFile, this._downloadFile, result);
         }
     }
     async getTrainingPartnerPreference(): Promise<TrainingPartnerPreference | null> {
         if (this.processError) {
             try {
                 const result = await this.actor.getTrainingPartnerPreference();
-                return from_candid_opt_n35(this._uploadFile, this._downloadFile, result);
+                return from_candid_opt_n39(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getTrainingPartnerPreference();
-            return from_candid_opt_n35(this._uploadFile, this._downloadFile, result);
+            return from_candid_opt_n39(this._uploadFile, this._downloadFile, result);
         }
     }
     async getUserProfile(arg0: Principal): Promise<UserProfile | null> {
@@ -926,14 +994,14 @@ export class Backend implements backendInterface {
     async saveCallerUserProfile(arg0: UserProfile): Promise<void> {
         if (this.processError) {
             try {
-                const result = await this.actor.saveCallerUserProfile(to_candid_UserProfile_n36(this._uploadFile, this._downloadFile, arg0));
+                const result = await this.actor.saveCallerUserProfile(to_candid_UserProfile_n40(this._uploadFile, this._downloadFile, arg0));
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.saveCallerUserProfile(to_candid_UserProfile_n36(this._uploadFile, this._downloadFile, arg0));
+            const result = await this.actor.saveCallerUserProfile(to_candid_UserProfile_n40(this._uploadFile, this._downloadFile, arg0));
             return result;
         }
     }
@@ -976,6 +1044,34 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.sendConnectionRequest(arg0, arg1);
+            return result;
+        }
+    }
+    async submitPersonalRecord(arg0: bigint, arg1: number, arg2: bigint): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.submitPersonalRecord(arg0, arg1, arg2);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.submitPersonalRecord(arg0, arg1, arg2);
+            return result;
+        }
+    }
+    async transform(arg0: TransformationInput): Promise<TransformationOutput> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.transform(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.transform(arg0);
             return result;
         }
     }
@@ -1031,6 +1127,12 @@ function from_candid_ConnectionRequest_n30(_uploadFile: (file: ExternalBlob) => 
 function from_candid_ExerciseWithHistory_n24(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _ExerciseWithHistory): ExerciseWithHistory {
     return from_candid_record_n25(_uploadFile, _downloadFile, value);
 }
+function from_candid_PRLeaderboard_n34(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _PRLeaderboard): PRLeaderboard {
+    return from_candid_record_n35(_uploadFile, _downloadFile, value);
+}
+function from_candid_PrType_n36(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _PrType): PrType {
+    return from_candid_variant_n37(_uploadFile, _downloadFile, value);
+}
 function from_candid_UserProfile_n18(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _UserProfile): UserProfile {
     return from_candid_record_n19(_uploadFile, _downloadFile, value);
 }
@@ -1064,10 +1166,10 @@ function from_candid_opt_n28(_uploadFile: (file: ExternalBlob) => Promise<Uint8A
 function from_candid_opt_n33(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_OptimalWorkoutTime]): OptimalWorkoutTime | null {
     return value.length === 0 ? null : value[0];
 }
-function from_candid_opt_n34(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_SupplementStack]): SupplementStack | null {
+function from_candid_opt_n38(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_SupplementStack]): SupplementStack | null {
     return value.length === 0 ? null : value[0];
 }
-function from_candid_opt_n35(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_TrainingPartnerPreference]): TrainingPartnerPreference | null {
+function from_candid_opt_n39(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_TrainingPartnerPreference]): TrainingPartnerPreference | null {
     return value.length === 0 ? null : value[0];
 }
 function from_candid_opt_n6(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [boolean]): boolean | null {
@@ -1151,6 +1253,18 @@ function from_candid_record_n31(_uploadFile: (file: ExternalBlob) => Promise<Uin
         senderId: value.senderId
     };
 }
+function from_candid_record_n35(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    entries: Array<_PRLeaderboardEntry>;
+    prType: _PrType;
+}): {
+    entries: Array<PRLeaderboardEntry>;
+    prType: PrType;
+} {
+    return {
+        entries: value.entries,
+        prType: from_candid_PrType_n36(_uploadFile, _downloadFile, value.prType)
+    };
+}
 function from_candid_record_n5(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     success: [] | [boolean];
     topped_up_amount: [] | [bigint];
@@ -1190,6 +1304,19 @@ function from_candid_variant_n32(_uploadFile: (file: ExternalBlob) => Promise<Ui
 }): Variant_pending_rejected_accepted {
     return "pending" in value ? Variant_pending_rejected_accepted.pending : "rejected" in value ? Variant_pending_rejected_accepted.rejected : "accepted" in value ? Variant_pending_rejected_accepted.accepted : value;
 }
+function from_candid_variant_n37(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    deadlift: null;
+} | {
+    benchPress: null;
+} | {
+    shoulderPress: null;
+} | {
+    squat: null;
+} | {
+    barbellRow: null;
+}): PrType {
+    return "deadlift" in value ? PrType.deadlift : "benchPress" in value ? PrType.benchPress : "shoulderPress" in value ? PrType.shoulderPress : "squat" in value ? PrType.squat : "barbellRow" in value ? PrType.barbellRow : value;
+}
 function from_candid_vec_n12(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_User>): Array<User> {
     return value.map((x)=>from_candid_User_n13(_uploadFile, _downloadFile, x));
 }
@@ -1199,8 +1326,8 @@ function from_candid_vec_n29(_uploadFile: (file: ExternalBlob) => Promise<Uint8A
 function to_candid_AppUserRole_n8(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: AppUserRole): _AppUserRole {
     return to_candid_variant_n9(_uploadFile, _downloadFile, value);
 }
-function to_candid_UserProfile_n36(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UserProfile): _UserProfile {
-    return to_candid_record_n37(_uploadFile, _downloadFile, value);
+function to_candid_UserProfile_n40(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UserProfile): _UserProfile {
+    return to_candid_record_n41(_uploadFile, _downloadFile, value);
 }
 function to_candid_UserRole_n10(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UserRole): _UserRole {
     return to_candid_variant_n11(_uploadFile, _downloadFile, value);
@@ -1220,7 +1347,7 @@ function to_candid_record_n3(_uploadFile: (file: ExternalBlob) => Promise<Uint8A
         proposed_top_up_amount: value.proposed_top_up_amount ? candid_some(value.proposed_top_up_amount) : candid_none()
     };
 }
-function to_candid_record_n37(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function to_candid_record_n41(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     name: string;
     role: AppUserRole;
     email: string;

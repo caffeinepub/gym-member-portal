@@ -1,37 +1,34 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useActor } from './useActor';
-import { Principal } from '@dfinity/principal';
 import type {
+  User,
   UserProfile,
-  AppUserRole,
   BrandingSettings,
-  Set_,
   Exercise,
+  ExerciseWithHistory,
   WeightProgressionEntry,
   WeightProgressionStats,
   OptimalWorkoutTime,
-  ExerciseId,
+  LocationPreference,
+  TrainingPartnerPreference,
+  NearbyUser,
+  ConnectionRequest,
+  PRLeaderboard,
+  FormAnalysisTip,
+  SupplementStack,
+  AppUserRole,
   UserId,
   WorkoutPlanId,
   RecordId,
-  FormAnalysisTip,
-  SupplementStack,
-  LocationPreference,
-  TrainingPartnerPreference,
-  ConnectionRequest,
-  NearbyUser,
-  ExerciseWithHistory,
-  ConnectionRequestId,
+  Set_,
 } from '../backend';
+import { PrType } from '../backend';
+import { Principal } from '@dfinity/principal';
 
-// Local type definitions for types not exported by backend
-export interface User {
-  id: UserId;
-  name: string;
-  email: string;
-  role: AppUserRole;
-}
+// Re-export types for components
+export type { User, UserProfile, BrandingSettings, Exercise, FormAnalysisTip, SupplementStack };
 
+// Additional types for frontend
 export interface WorkoutPlan {
   id: WorkoutPlanId;
   creatorTrainerId: UserId;
@@ -51,24 +48,15 @@ export interface WorkoutRecord {
   personalNotes: string;
 }
 
-export interface FoodItem {
-  name: string;
-  portion: string;
-  calories: bigint;
-  protein: number;
-  carbs: number;
-  fats: number;
-}
-
-export interface Meal {
+export interface ScheduledSession {
   id: string;
-  name: string;
-  time: string;
-  foodItems: FoodItem[];
-  totalCalories: bigint;
-  protein: number;
-  carbs: number;
-  fats: number;
+  trainerId: UserId;
+  clientId: UserId;
+  workoutPlanId: WorkoutPlanId;
+  dateTime: bigint;
+  isCompleted: boolean;
+  clientNotes: string;
+  trainerNotes: string;
 }
 
 export interface DietPlan {
@@ -78,6 +66,26 @@ export interface DietPlan {
   name: string;
   meals: Meal[];
   dietaryNotes: string;
+}
+
+export interface Meal {
+  id: string;
+  name: string;
+  time: string;
+  foodItems: FoodItem[];
+  totalCalories: number;
+  protein: number;
+  carbs: number;
+  fats: number;
+}
+
+export interface FoodItem {
+  name: string;
+  portion: string;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fats: number;
 }
 
 export interface DietOption {
@@ -90,20 +98,41 @@ export interface MealOption {
   options: DietOption[];
 }
 
-export interface ScheduledSession {
-  id: string;
-  trainerId: UserId;
-  clientId: UserId;
-  workoutPlanId: WorkoutPlanId;
-  dateTime: bigint;
-  isCompleted: boolean;
-  clientNotes: string;
-  trainerNotes: string;
+// Helper function to convert PrType enum to integer for backend
+function prTypeToInt(prType: PrType): bigint {
+  switch (prType) {
+    case PrType.squat:
+      return BigInt(1);
+    case PrType.benchPress:
+      return BigInt(2);
+    case PrType.deadlift:
+      return BigInt(3);
+    case PrType.shoulderPress:
+      return BigInt(4);
+    case PrType.barbellRow:
+      return BigInt(5);
+    default:
+      return BigInt(1);
+  }
 }
 
-export interface VortexMessage {
-  role: 'user' | 'assistant';
-  content: string;
+// Vortex AI Query Hook - Fixed to use backend
+export function useAskVortex() {
+  const { actor } = useActor();
+
+  return useMutation({
+    mutationFn: async (question: string) => {
+      if (!actor) throw new Error('Actor not available');
+      
+      try {
+        const response = await actor.askVortex(question);
+        return response;
+      } catch (error: any) {
+        console.error('Vortex AI backend error:', error);
+        throw new Error(error.message || 'Failed to get response from Vortex AI. Please try again.');
+      }
+    },
+  });
 }
 
 // User Profile Queries
@@ -142,17 +171,137 @@ export function useSaveCallerUserProfile() {
   });
 }
 
-// Branding Queries
+// User Management Queries (Admin)
+export function useGetAllUsers() {
+  const { actor, isFetching } = useActor();
+
+  return useQuery<User[]>({
+    queryKey: ['users'],
+    queryFn: async () => {
+      if (!actor) return [];
+      return actor.getAllUsers();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useAddUser() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      id,
+      name,
+      email,
+      role,
+    }: {
+      id: Principal;
+      name: string;
+      email: string;
+      role: AppUserRole;
+    }) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.addUser(id, name, email, role);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+    },
+  });
+}
+
+export function useEditUser() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      id,
+      name,
+      email,
+      role,
+    }: {
+      id: Principal;
+      name: string;
+      email: string;
+      role: AppUserRole;
+    }) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.editUser(id, name, email, role);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+    },
+  });
+}
+
+export function useRemoveUser() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: Principal) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.removeUser(id);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+    },
+  });
+}
+
+// Trainer-Client Assignment
+export function useAssignClientToTrainer() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      trainerId,
+      clientId,
+    }: {
+      trainerId: Principal;
+      clientId: Principal;
+    }) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.assignClientToTrainer(trainerId, clientId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['trainerClients'] });
+    },
+  });
+}
+
+export function useGetTrainerClients() {
+  const { actor, isFetching } = useActor();
+
+  return useQuery<User[]>({
+    queryKey: ['trainerClients'],
+    queryFn: async () => {
+      if (!actor) return [];
+      return actor.getMyClients();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+// Branding Settings
 export function useGetBrandingSettings() {
-  const { actor, isFetching: actorFetching } = useActor();
+  const { actor, isFetching } = useActor();
 
   return useQuery<BrandingSettings>({
     queryKey: ['brandingSettings'],
     queryFn: async () => {
-      if (!actor) throw new Error('Actor not available');
+      if (!actor)
+        return {
+          logoUrl: '',
+          primaryColor: '#000000',
+          secondaryColor: '#FFFFFF',
+          accentColor: '#FF0000',
+        };
       return actor.getBrandingSettings();
     },
-    enabled: !!actor && !actorFetching,
+    enabled: !!actor && !isFetching,
   });
 }
 
@@ -171,369 +320,43 @@ export function useUpdateBrandingSettings() {
   });
 }
 
-// Admin User Management
-export function useGetAllUsers() {
-  const { actor, isFetching: actorFetching } = useActor();
-
-  return useQuery<User[]>({
-    queryKey: ['allUsers'],
-    queryFn: async () => {
-      if (!actor) throw new Error('Actor not available');
-      return actor.getAllUsers();
-    },
-    enabled: !!actor && !actorFetching,
-  });
-}
-
-export function useGetUser(userId: Principal) {
-  const { actor, isFetching: actorFetching } = useActor();
-
-  return useQuery<User | null>({
-    queryKey: ['user', userId.toString()],
-    queryFn: async () => {
-      if (!actor) throw new Error('Actor not available');
-      const profile = await actor.getUserProfile(userId);
-      if (!profile) return null;
-      return {
-        id: userId,
-        name: profile.name,
-        email: profile.email,
-        role: profile.role,
-      };
-    },
-    enabled: !!actor && !actorFetching,
-  });
-}
-
-export function useAddUser() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (params: { id: Principal; name: string; email: string; role: AppUserRole }) => {
-      if (!actor) throw new Error('Actor not available');
-      return actor.addUser(params.id, params.name, params.email, params.role);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['allUsers'] });
-    },
-  });
-}
-
-export function useEditUser() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (params: { id: Principal; name: string; email: string; role: AppUserRole }) => {
-      if (!actor) throw new Error('Actor not available');
-      return actor.editUser(params.id, params.name, params.email, params.role);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['allUsers'] });
-    },
-  });
-}
-
-export function useRemoveUser() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (id: Principal) => {
-      if (!actor) throw new Error('Actor not available');
-      return actor.removeUser(id);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['allUsers'] });
-    },
-  });
-}
-
-// Trainer-Client Assignment
-export function useGetMyClients() {
-  const { actor, isFetching: actorFetching } = useActor();
-
-  return useQuery<User[]>({
-    queryKey: ['myClients'],
-    queryFn: async () => {
-      if (!actor) throw new Error('Actor not available');
-      return actor.getMyClients();
-    },
-    enabled: !!actor && !actorFetching,
-  });
-}
-
-export function useGetTrainerClients() {
-  return useGetMyClients();
-}
-
-export function useAssignClientToTrainer() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (params: { trainerId: Principal; clientId: Principal }) => {
-      if (!actor) throw new Error('Actor not available');
-      return actor.assignClientToTrainer(params.trainerId, params.clientId);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['myClients'] });
-    },
-  });
-}
-
-// Workout Plans - Mock implementations
-export function useGetAllWorkoutPlansForUser(userId: Principal | undefined) {
-  const { actor, isFetching: actorFetching } = useActor();
-
-  return useQuery<WorkoutPlan[]>({
-    queryKey: ['workoutPlans', userId?.toString()],
-    queryFn: async () => {
-      if (!actor || !userId) return [];
-      // Backend doesn't have this method, return empty array
-      return [];
-    },
-    enabled: !!actor && !actorFetching && !!userId,
-  });
-}
-
-export function useCreateWorkoutPlan() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (params: {
-      planId: string;
-      trainerId: Principal;
-      clientId: Principal;
-      name: string;
-      sets: Set_[];
-      restTime: bigint;
-      notes: string;
-    }) => {
-      if (!actor) throw new Error('Actor not available');
-      return actor.createWorkoutPlan(
-        params.planId,
-        params.trainerId,
-        params.clientId,
-        params.name,
-        params.sets,
-        params.restTime,
-        params.notes
-      );
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['workoutPlans'] });
-    },
-  });
-}
-
-export function useUpdateWorkoutPlan() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (params: {
-      planId: string;
-      name: string;
-      sets: Set_[];
-      restTime: bigint;
-      notes: string;
-    }) => {
-      if (!actor) throw new Error('Actor not available');
-      return actor.updateWorkoutPlan(params.planId, params.name, params.sets, params.restTime, params.notes);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['workoutPlans'] });
-    },
-  });
-}
-
-export function useDeleteWorkoutPlan() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (planId: string) => {
-      if (!actor) throw new Error('Actor not available');
-      return actor.deleteWorkoutPlan(planId);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['workoutPlans'] });
-    },
-  });
-}
-
-// Workout Records
-export function useGetWorkoutRecordsForUser(userId: Principal | undefined) {
-  const { actor, isFetching: actorFetching } = useActor();
-
-  return useQuery<WorkoutRecord[]>({
-    queryKey: ['workoutRecords', userId?.toString()],
-    queryFn: async () => {
-      if (!actor || !userId) return [];
-      // Backend doesn't have this method, return empty array
-      return [];
-    },
-    enabled: !!actor && !actorFetching && !!userId,
-  });
-}
-
-export function useLogWorkoutCompletion() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (params: {
-      recordId: string;
-      planId: string;
-      userId: Principal;
-      completedSets: bigint;
-      personalNotes: string;
-    }) => {
-      if (!actor) throw new Error('Actor not available');
-      return actor.logWorkoutCompletion(
-        params.recordId,
-        params.planId,
-        params.userId,
-        params.completedSets,
-        params.personalNotes
-      );
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['workoutRecords'] });
-    },
-  });
-}
-
-// Scheduled Sessions - Mock implementations
-export function useGetScheduledSessionsForClient(userId: Principal | undefined) {
-  const { actor, isFetching: actorFetching } = useActor();
-
-  return useQuery<ScheduledSession[]>({
-    queryKey: ['scheduledSessions', userId?.toString()],
-    queryFn: async () => {
-      if (!actor || !userId) return [];
-      // Backend doesn't have this method, return empty array
-      return [];
-    },
-    enabled: !!actor && !actorFetching && !!userId,
-  });
-}
-
-export function useCreateScheduledSession() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (params: {
-      sessionId: string;
-      trainerId: Principal;
-      clientId: Principal;
-      workoutPlanId: string;
-      dateTime: bigint;
-      trainerNotes: string;
-    }) => {
-      if (!actor) throw new Error('Actor not available');
-      // Backend doesn't have this method, mock implementation
-      return Promise.resolve();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['scheduledSessions'] });
-    },
-  });
-}
-
-// Diet Plans - Mock implementations
-export function useGetDietPlansForClient(userId: Principal | undefined) {
-  const { actor, isFetching: actorFetching } = useActor();
-
-  return useQuery<DietPlan[]>({
-    queryKey: ['dietPlans', userId?.toString()],
-    queryFn: async () => {
-      if (!actor || !userId) return [];
-      // Backend doesn't have this method, return empty array
-      return [];
-    },
-    enabled: !!actor && !actorFetching && !!userId,
-  });
-}
-
-export function useGetDietPlanTemplate() {
-  const { actor, isFetching: actorFetching } = useActor();
-
-  return useQuery<MealOption[]>({
-    queryKey: ['dietPlanTemplate'],
-    queryFn: async () => {
-      if (!actor) return [];
-      // Backend doesn't have this method, return empty array
-      return [];
-    },
-    enabled: !!actor && !actorFetching,
-  });
-}
-
-export function useCreateDietPlan() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (params: {
-      planId: string;
-      trainerId: Principal;
-      clientId: Principal;
-      name: string;
-      meals: Meal[];
-      dietaryNotes: string;
-    }) => {
-      if (!actor) throw new Error('Actor not available');
-      // Backend doesn't have this method, mock implementation
-      return Promise.resolve();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['dietPlans'] });
-    },
-  });
-}
-
 // Exercise Library
 export function useGetAllExercises() {
-  const { actor, isFetching: actorFetching } = useActor();
+  const { actor, isFetching } = useActor();
 
   return useQuery<Exercise[]>({
     queryKey: ['exercises'],
     queryFn: async () => {
-      if (!actor) throw new Error('Actor not available');
+      if (!actor) return [];
       return actor.getAllExercises();
     },
-    enabled: !!actor && !actorFetching,
+    enabled: !!actor && !isFetching,
   });
 }
 
-export function useGetExercise(exerciseId: ExerciseId) {
-  const { actor, isFetching: actorFetching } = useActor();
+export function useGetExercise(id: bigint | null) {
+  const { actor, isFetching } = useActor();
 
   return useQuery<Exercise | null>({
-    queryKey: ['exercise', exerciseId.toString()],
+    queryKey: ['exercise', id?.toString()],
     queryFn: async () => {
-      if (!actor) throw new Error('Actor not available');
-      return actor.getExercise(exerciseId);
+      if (!actor || !id) return null;
+      return actor.getExercise(id);
     },
-    enabled: !!actor && !actorFetching,
+    enabled: !!actor && !isFetching && id !== null,
   });
 }
 
-export function useGetExerciseWithHistory(exerciseId: ExerciseId | null) {
-  const { actor, isFetching: actorFetching } = useActor();
+export function useGetExerciseWithHistory(id: bigint | null) {
+  const { actor, isFetching } = useActor();
 
   return useQuery<ExerciseWithHistory | null>({
-    queryKey: ['exerciseWithHistory', exerciseId?.toString()],
+    queryKey: ['exerciseWithHistory', id?.toString()],
     queryFn: async () => {
-      if (!actor || !exerciseId) throw new Error('Actor not available');
-      return actor.getExerciseWithHistory(exerciseId);
+      if (!actor || !id) return null;
+      return actor.getExerciseWithHistory(id);
     },
-    enabled: !!actor && !actorFetching && exerciseId !== null,
+    enabled: !!actor && !isFetching && id !== null,
   });
 }
 
@@ -542,8 +365,8 @@ export function useAddExercise() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (params: {
-      id: ExerciseId;
+    mutationFn: async (exercise: {
+      id: bigint;
       name: string;
       targetMuscleGroups: string;
       difficultyLevel: string;
@@ -555,15 +378,15 @@ export function useAddExercise() {
     }) => {
       if (!actor) throw new Error('Actor not available');
       return actor.addExerciseToLibrary(
-        params.id,
-        params.name,
-        params.targetMuscleGroups,
-        params.difficultyLevel,
-        params.equipmentNeeded,
-        params.videoUrl,
-        params.description,
-        params.recommendedRepsRange,
-        params.recommendedSetsRange
+        exercise.id,
+        exercise.name,
+        exercise.targetMuscleGroups,
+        exercise.difficultyLevel,
+        exercise.equipmentNeeded,
+        exercise.videoUrl,
+        exercise.description,
+        exercise.recommendedRepsRange,
+        exercise.recommendedSetsRange
       );
     },
     onSuccess: () => {
@@ -577,8 +400,8 @@ export function useUpdateExercise() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (params: {
-      id: ExerciseId;
+    mutationFn: async (exercise: {
+      id: bigint;
       name: string;
       targetMuscleGroups: string;
       difficultyLevel: string;
@@ -590,15 +413,15 @@ export function useUpdateExercise() {
     }) => {
       if (!actor) throw new Error('Actor not available');
       return actor.updateExerciseInLibrary(
-        params.id,
-        params.name,
-        params.targetMuscleGroups,
-        params.difficultyLevel,
-        params.equipmentNeeded,
-        params.videoUrl,
-        params.description,
-        params.recommendedRepsRange,
-        params.recommendedSetsRange
+        exercise.id,
+        exercise.name,
+        exercise.targetMuscleGroups,
+        exercise.difficultyLevel,
+        exercise.equipmentNeeded,
+        exercise.videoUrl,
+        exercise.description,
+        exercise.recommendedRepsRange,
+        exercise.recommendedSetsRange
       );
     },
     onSuccess: () => {
@@ -612,7 +435,7 @@ export function useDeleteExercise() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (id: ExerciseId) => {
+    mutationFn: async (id: bigint) => {
       if (!actor) throw new Error('Actor not available');
       return actor.deleteExerciseFromLibrary(id);
     },
@@ -628,40 +451,52 @@ export function useLogWeightProgress() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (params: { exerciseId: ExerciseId; weight: number; reps: bigint }) => {
+    mutationFn: async ({
+      exerciseId,
+      weight,
+      reps,
+    }: {
+      exerciseId: bigint;
+      weight: number;
+      reps: bigint;
+    }) => {
       if (!actor) throw new Error('Actor not available');
-      return actor.logWeightProgress(params.exerciseId, params.weight, params.reps);
+      return actor.logWeightProgress(exerciseId, weight, reps);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['weightProgression'] });
-      queryClient.invalidateQueries({ queryKey: ['progressionStats'] });
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ['weightProgressionEntries', variables.exerciseId.toString()],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['progressionStats', variables.exerciseId.toString()],
+      });
     },
   });
 }
 
-export function useGetProgressionStatsForExercise(exerciseId: ExerciseId | null) {
-  const { actor, isFetching: actorFetching } = useActor();
-
-  return useQuery<WeightProgressionStats>({
-    queryKey: ['progressionStats', exerciseId?.toString()],
-    queryFn: async () => {
-      if (!actor || !exerciseId) throw new Error('Actor not available');
-      return actor.getProgressionStatsForExercise(exerciseId);
-    },
-    enabled: !!actor && !actorFetching && exerciseId !== null,
-  });
-}
-
-export function useGetWeightProgressionEntries(exerciseId: ExerciseId | null) {
-  const { actor, isFetching: actorFetching } = useActor();
+export function useGetWeightProgressionEntries(exerciseId: bigint | null) {
+  const { actor, isFetching } = useActor();
 
   return useQuery<WeightProgressionEntry[]>({
-    queryKey: ['weightProgression', exerciseId?.toString()],
+    queryKey: ['weightProgressionEntries', exerciseId?.toString()],
     queryFn: async () => {
-      if (!actor || !exerciseId) throw new Error('Actor not available');
+      if (!actor || !exerciseId) return [];
       return actor.getWeightProgressionEntries(exerciseId);
     },
-    enabled: !!actor && !actorFetching && exerciseId !== null,
+    enabled: !!actor && !isFetching && exerciseId !== null,
+  });
+}
+
+export function useGetProgressionStatsForExercise(exerciseId: bigint | null) {
+  const { actor, isFetching } = useActor();
+
+  return useQuery<WeightProgressionStats | null>({
+    queryKey: ['progressionStats', exerciseId?.toString()],
+    queryFn: async () => {
+      if (!actor || !exerciseId) return null;
+      return actor.getProgressionStatsForExercise(exerciseId);
+    },
+    enabled: !!actor && !isFetching && exerciseId !== null,
   });
 }
 
@@ -682,15 +517,15 @@ export function useLogCaffeineIntake() {
 }
 
 export function useGetOptimalWorkoutTime() {
-  const { actor, isFetching: actorFetching } = useActor();
+  const { actor, isFetching } = useActor();
 
   return useQuery<OptimalWorkoutTime | null>({
     queryKey: ['optimalWorkoutTime'],
     queryFn: async () => {
-      if (!actor) throw new Error('Actor not available');
+      if (!actor) return null;
       return actor.getOptimalWorkoutTime();
     },
-    enabled: !!actor && !actorFetching,
+    enabled: !!actor && !isFetching,
   });
 }
 
@@ -709,69 +544,25 @@ export function useClearCaffeineIntake() {
   });
 }
 
-// Form Analysis Tips
-export function useGetFormAnalysisTip(exerciseId: ExerciseId) {
-  const { actor, isFetching: actorFetching } = useActor();
-
-  return useQuery<FormAnalysisTip | null>({
-    queryKey: ['formAnalysisTip', exerciseId.toString()],
-    queryFn: async () => {
-      if (!actor) throw new Error('Actor not available');
-      return actor.getFormAnalysisTip(exerciseId);
-    },
-    enabled: !!actor && !actorFetching,
-  });
-}
-
-export function useGetAllFormAnalysisTips() {
-  const { actor, isFetching: actorFetching } = useActor();
-
-  return useQuery<FormAnalysisTip[]>({
-    queryKey: ['formAnalysisTips'],
-    queryFn: async () => {
-      if (!actor) throw new Error('Actor not available');
-      return actor.getAllFormAnalysisTips();
-    },
-    enabled: !!actor && !actorFetching,
-  });
-}
-
-// Supplement Stacks
-export function useGetSupplementStack(goalType: string) {
-  const { actor, isFetching: actorFetching } = useActor();
-
-  return useQuery<SupplementStack | null>({
-    queryKey: ['supplementStack', goalType],
-    queryFn: async () => {
-      if (!actor) throw new Error('Actor not available');
-      return actor.getSupplementStack(goalType);
-    },
-    enabled: !!actor && !actorFetching && !!goalType,
-  });
-}
-
-export function useGetAllSupplementStacks() {
-  const { actor, isFetching: actorFetching } = useActor();
-
-  return useQuery<SupplementStack[]>({
-    queryKey: ['supplementStacks'],
-    queryFn: async () => {
-      if (!actor) throw new Error('Actor not available');
-      return actor.getAllSupplementStacks();
-    },
-    enabled: !!actor && !actorFetching,
-  });
-}
-
-// Gym Buddy Locator
+// Location & Training Partner Preferences
 export function useSaveLocationPreference() {
   const { actor } = useActor();
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (params: { latitude: number; longitude: number; searchRadiusKm: bigint; gymName: string }) => {
+    mutationFn: async ({
+      latitude,
+      longitude,
+      searchRadiusKm,
+      gymName,
+    }: {
+      latitude: number;
+      longitude: number;
+      searchRadiusKm: bigint;
+      gymName: string;
+    }) => {
       if (!actor) throw new Error('Actor not available');
-      return actor.saveLocationPreference(params.latitude, params.longitude, params.searchRadiusKm, params.gymName);
+      return actor.saveLocationPreference(latitude, longitude, searchRadiusKm, gymName);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['locationPreference'] });
@@ -781,15 +572,15 @@ export function useSaveLocationPreference() {
 }
 
 export function useGetLocationPreference() {
-  const { actor, isFetching: actorFetching } = useActor();
+  const { actor, isFetching } = useActor();
 
   return useQuery<LocationPreference | null>({
     queryKey: ['locationPreference'],
     queryFn: async () => {
-      if (!actor) throw new Error('Actor not available');
+      if (!actor) return null;
       return actor.getLocationPreference();
     },
-    enabled: !!actor && !actorFetching,
+    enabled: !!actor && !isFetching,
   });
 }
 
@@ -798,7 +589,12 @@ export function useSaveTrainingPartnerPreference() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (params: {
+    mutationFn: async ({
+      fitnessGoals,
+      experienceLevel,
+      preferredWorkoutTimes,
+      bio,
+    }: {
       fitnessGoals: string[];
       experienceLevel: string;
       preferredWorkoutTimes: string[];
@@ -806,10 +602,10 @@ export function useSaveTrainingPartnerPreference() {
     }) => {
       if (!actor) throw new Error('Actor not available');
       return actor.saveTrainingPartnerPreference(
-        params.fitnessGoals,
-        params.experienceLevel,
-        params.preferredWorkoutTimes,
-        params.bio
+        fitnessGoals,
+        experienceLevel,
+        preferredWorkoutTimes,
+        bio
       );
     },
     onSuccess: () => {
@@ -819,39 +615,40 @@ export function useSaveTrainingPartnerPreference() {
 }
 
 export function useGetTrainingPartnerPreference() {
-  const { actor, isFetching: actorFetching } = useActor();
+  const { actor, isFetching } = useActor();
 
   return useQuery<TrainingPartnerPreference | null>({
     queryKey: ['trainingPartnerPreference'],
     queryFn: async () => {
-      if (!actor) throw new Error('Actor not available');
+      if (!actor) return null;
       return actor.getTrainingPartnerPreference();
     },
-    enabled: !!actor && !actorFetching,
+    enabled: !!actor && !isFetching,
   });
 }
 
 export function useGetNearbyUsers() {
-  const { actor, isFetching: actorFetching } = useActor();
+  const { actor, isFetching } = useActor();
 
   return useQuery<NearbyUser[]>({
     queryKey: ['nearbyUsers'],
     queryFn: async () => {
-      if (!actor) throw new Error('Actor not available');
+      if (!actor) return [];
       return actor.getNearbyUsers();
     },
-    enabled: !!actor && !actorFetching,
+    enabled: !!actor && !isFetching,
   });
 }
 
+// Connection Requests
 export function useSendConnectionRequest() {
   const { actor } = useActor();
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (params: { receiverId: Principal; message: string }) => {
+    mutationFn: async ({ receiverId, message }: { receiverId: Principal; message: string }) => {
       if (!actor) throw new Error('Actor not available');
-      return actor.sendConnectionRequest(params.receiverId, params.message);
+      return actor.sendConnectionRequest(receiverId, message);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['connectionRequests'] });
@@ -864,13 +661,13 @@ export function useAcceptConnectionRequest() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (requestId: ConnectionRequestId) => {
+    mutationFn: async (requestId: string) => {
       if (!actor) throw new Error('Actor not available');
       return actor.acceptConnectionRequest(requestId);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['connectionRequests'] });
-      queryClient.invalidateQueries({ queryKey: ['myConnections'] });
+      queryClient.invalidateQueries({ queryKey: ['connections'] });
     },
   });
 }
@@ -880,7 +677,7 @@ export function useRejectConnectionRequest() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (requestId: ConnectionRequestId) => {
+    mutationFn: async (requestId: string) => {
       if (!actor) throw new Error('Actor not available');
       return actor.rejectConnectionRequest(requestId);
     },
@@ -891,38 +688,297 @@ export function useRejectConnectionRequest() {
 }
 
 export function useGetMyConnectionRequests() {
-  const { actor, isFetching: actorFetching } = useActor();
+  const { actor, isFetching } = useActor();
 
   return useQuery<ConnectionRequest[]>({
     queryKey: ['connectionRequests'],
     queryFn: async () => {
-      if (!actor) throw new Error('Actor not available');
+      if (!actor) return [];
       return actor.getMyConnectionRequests();
     },
-    enabled: !!actor && !actorFetching,
+    enabled: !!actor && !isFetching,
   });
 }
 
 export function useGetMyConnections() {
-  const { actor, isFetching: actorFetching } = useActor();
+  const { actor, isFetching } = useActor();
 
   return useQuery<User[]>({
-    queryKey: ['myConnections'],
+    queryKey: ['connections'],
     queryFn: async () => {
-      if (!actor) throw new Error('Actor not available');
+      if (!actor) return [];
       return actor.getMyConnections();
     },
-    enabled: !!actor && !actorFetching,
+    enabled: !!actor && !isFetching,
   });
 }
 
-// VORTEX AI - Mock implementation
-export function useAskVortex() {
+// PR Leaderboard
+export function useSubmitPersonalRecord() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
   return useMutation({
-    mutationFn: async (message: string) => {
-      // Mock response
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      return `VORTEX AI response to: ${message}`;
+    mutationFn: async ({
+      prType,
+      weight,
+      reps,
+    }: {
+      prType: PrType;
+      weight: number;
+      reps: bigint;
+    }) => {
+      if (!actor) throw new Error('Actor not available');
+      const prTypeInt = prTypeToInt(prType);
+      return actor.submitPersonalRecord(prTypeInt, weight, reps);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['prLeaderboard'] });
+    },
+  });
+}
+
+export function useGetPRLeaderboard(prType: PrType) {
+  const { actor, isFetching } = useActor();
+
+  return useQuery<PRLeaderboard>({
+    queryKey: ['prLeaderboard', prType],
+    queryFn: async () => {
+      if (!actor)
+        return {
+          prType,
+          entries: [],
+        };
+      const prTypeInt = prTypeToInt(prType);
+      return actor.getPrLeaderboard(prTypeInt);
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+// Form Analysis Tips
+export function useGetFormAnalysisTip(exerciseId: bigint | null) {
+  const { actor, isFetching } = useActor();
+
+  return useQuery<FormAnalysisTip | null>({
+    queryKey: ['formAnalysisTip', exerciseId?.toString()],
+    queryFn: async () => {
+      if (!actor || !exerciseId) return null;
+      return actor.getFormAnalysisTip(exerciseId);
+    },
+    enabled: !!actor && !isFetching && exerciseId !== null,
+  });
+}
+
+export function useGetAllFormAnalysisTips() {
+  const { actor, isFetching } = useActor();
+
+  return useQuery<FormAnalysisTip[]>({
+    queryKey: ['formAnalysisTips'],
+    queryFn: async () => {
+      if (!actor) return [];
+      return actor.getAllFormAnalysisTips();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+// Supplement Stacks
+export function useGetSupplementStack(goalType: string) {
+  const { actor, isFetching } = useActor();
+
+  return useQuery<SupplementStack | null>({
+    queryKey: ['supplementStack', goalType],
+    queryFn: async () => {
+      if (!actor) return null;
+      return actor.getSupplementStack(goalType);
+    },
+    enabled: !!actor && !isFetching && !!goalType,
+  });
+}
+
+export function useGetAllSupplementStacks() {
+  const { actor, isFetching } = useActor();
+
+  return useQuery<SupplementStack[]>({
+    queryKey: ['supplementStacks'],
+    queryFn: async () => {
+      if (!actor) return [];
+      return actor.getAllSupplementStacks();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+// Placeholder hooks for features not yet implemented in backend
+// These return empty data to prevent errors in components
+
+export function useGetAllWorkoutPlansForUser() {
+  return useQuery<WorkoutPlan[]>({
+    queryKey: ['workoutPlans'],
+    queryFn: async () => [],
+    enabled: false,
+  });
+}
+
+export function useCreateWorkoutPlan() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (params: {
+      planId: string;
+      trainerId: Principal;
+      clientId: Principal;
+      name: string;
+      sets: Set_[];
+      restTime: bigint;
+      notes: string;
+    }) => {
+      // Placeholder - backend not implemented yet
+      console.log('Workout plan creation not yet implemented in backend', params);
+      throw new Error('Workout plan creation not yet implemented');
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['workoutPlans'] });
+    },
+  });
+}
+
+export function useGetWorkoutRecordsForUser() {
+  return useQuery<WorkoutRecord[]>({
+    queryKey: ['workoutRecords'],
+    queryFn: async () => [],
+    enabled: false,
+  });
+}
+
+export function useLogWorkoutCompletion() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      recordId,
+      planId,
+      userId,
+      completedSets,
+      personalNotes,
+    }: {
+      recordId: string;
+      planId: string;
+      userId: Principal;
+      completedSets: bigint;
+      personalNotes: string;
+    }) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.logWorkoutCompletion(recordId, planId, userId, completedSets, personalNotes);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['workoutRecords'] });
+    },
+  });
+}
+
+export function useGetScheduledSessionsForClient() {
+  return useQuery<ScheduledSession[]>({
+    queryKey: ['scheduledSessions'],
+    queryFn: async () => [],
+    enabled: false,
+  });
+}
+
+export function useCreateScheduledSession() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (params: { receiverId: Principal; message: string }) => {
+      // Placeholder - backend not implemented yet
+      console.log('Scheduled session creation not yet implemented in backend', params);
+      throw new Error('Scheduled session creation not yet implemented');
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['scheduledSessions'] });
+    },
+  });
+}
+
+export function useGetDietPlansForClient() {
+  return useQuery<DietPlan[]>({
+    queryKey: ['dietPlans'],
+    queryFn: async () => [],
+    enabled: false,
+  });
+}
+
+export function useCreateDietPlan() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (params: {
+      planId: string;
+      trainerId: Principal;
+      clientId: Principal;
+      name: string;
+      meals: Meal[];
+      dietaryNotes: string;
+    }) => {
+      // Placeholder - backend not implemented yet
+      console.log('Diet plan creation not yet implemented in backend', params);
+      throw new Error('Diet plan creation not yet implemented');
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['dietPlans'] });
+    },
+  });
+}
+
+export function useGetDietPlanTemplate() {
+  return useQuery<MealOption[]>({
+    queryKey: ['dietPlanTemplate'],
+    queryFn: async () => {
+      // Return a hardcoded template for now
+      return [
+        {
+          mealType: 'Breakfast (7:00 AM - 8:00 AM)',
+          options: [
+            {
+              description: 'High Protein Start',
+              foodItems: [
+                { name: '4 Whole Eggs', portion: '4 eggs', calories: 280, protein: 24, carbs: 2, fats: 20 },
+                { name: 'Oatmeal', portion: '1 cup', calories: 150, protein: 5, carbs: 27, fats: 3 },
+                { name: 'Banana', portion: '1 medium', calories: 105, protein: 1, carbs: 27, fats: 0 },
+              ],
+            },
+            {
+              description: 'Balanced Energy',
+              foodItems: [
+                { name: 'Greek Yogurt', portion: '200g', calories: 130, protein: 20, carbs: 9, fats: 0 },
+                { name: 'Granola', portion: '1/2 cup', calories: 200, protein: 4, carbs: 30, fats: 8 },
+                { name: 'Berries', portion: '1 cup', calories: 70, protein: 1, carbs: 17, fats: 0 },
+              ],
+            },
+          ],
+        },
+        {
+          mealType: 'Mid-Morning Snack (10:00 AM - 11:00 AM)',
+          options: [
+            {
+              description: 'Protein Boost',
+              foodItems: [
+                { name: 'Protein Shake', portion: '1 scoop', calories: 120, protein: 25, carbs: 3, fats: 1 },
+                { name: 'Almonds', portion: '1 oz', calories: 160, protein: 6, carbs: 6, fats: 14 },
+              ],
+            },
+            {
+              description: 'Natural Energy',
+              foodItems: [
+                { name: 'Apple', portion: '1 medium', calories: 95, protein: 0, carbs: 25, fats: 0 },
+                { name: 'Peanut Butter', portion: '2 tbsp', calories: 190, protein: 8, carbs: 7, fats: 16 },
+              ],
+            },
+          ],
+        },
+      ];
     },
   });
 }
